@@ -467,7 +467,7 @@ cps = cps.loc[cps.year.isin(range(1985, 2020 + 1)), :]
 cps.loc[:, 'year'] = cps.year - 1
 
 # Calculate the standard deviation of leisure by year and race
-df = cps.groupby(['year', 'race'], as_index=False).agg({'leisure':lambda x: weighted_sd(x, data=cps, weights='weight')})
+df = cps.groupby(['year', 'race'], as_index=False).agg({'leisure': lambda x: weighted_sd(x, data=cps, weights='weight')})
 
 # Initialize the figure
 fig, ax = plt.subplots()
