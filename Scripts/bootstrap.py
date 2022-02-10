@@ -2,9 +2,7 @@
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
-import statsmodels.api as sm
 from joblib import Parallel, delayed
-import itertools
 import os
 
 # Find the number of available CPUs
@@ -59,6 +57,13 @@ def bootstrap_statistics(b):
     d_functions = dict(zip(columns, functions))
     d_names = dict(zip(columns, names))
 
+    # Calculate CEX consumption statistics by year and age in the current bootstrap sample
+    df = pd.merge(df_cex.groupby(['year', 'age'], as_index=False).agg(d_functions_log).rename(columns=d_names_log),
+                  df_cex.groupby(['year', 'age'], as_index=False).agg(d_functions).rename(columns=d_names), how='left')
+    df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [-1], 'latin': [-1], 'bootstrap': [b]}), df, how='left')
+    df.loc[:, names_log + names] = df.groupby('year', as_index=False)[names_log + names].transform(lambda x: filter(x, 1600)).values
+    df_consumption = df_consumption.append(df, ignore_index=True)
+
     # Calculate CEX consumption statistics by year, race and age in the current bootstrap sample
     df = pd.merge(df_cex.loc[df_cex.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).agg(d_functions_log).rename(columns=d_names_log),
                   df_cex.loc[df_cex.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).agg(d_functions).rename(columns=d_names), how='left')
@@ -79,6 +84,15 @@ def bootstrap_statistics(b):
     df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'latin': [0], 'bootstrap': [b]}), df, how='left')
     df.loc[:, names_log + names] = df.groupby(['year', 'race'], as_index=False)[names_log + names].transform(lambda x: filter(x, 1600)).values
     df_consumption = df_consumption.append(df, ignore_index=True)
+
+    # Calculate CPS leisure statistics by year and age in the current bootstrap sample
+    df = pd.merge(df_cps.groupby(['year', 'age'], as_index=False).agg({'leisure': lambda x: weighted_average(v_of_ℓ(x), data=df_cps, weights='weight')}).rename(columns={'leisure': 'Ev_of_ℓ'}),
+                  df_cps.groupby(['year', 'age'], as_index=False).agg({'leisure': lambda x: weighted_average(x, data=df_cps, weights='weight')}).rename(columns={'leisure': 'ℓ_bar'}), how='left')
+    df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [-1], 'latin': [-1], 'bootstrap': [b]}), df, how='left')
+    df.loc[:, ['Ev_of_ℓ', 'ℓ_bar']] = df.groupby('year', as_index=False)[['Ev_of_ℓ', 'ℓ_bar']].transform(lambda x: filter(x, 100)).values
+    df.loc[df.loc[:, 'Ev_of_ℓ'] > 0, 'Ev_of_ℓ'] = 0
+    df.loc[df.loc[:, 'ℓ_bar'] > 1, 'ℓ_bar'] = 1
+    df_leisure = df_leisure.append(df, ignore_index=True)
 
     # Calculate CPS leisure statistics by year, race and age in the current bootstrap sample
     df = pd.merge(df_cps.loc[df_cps.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).agg({'leisure': lambda x: weighted_average(v_of_ℓ(x), data=df_cps, weights='weight')}).rename(columns={'leisure': 'Ev_of_ℓ'}),
