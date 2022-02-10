@@ -121,16 +121,25 @@ def bootstrap_statistics(b):
     df.loc[df.loc[:, 'ℓ_bar'] > 1, 'ℓ_bar'] = 1
     df_leisure = df_leisure.append(df, ignore_index=True)
 
+    # Calculate the standard deviation of CEX consumption and CPS leisure by year and race
+    df_consumption_sd = df_cex.loc[df_cex.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).agg({'consumption_nd': lambda x: weighted_sd(np.log(x), data=df_cex, weights='weight')}).rename(columns={'consumption_nd': 'consumption_nd_sd'})
+    df_leisure_sd = df_cps.loc[df_cps.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).agg({'leisure': lambda x: weighted_sd(x, data=df_cps, weights='weight')}).rename(columns={'leisure': 'leisure_sd'})
+
     # Merge and return the data frames
     df = pd.merge(df_consumption, df_leisure, how='left')
-    return df
+    df_sd = pd.merge(df_consumption_sd, df_leisure_sd, how='left')
+    df_sd.loc[:, 'bootstrap'] = b
+    return df, df_sd
 
 # Calculate CEX consumption and CPS leisure statistics across bootstrap samples
 results = Parallel(n_jobs=n_cpu)(delayed(bootstrap_statistics)(b) for b in range(1000))
 df_bootstrap = pd.DataFrame()
+df_bootstrap_sd = pd.DataFrame()
 for result in results:
-    df_bootstrap = df_bootstrap.append(result, ignore_index=True)
+    df_bootstrap = df_bootstrap.append(result[0], ignore_index=True)
+    df_bootstrap_sd = df_bootstrap_sd.append(result[1], ignore_index=True)
 del cex, cps
 
 # Save the data frame
 df_bootstrap.to_csv(os.path.join(data, 'dignity_bootstrap.csv'), index=False)
+df_bootstrap_sd.to_csv(os.path.join(data, 'dignity_bootstrap_sd.csv'), index=False)
