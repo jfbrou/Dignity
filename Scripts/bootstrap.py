@@ -12,7 +12,7 @@ n_cpu = os.cpu_count()
 from functions import *
 
 # Set the Sherlock data directory
-data = '/scratch/users/jfbrou/Dignity/Data'
+data = '/scratch/users/jfbrou/Dignity'
 
 ################################################################################
 #                                                                              #
