@@ -39,6 +39,8 @@ def bootstrap_statistics(b):
     for year in range(1984, 2020 + 1):
         df_cex = df_cex.append(cex.loc[cex.year == year, :].sample(n=cex.loc[cex.year == year, :].shape[0], replace=True, weights='weight', random_state=b), ignore_index=True)
     for column in ['consumption', 'consumption_nd']:
+        df_cex_simple = df_cex
+        df_cex_simple.loc[:, column] = df_cex_simple.loc[:, column] / weighted_average(df_cex_simple.loc[(df_cex_simple.year == 2019) & (df_cex_simple.race == 1), column], data=df_cex_simple, weights='weight')
         df_cex.loc[:, column] = df_cex.loc[:, column] / weighted_average(df_cex.loc[df_cex.year == 2019, column], data=df_cex, weights='weight')
 
     # Sample from the CPS data
@@ -74,7 +76,7 @@ def bootstrap_statistics(b):
     df_consumption = df_consumption.append(df, ignore_index=True)
 
     # Calculate CEX consumption statistics by year and race in the current bootstrap sample
-    df = pd.merge(df_cex.loc[df_cex.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).agg({'consumption': lambda x: np.log(weighted_average(x, data=df_cex, weights='weight'))}).rename(columns={'consumption': 'consumption_average'}),
+    df = pd.merge(df_cex_simple.loc[df_cex_simple.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).agg({'consumption': lambda x: np.log(weighted_average(x, data=df_cex_simple, weights='weight'))}).rename(columns={'consumption': 'consumption_average'}),
                   df_cex.loc[df_cex.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).agg({'consumption_nd': lambda x: weighted_sd(np.log(x), data=df_cex, weights='weight')}).rename(columns={'consumption_nd': 'consumption_sd'}), how='left')
     df = pd.merge(expand({'year': df.year.unique(), 'race': [1, 2], 'latin': [-1], 'bootstrap': [b]}), df, how='left')
     df_consumption_simple = df_consumption_simple.append(df, ignore_index=True)
@@ -87,7 +89,7 @@ def bootstrap_statistics(b):
     df_consumption = df_consumption.append(df, ignore_index=True)
 
     # Calculate CEX consumption statistics by year for Latinos in the current bootstrap sample
-    df = pd.merge(df_cex.loc[(df_cex.latin == 1) & (df_cex.year >= 2006), :].groupby('year', as_index=False).agg({'consumption': lambda x: np.log(weighted_average(x, data=df_cex, weights='weight'))}).rename(columns={'consumption': 'consumption_average'}),
+    df = pd.merge(df_cex_simple.loc[(df_cex_simple.latin == 1) & (df_cex_simple.year >= 2006), :].groupby('year', as_index=False).agg({'consumption': lambda x: np.log(weighted_average(x, data=df_cex_simple, weights='weight'))}).rename(columns={'consumption': 'consumption_average'}),
                   df_cex.loc[(df_cex.latin == 1) & (df_cex.year >= 2006), :].groupby('year', as_index=False).agg({'consumption_nd': lambda x: weighted_sd(np.log(x), data=df_cex, weights='weight')}).rename(columns={'consumption_nd': 'consumption_sd'}), how='left')
     df = pd.merge(expand({'year': df.year.unique(), 'race': [-1], 'latin': [1], 'bootstrap': [b]}), df, how='left')
     df_consumption_simple = df_consumption_simple.append(df, ignore_index=True)
@@ -100,7 +102,7 @@ def bootstrap_statistics(b):
     df_consumption = df_consumption.append(df, ignore_index=True)
 
     # Calculate CEX consumption statistics by year and race for non-Latinos in the current bootstrap sample
-    df = pd.merge(df_cex.loc[df_cex.race.isin([1, 2]) & (df_cex.latin == 0) & (df_cex.year >= 2006), :].groupby(['year', 'race'], as_index=False).agg({'consumption': lambda x: np.log(weighted_average(x, data=df_cex, weights='weight'))}).rename(columns={'consumption': 'consumption_average'}),
+    df = pd.merge(df_cex_simple.loc[df_cex_simple.race.isin([1, 2]) & (df_cex_simple.latin == 0) & (df_cex_simple.year >= 2006), :].groupby(['year', 'race'], as_index=False).agg({'consumption': lambda x: np.log(weighted_average(x, data=df_cex_simple, weights='weight'))}).rename(columns={'consumption': 'consumption_average'}),
                   df_cex.loc[df_cex.race.isin([1, 2]) & (df_cex.latin == 0) & (df_cex.year >= 2006), :].groupby(['year', 'race'], as_index=False).agg({'consumption_nd': lambda x: weighted_sd(np.log(x), data=df_cex, weights='weight')}).rename(columns={'consumption_nd': 'consumption_sd'}), how='left')
     df = pd.merge(expand({'year': df.year.unique(), 'race': [1, 2], 'latin': [0], 'bootstrap': [b]}), df, how='left')
     df_consumption_simple = df_consumption_simple.append(df, ignore_index=True)

@@ -50,6 +50,12 @@ cex.loc[:, 'consumption'] = cex.consumption / weighted_average(cex.loc[(cex.year
 # Calculate the logarithm of average consumption by year and race
 df = cex.groupby(['year', 'race'], as_index=False).agg({'consumption': lambda x: np.log(weighted_average(x, data=cex, weights='weight'))})
 
+# Load the bootstrapped CEX data and calculate the 95% confidence interval
+cex_bs = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap_simple.csv'))
+cex_bs = cex_bs.loc[cex_bs.year.isin(range(1984, 2019 + 1)) & cex_bs.race.isin([1, 2]) & (cex_bs.latin == -1), :]
+df_bs = pd.merge(cex_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.025)}).rename(columns={'consumption_average': 'lb'}),
+                 cex_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.975)}).rename(columns={'consumption_average': 'ub'}), how='left')
+
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
 
@@ -145,6 +151,12 @@ cex.loc[:, 'consumption_nd'] = cex.consumption_nd / weighted_average(cex.loc[cex
 
 # Calculate the standard deviation of log consumption by year and race
 df = cex.groupby(['year', 'race'], as_index=False).agg({'consumption_nd': lambda x: weighted_sd(np.log(x), data=cex, weights='weight')})
+
+# Load the bootstrapped CEX data and calculate the 95% confidence interval
+cex_bs = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap_simple.csv'))
+cex_bs = cex_bs.loc[cex_bs.year.isin(range(1984, 2019 + 1)) & cex_bs.race.isin([1, 2]) & (cex_bs.latin == -1), :]
+df_bs = pd.merge(cex_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_sd': lambda x: x.quantile(0.025)}).rename(columns={'consumption_sd': 'lb'}),
+                 cex_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_sd': lambda x: x.quantile(0.975)}).rename(columns={'consumption_sd': 'ub'}), how='left')
 
 # Initialize the figure
 fig, ax = plt.subplots()

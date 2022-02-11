@@ -162,7 +162,7 @@ df_leisure = df_leisure.append(df, ignore_index=True)
 
 # Calculate ACS leisure statistics by year and age
 df = acs.groupby(['year', 'age'], as_index=False).agg({'leisure': lambda x: weighted_average(x, data=acs, weights='leisure_weight')}).rename(columns={'leisure': 'ℓ_bar'})
-df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [-1], 'latin': [-1] 'historical': [True]}), df, how='left')
+df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [-1], 'latin': [-1], 'historical': [True]}), df, how='left')
 df.loc[:, 'ℓ_bar'] = df.groupby('year', as_index=False)['ℓ_bar'].transform(lambda x: filter(x, 100)).values
 df.loc[df.loc[:, 'ℓ_bar'] > 1, 'ℓ_bar'] = 1
 df_leisure = df_leisure.append(df, ignore_index=True)

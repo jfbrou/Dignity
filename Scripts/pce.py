@@ -102,7 +102,7 @@ itbi_types = {'NEWID': 'str', 'UCC': 'int', 'VALUE': 'float'}
 # Load the UCC dictionary
 ucc = pd.read_csv(os.path.join(cex_r_data, 'ucc.csv'))
 
-# Initialize data frames
+# Initialize a data frame
 cex_expenditures = pd.DataFrame()
 
 # Process the MTBI and ITBI data files
@@ -172,7 +172,7 @@ cex = cex.groupby(['year', 'series'], as_index=False).agg({'COST': 'sum'})
 
 # Load and reshape the NIPA PCE data
 nipa_pce = bea.data('underlying', tablename='u20405', frequency='a', year=range(1984, 2020 + 1)).data.reset_index().rename(columns={'': 'year'})
-nipa_pce = pd.melt(nipa_pce, id_vars=['year'], value_vars=[col for col in nipa_pce.columns if col not in 'year'], var_name='series', value_name='expenditures')
+nipa_pce = pd.melt(nipa_pce, id_vars=['year'], value_vars=[column for column in nipa_pce.columns if column not in 'year'], var_name='series', value_name='expenditures')
 
 # Calculate the NIPA PCE aggregates
 nipa_pce.loc[:, 'series'] = nipa_pce.series.replace({'DCHCRC': 'C1', 'DNSCRC': 'C1',

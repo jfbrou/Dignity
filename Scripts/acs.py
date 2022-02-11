@@ -36,7 +36,6 @@ columns = ['YEAR',
            'RACASIAN',
            'RACPACIS',
            'HISPAN',
-		   'BPL',
 		   'HINSCAID',
 		   'HINSCARE',
            'EDUC',
@@ -68,7 +67,6 @@ types = {'YEAR':     'int',
          'RACASIAN': 'float',
          'RACPACIS': 'float',
          'HISPAN':   'int',
-		 'BPL':      'int',
 		 'HINSCAID': 'float',
 		 'HINSCARE': 'float',
          'EDUC':     'int',
@@ -157,17 +155,17 @@ BEA = pd.DataFrame(data={'YEAR':             years,
 
 # Define a function to read the data by year
 def year_chunk(file, chunksize=1e6):
-    reader = pd.read_csv(file, compression='gzip', header=0, usecols=columns, dtype=types, iterator=True, chunksize=chunksize)
+    iterator = pd.read_csv(file, compression='gzip', header=0, usecols=columns, dtype=types, iterator=True, chunksize=chunksize)
     chunk = pd.DataFrame()
-    for i in reader:
-        unique_years = np.sort(i.YEAR.unique())
+    for df in iterator:
+        unique_years = np.sort(df.YEAR.unique())
         if len(unique_years) == 1:
-            chunk = chunk.append(i, ignore_index=True)
+            chunk = chunk.append(df, ignore_index=True)
         else:
-            chunk = chunk.append(i.loc[i.YEAR == unique_years[0], :], ignore_index=True)
+            chunk = chunk.append(df.loc[df.YEAR == unique_years[0], :], ignore_index=True)
             yield chunk
             chunk = pd.DataFrame()
-            chunk = chunk.append(i.loc[i.YEAR == unique_years[1], :], ignore_index=True)
+            chunk = chunk.append(df.loc[df.YEAR == unique_years[1], :], ignore_index=True)
     yield chunk
 chunks = year_chunk(os.path.join(acs_r_data, 'acs.csv.gz'), chunksize=1e6)
 
@@ -307,11 +305,6 @@ for chunk in chunks:
 	chunk = chunk.loc[chunk.RACE.notna() & (chunk.RACE != 5), :]
 	chunk = chunk.drop(['RACWHT', 'RACBLK', 'RACAMIND', 'RACASIAN', 'RACPACIS'], axis=1)
 
-	# Create an immigrant identifier
-	chunk.loc[chunk.BPL >= 100, 'immigrant'] = 1
-	chunk.loc[chunk.BPL < 100, 'immigrant'] = 0
-	chunk = chunk.drop('BPL', axis=1)
-
 	# Create a food stamps, medicaid and medicare identifiers
 	chunk.loc[:, 'FOODSTMP'] = chunk.FOODSTMP.map({0: 0, 1: 0, 2: 1, np.nan: np.nan})
 	chunk.loc[:, 'HINSCAID'] = chunk.HINSCAID.map({1: 0, 2: 1, np.nan: np.nan})
@@ -447,7 +440,6 @@ acs = acs.drop(['leisure_1', 'leisure_2', 'leisure_3', 'leisure_4'], axis=1)
 # Create a data frame with all levels of all variables
 df = expand({'YEAR':      acs.YEAR.unique(),
 			 'RACE':      acs.RACE.unique(),
-			 'immigrant': acs.immigrant.unique(),
 			 'HISPAN':    acs.HISPAN.unique(),
 			 'SEX':       acs.SEX.unique(),
 			 'EDUC':      acs.EDUC.unique(),
@@ -457,7 +449,6 @@ df = expand({'YEAR':      acs.YEAR.unique(),
 acs = acs.groupby(['YEAR',
 				   'RACE',
 				   'HISPAN',
-				   'immigrant',
 				   'SEX',
 				   'EDUC',
 				   'AGE'], as_index=False).agg({'leisure':        lambda x: weighted_average(x, data=acs, weights='leisure_weight'),
@@ -488,7 +479,6 @@ acs = acs.astype({'year':          'int',
 				  'gender':        'int',
 				  'race':          'int',
 				  'latin':         'int',
-				  'immigrant':     'int',
 				  'education':     'float',
 				  'age':           'int',
 				  'leisure':       'float',
