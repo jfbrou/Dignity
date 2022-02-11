@@ -167,7 +167,7 @@ def bootstrap_statistics(b):
     return df, df_simple
 
 # Calculate CEX consumption and CPS leisure statistics across bootstrap samples
-results = Parallel(n_jobs=n_cpu)(delayed(bootstrap_statistics)(b) for b in range(1000))
+results = Parallel(n_jobs=n_cpu)(delayed(bootstrap_statistics)(b) for b in range(2000))
 df_bootstrap = pd.DataFrame()
 df_bootstrap_simple = pd.DataFrame()
 for result in results:
