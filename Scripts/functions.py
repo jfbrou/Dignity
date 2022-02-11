@@ -4,21 +4,6 @@ import pandas as pd
 import itertools
 import statsmodels.api as sm
 
-# Define a weighted average function
-def weighted_average(x, data=None, weights=None):
-    if sum(data.loc[x[x.notna()].index, weights]) == 0:
-        return nan
-    else:
-        return average(x[x.notna()], weights=data.loc[x[x.notna()].index, weights])
-
-# Define a weighted standard deviation function
-def weighted_sd(x, data=None, weights=None):
-    if sum(data.loc[x[x.notna()].index, weights]) == 0:
-        return nan
-    else:
-        mean = average(x[x.notna()], weights=data.loc[x[x.notna()].index, weights])
-        return sqrt(average((x[x.notna()] - mean)**2, weights=data.loc[x[x.notna()].index, weights]))
-
 # Define a function to create a data frame of the right form
 def expand(dictionary):
     rows = itertools.product(*dictionary.values())

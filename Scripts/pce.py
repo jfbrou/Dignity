@@ -197,7 +197,7 @@ cex = cex.drop(['COST', 'expenditures'], axis=1)
 
 # Merge back with the crosswalk
 cex = pd.merge(cw.loc[:, ['UCC', 'series', 'share']], cex, how='inner')
-cex = cex.groupby(['year', 'UCC'], as_index=False).agg({'ratio': lambda x: weighted_average(x, data=cex, weights='share')})
+cex = cex.groupby(['year', 'UCC'], as_index=False).apply(lambda x: pd.Series({'ratio': np.log(np.average(x.ratio, weights=x.share))}))
 
 # Eliminate ratios of zero or infinity
 cex = cex.loc[(cex.ratio != np.inf) & (cex.ratio != 0), :]

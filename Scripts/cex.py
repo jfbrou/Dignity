@@ -673,29 +673,35 @@ for column in [column for column in cex.columns if column.startswith('consumptio
 for column in [column for column in cex.columns if column.startswith('consumption') and column.find('_nd') != -1]:
     cex.loc[:, column] = np.log(4 * cex.loc[:, column] / cex.interviews)
 
+# Define a function to calculate the weighted standard deviation of log nondurable consumption for all families by the number of interviews in which they participated in
+def f(x):
+    d = {}
+    columns = [column for column in x.columns if column.startswith('consumption') and column.find('_nd') != -1]
+    for column in columns:
+        d[column.replace('consumption', 'scale')] = np.sqrt(np.average((x.loc[:, column] - np.average(x.loc[:, column], weights=x.FINLWT21))**2, weights=x.FINLWT21))
+    return pd.Series(d, index=[key for key, value in d.items()])
+
 # Calculate the weighted standard deviation of log nondurable consumption for all families by the number of interviews in which they participated in
-columns = [column for column in cex.columns if column.startswith('consumption') and column.find('_nd') != -1]
-functions = [lambda x: weighted_sd(x, data=cex, weights='FINLWT21')] * len(columns)
-names = [column.replace('consumption', 'scale') for column in columns]
-names_4 = [column.replace('consumption', 'scale_4') for column in columns]
-d_functions = dict(zip(columns, functions))
-d_names = dict(zip(columns, names))
-d_names_4 = dict(zip(columns, names_4))
-cex = pd.merge(cex, cex.groupby(['year', 'interviews'], as_index=False).agg(d_functions).rename(columns=d_names), how='left')
-cex = pd.merge(cex, cex.loc[cex.interviews == 4, :].groupby('year', as_index=False).agg(d_functions).rename(columns=d_names_4), how='left')
+d_rename = dict(zip([column.replace('consumption', 'scale') for column in cex.columns if column.startswith('consumption') and column.find('_nd') != -1],
+                    [column.replace('consumption', 'scale_4') for column in cex.columns if column.startswith('consumption') and column.find('_nd') != -1]))
+cex = pd.merge(cex, cex.groupby(['year', 'interviews'], as_index=False).apply(f), how='left')
+cex = pd.merge(cex, cex.loc[cex.interviews == 4, :].groupby('year', as_index=False).apply(f).rename(columns=d_rename), how='left')
 
 # Calculate the ratio of those standard deviations relative to the four-interviews households
 for column in [column for column in cex.columns if column.startswith('scale') and column.find('_4') == -1]:
     cex.loc[:, column] = cex.loc[:, column.replace('scale', 'scale_4')] / cex.loc[:, column]
 cex = cex.drop(['interviews'] + [column for column in cex.columns if column.startswith('scale_4')], axis=1)
 
+# Define a function to calculate the average log nondurable consumption by year and race
+def f(x):
+    d = {}
+    columns = [column for column in x.columns if column.startswith('consumption') and column.find('_nd') != -1]
+    for column in columns:
+        d[column + '_average'] = np.average(x.loc[:, column], weights=x.FINLWT21)
+    return pd.Series(d, index=[key for key, value in d.items()])
+
 # Calculate average log nondurable consumption by year and race
-columns = [column for column in cex.columns if column.startswith('consumption') and column.find('_nd') != -1]
-functions = [lambda x: weighted_average(x, data=cex, weights='FINLWT21')] * len(columns)
-names = [column + '_average' for column in columns]
-d_functions = dict(zip(columns, functions))
-d_names = dict(zip(columns, names))
-cex = pd.merge(cex, cex.groupby(['year', 'RACE'], as_index=False).agg(d_functions).rename(columns=d_names), how='left')
+cex = pd.merge(cex, cex.groupby(['year', 'RACE'], as_index=False).apply(f), how='left')
 
 # Re-scale log nondurable consumption to adjust for differences in standard deviations across the number of interviews
 for column in [column for column in cex.columns if column.startswith('consumption') and not column.endswith('average') and column.find('_nd') != -1]:
@@ -739,13 +745,16 @@ cex = pd.merge(cex, pd.DataFrame(data={'year':      years,
 cex.loc[:, 'consumption_cex'] = cex.consumption
 cex.loc[:, 'consumption_nipa_cex'] = cex.consumption_nipa
 
+# Define a function to calculate the average log nondurable consumption by year
+def f(x):
+    d = {}
+    columns = [column for column in x.columns if column.startswith('consumption') and not column.endswith('cex')]
+    for column in columns:
+        d[column + '_average'] = np.average(x.loc[:, column], weights=x.FINLWT21)
+    return pd.Series(d, index=[key for key, value in d.items()])
+
 # Re-scale consumption such that it aggregates to the NIPA personal consumption expenditures
-columns = [column for column in cex.columns if column.startswith('consumption') and not column.endswith('cex')]
-functions = [lambda x: weighted_average(x, data=cex, weights='FINLWT21')] * len(columns)
-names = [column + '_average' for column in columns]
-d_functions = dict(zip(columns, functions))
-d_names = dict(zip(columns, names))
-cex = pd.merge(cex, cex.groupby('year', as_index=False).agg(d_functions).rename(columns=d_names), how='left')
+cex = pd.merge(cex, cex.groupby('year', as_index=False).apply(f), how='left')
 for column in [column for column in cex.columns if column.startswith('consumption') and not column.endswith('cex') and not column.endswith('average')]:
     if column.find('_nd') == -1:
         if column.find('_nh') == -1:
@@ -837,17 +846,23 @@ df = pd.concat([df, pd.get_dummies(df.education.astype('int'), prefix='education
 # Recode the gender variable
 df.loc[:, 'gender'] = df.gender.replace({1: 1, 2: 0})
 
+# Define a function to calculate average consumption, income and demographics by year
+def f(x):
+    d = {}
+    columns = ['consumption_cex', 'earnings', 'salary'] + ['race_' + str(i) for i in range(1, 4 + 1)] \
+                                                        + ['education_' + str(i) for i in range(1, 4 + 1)] \
+                                                        + ['family_size', 'latin', 'gender', 'age']
+    for column in columns:
+        d[column + '_average'] = np.average(x.loc[:, column], weights=x.weight)
+    return pd.Series(d, index=[key for key, value in d.items()])
+
 # Calculate average consumption, income and demographics by year
+df = pd.merge(df, df.groupby('year', as_index=False).apply(f), how='left')
+
+# Calculate the percentage deviation of consumption, income and demographics from their annual average
 columns = ['consumption_cex', 'earnings', 'salary'] + ['race_' + str(i) for i in range(1, 4 + 1)] \
                                                     + ['education_' + str(i) for i in range(1, 4 + 1)] \
                                                     + ['family_size', 'latin', 'gender', 'age']
-functions = [lambda x: weighted_average(x, data=df, weights='weight')] * len(columns)
-names = [column + '_average' for column in columns]
-d_functions = dict(zip(columns, functions))
-d_names = dict(zip(columns, names))
-df = pd.merge(df, df.groupby('year', as_index=False).agg(d_functions).rename(columns=d_names), how='left')
-
-# Calculate the percentage deviation of consumption, income and demographics from their annual average
 for column in columns:
      df.loc[:, column + '_Δ'] = (df.loc[:, column] - df.loc[:, column + '_average']) / df.loc[:, column + '_average']
 

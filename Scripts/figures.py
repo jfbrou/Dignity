@@ -45,10 +45,10 @@ cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
 cex = cex.loc[cex.year.isin(range(1984, 2019 + 1)), :]
 
 # Normalize consumption by that of the reference group
-cex.loc[:, 'consumption'] = cex.consumption / weighted_average(cex.loc[(cex.year == 2019) & (cex.race == 1), 'consumption'], data=cex, weights='weight')
+cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[(cex.year == 2019) & (cex.race == 1), 'consumption'], weights=cex.loc[(cex.year == 2019) & (cex.race == 1), 'weight'])
 
 # Calculate the logarithm of average consumption by year and race
-df = cex.groupby(['year', 'race'], as_index=False).agg({'consumption': lambda x: np.log(weighted_average(x, data=cex, weights='weight'))})
+df = cex.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption': np.average(x.consumption, weights=x.weight)}))
 
 # Load the bootstrapped CEX data and calculate the 95% confidence interval
 cex_bs = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap_simple.csv'))
@@ -97,12 +97,12 @@ cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
 cex = cex.loc[cex.year.isin(range(1984, 2019 + 1)), :]
 
 # Normalize consumption by that of the reference group
-cex.loc[:, 'consumption'] = cex.consumption / weighted_average(cex.loc[(cex.year == 2019) & (cex.race == 1), 'consumption'], data=cex, weights='weight')
-cex.loc[:, 'consumption_nipa'] = cex.consumption_nipa / weighted_average(cex.loc[(cex.year == 2019) & (cex.race == 1), 'consumption_nipa'], data=cex, weights='weight')
+cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[(cex.year == 2019) & (cex.race == 1), 'consumption'], weights=cex.loc[(cex.year == 2019) & (cex.race == 1), 'weight'])
+cex.loc[:, 'consumption_nipa'] = cex.consumption_nipa / np.average(cex.loc[(cex.year == 2019) & (cex.race == 1), 'consumption_nipa'], weights=cex.loc[(cex.year == 2019) & (cex.race == 1), 'weight'])
 
 # Calculate the logarithm of average consumption by year and race
-df = cex.groupby(['year', 'race'], as_index=False).agg({'consumption':      lambda x: np.log(weighted_average(x, data=cex, weights='weight')),
-                                                        'consumption_nipa': lambda x: np.log(weighted_average(x, data=cex, weights='weight'))})
+df = cex.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption':      np.log(np.average(x.consumption, weights=x.weight)),
+                                                                              'consumption_nipa': np.log(np.average(x.consumption_nipa, weights=x.weight))}))
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
@@ -147,10 +147,10 @@ cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
 cex = cex.loc[cex.year.isin(range(1984, 2019 + 1)), :]
 
 # Normalize consumption by that of the reference group
-cex.loc[:, 'consumption_nd'] = cex.consumption_nd / weighted_average(cex.loc[cex.year == 2019, 'consumption_nd'], data=cex, weights='weight')
+cex.loc[:, 'consumption_nd'] = cex.consumption_nd / np.average(cex.loc[cex.year == 2019, 'consumption_nd'], weights=cex.loc[cex.year == 2019, 'weight'])
 
 # Calculate the standard deviation of log consumption by year and race
-df = cex.groupby(['year', 'race'], as_index=False).agg({'consumption_nd': lambda x: weighted_sd(np.log(x), data=cex, weights='weight')})
+df = cex.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption_nd': np.sqrt(np.average((np.log(x.consumption_nd) - np.average(np.log(x.consumption_nd), weights=x.weight))**2, weights=x.weight))}))
 
 # Load the bootstrapped CEX data and calculate the 95% confidence interval
 cex_bs = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap_simple.csv'))
@@ -196,10 +196,10 @@ acs = pd.read_csv(os.path.join(acs_f_data, 'acs.csv'))
 acs = acs.loc[acs.year <= 2019, :]
 
 # Normalize consumption by that of the reference group
-acs.loc[:, 'consumption'] = acs.consumption / weighted_average(acs.loc[(acs.year == 2019) & (acs.race == 1), 'consumption'], data=acs, weights='weight')
+acs.loc[:, 'consumption'] = acs.consumption / np.average(acs.loc[(acs.year == 2019) & (acs.race == 1), 'consumption'], weights=acs.loc[(acs.year == 2019) & (acs.race == 1), 'weight'])
 
 # Calculate the logarithm of average consumption by year and race
-df = acs.groupby(['year', 'race'], as_index=False).agg({'consumption': lambda x: np.log(weighted_average(x, data=acs, weights='weight'))})
+df = acs.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption': np.log(np.average(x.consumption, weights=x.weight))}))
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
@@ -242,11 +242,11 @@ cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
 cex = cex.loc[cex.year.isin(range(2006, 2019 + 1)), :]
 
 # Normalize consumption by that of the reference group
-cex.loc[:, 'consumption'] = cex.consumption / weighted_average(cex.loc[(cex.year == 2019) & (cex.race == 1) & (cex.latin == 0), 'consumption'], data=cex, weights='weight')
+cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[(cex.year == 2019) & (cex.race == 1) & (cex.latin == 0), 'consumption'], weights=cex.loc[(cex.year == 2019) & (cex.race == 1) & (cex.latin == 0), 'weight'])
 
 # Calculate the logarithm of average consumption by year and race
-df = cex.groupby(['year', 'race', 'latin'], as_index=False).agg({'consumption': lambda x: np.log(weighted_average(x, data=cex, weights='weight'))})
-dflatin = cex.groupby(['year', 'latin'], as_index=False).agg({'consumption': lambda x: np.log(weighted_average(x, data=cex, weights='weight'))})
+df = cex.groupby(['year', 'race', 'latin'], as_index=False).apply(lambda x: pd.Series({'consumption': np.log(np.average(x.consumption, weights=x.weight))}))
+df_latin = cex.groupby(['year', 'latin'], as_index=False).apply(lambda x: pd.Series({'consumption': np.log(np.average(x.consumption, weights=x.weight))}))
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
@@ -256,7 +256,7 @@ ax.plot(range(2006, 2019 + 1), df.loc[(df.race == 1) & (df.latin == 0), 'consump
 ax.annotate('White non-Latinx', xy=(2007, np.log(0.89)), color='k', fontsize=12, va='center', annotation_clip=False)
 ax.plot(range(2006, 2019 + 1), df.loc[(df.race == 2) & (df.latin == 0), 'consumption'], color=colors[1], linewidth=2.5)
 ax.annotate('Black non-Latinx', xy=(2015.5, np.log(0.68)), color='k', fontsize=12, va='center', annotation_clip=False)
-ax.plot(range(2006, 2019 + 1), dflatin.loc[dflatin.latin == 1, 'consumption'], color=colors[2], linewidth=2.5)
+ax.plot(range(2006, 2019 + 1), df_latin.loc[df_latin.latin == 1, 'consumption'], color=colors[2], linewidth=2.5)
 ax.annotate('Latinx', xy=(2017.75, np.log(0.575)), color='k', fontsize=12, va='center', annotation_clip=False)
 
 # Set the horizontal axis
@@ -295,12 +295,12 @@ cex = cex.loc[cex.year.isin(range(1984, 2019 + 1)), :]
 cex = cex.loc[cex.year >= 1990, :]
 
 # Normalize consumption in the ACS and CEX by that of the reference group
-acs.loc[:, 'consumption'] = acs.consumption / weighted_average(acs.loc[(acs.year == 2019) & (acs.race == 1), 'consumption'], data=acs, weights='weight')
-cex.loc[:, 'consumption'] = cex.consumption / weighted_average(cex.loc[(cex.year == 2019) & (cex.race == 1), 'consumption'], data=cex, weights='weight')
+acs.loc[:, 'consumption'] = acs.consumption / np.average(acs.loc[(acs.year == 2019) & (acs.race == 1), 'consumption'], weights=acs.loc[(acs.year == 2019) & (acs.race == 1), 'weight'])
+cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[(cex.year == 2019) & (cex.race == 1), 'consumption'], weights=acs.loc[(acs.year == 2019) & (acs.race == 1), 'weight'])
 
 # Calculate the logarithm of average consumption by year and race in the ACS and CEX
-acs = acs.groupby(['year', 'race'], as_index=False).agg({'consumption': lambda x: np.log(weighted_average(x, data=acs, weights='weight'))})
-cex = cex.groupby(['year', 'race'], as_index=False).agg({'consumption': lambda x: np.log(weighted_average(x, data=cex, weights='weight'))})
+acs = acs.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption': np.log(np.average(x.consumption, weights=x.weight))}))
+cex = cex.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption': np.log(np.average(x.consumption, weights=x.weight))}))
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
@@ -390,7 +390,7 @@ cps = cps.loc[cps.year.isin(range(1985, 2020 + 1)), :]
 cps.loc[:, 'year'] = cps.year - 1
 
 # Calculate average leisure by year and race
-df = cps.groupby(['year', 'race'], as_index=False).agg({'leisure': lambda x: weighted_average(x, data=cps, weights='weight')})
+df = cps.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'leisure': np.average(x.leisure, weights=x.weight)}))
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
@@ -433,8 +433,8 @@ cps = cps.loc[cps.year.isin(range(2007, 2020 + 1)), :]
 cps.loc[:, 'year'] = cps.year - 1
 
 # Calculate average leisure by year and race
-df = cps.groupby(['year', 'race', 'latin'], as_index=False).agg({'leisure': lambda x: weighted_average(x, data=cps, weights='weight')})
-dflatin = cps.groupby(['year', 'latin'], as_index=False).agg({'leisure': lambda x: weighted_average(x, data=cps, weights='weight')})
+df = cps.groupby(['year', 'race', 'latin'], as_index=False).apply(lambda x: pd.Series({'leisure': np.average(x.leisure, weights=x.weight)}))
+df_latin = cps.groupby(['year', 'latin'], as_index=False).apply(lambda x: pd.Series({'leisure': np.average(x.leisure, weights=x.weight)}))
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
@@ -444,7 +444,7 @@ ax.plot(range(2006, 2019 + 1), 100 * df.loc[(df.race == 1) & (df.latin == 0), 'l
 ax.annotate('White non-Latinx', xy=(2008.5, 83.8), color='k', fontsize=12, va='center', annotation_clip=False)
 ax.plot(range(2006, 2019 + 1), 100 * df.loc[(df.race == 2) & (df.latin == 0), 'leisure'], color=colors[1], linewidth=2.5)
 ax.annotate('Black non-Latinx', xy=(2008.5, 87.3), color='k', fontsize=12, va='center', annotation_clip=False)
-ax.plot(range(2006, 2019 + 1), 100 * dflatin.loc[dflatin.latin == 1, 'leisure'], color=colors[2], linewidth=2.5)
+ax.plot(range(2006, 2019 + 1), 100 * df_latin.loc[df_latin.latin == 1, 'leisure'], color=colors[2], linewidth=2.5)
 ax.annotate('Latinx', xy=(2006.35, 84.5), color='k', fontsize=12, va='center', annotation_clip=False)
 
 # Set the horizontal axis
@@ -479,7 +479,7 @@ cps = cps.loc[cps.year.isin(range(1985, 2020 + 1)), :]
 cps.loc[:, 'year'] = cps.year - 1
 
 # Calculate the standard deviation of leisure by year and race
-df = cps.groupby(['year', 'race'], as_index=False).agg({'leisure': lambda x: weighted_sd(x, data=cps, weights='weight')})
+df = cps.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'leisure': np.sqrt(np.average((x.leisure - np.average(x.leisure, weights=x.weight))**2, weights=x.weight))}))
 
 # Initialize the figure
 fig, ax = plt.subplots()
@@ -685,7 +685,7 @@ plt.close()
 
 # Load the NHIS data and calculate the average HALex by year, race and age
 nhis = pd.read_csv(os.path.join(nhis_f_data, 'nhis.csv'))
-nhis = nhis.loc[nhis.year.isin(range(1997, 2018 + 1)) & nhis.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).agg({'halex': lambda x: weighted_average(x, data=nhis, weights='weight')})
+nhis = nhis.loc[nhis.year.isin(range(1997, 2018 + 1)) & nhis.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
 nhis = pd.merge(expand({'year': nhis.year.unique(), 'race': nhis.race.unique(), 'age': range(101)}), nhis, how='left')
 nhis.loc[:, 'halex'] = nhis.groupby(['year', 'race'], as_index=False).halex.transform(lambda x: filter(x, 100)).values
 nhis.loc[nhis.halex < 0, 'halex'] = 0
@@ -742,7 +742,7 @@ plt.close()
 
 # Load the NHIS data and calculate the average HALex by year, race and age
 nhis = pd.read_csv(os.path.join(nhis_f_data, 'nhis.csv'))
-nhis = nhis.loc[nhis.year.isin(range(1997, 2018 + 1)) & nhis.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).agg({'halex': lambda x: weighted_average(x, data=nhis, weights='weight')})
+nhis = nhis.loc[nhis.year.isin(range(1997, 2018 + 1)) & nhis.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
 nhis = pd.merge(expand({'year': nhis.year.unique(), 'race': nhis.race.unique(), 'age': range(101)}), nhis, how='left')
 nhis.loc[:, 'halex'] = nhis.groupby(['year', 'race'], as_index=False).halex.transform(lambda x: filter(x, 100)).values
 nhis.loc[nhis.halex < 0, 'halex'] = 0
@@ -759,7 +759,7 @@ df.loc[:, 'halex'] = 0.1 + 0.9 * df.halex
 # Average the HALex across ages with the 2018 age distributions by race
 population = pd.read_csv(os.path.join(population_f_data, 'population.csv'))
 df = pd.merge(df, population.loc[(population.year == 2018) & population.race.isin([1, 2]), :].groupby(['race', 'age'], as_index=False).agg({'population': 'sum'}), how='left')
-df = df.groupby(['year', 'race'], as_index=False).agg({'halex': lambda x: weighted_average(x, data=df, weights='population')})
+df = df.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.population)}))
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
@@ -798,7 +798,7 @@ plt.close()
 
 # Load the NHIS data and calculate the average HALex by year, race and age
 nhis = pd.read_csv(os.path.join(nhis_f_data, 'nhis.csv'))
-nhis = nhis.loc[nhis.year.isin(range(1997, 2018 + 1)) & nhis.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).agg({'halex': lambda x: weighted_average(x, data=nhis, weights='weight')})
+nhis = nhis.loc[nhis.year.isin(range(1997, 2018 + 1)) & nhis.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
 nhis = pd.merge(expand({'year': nhis.year.unique(), 'race': nhis.race.unique(), 'age': range(101)}), nhis, how='left')
 nhis.loc[:, 'halex'] = nhis.groupby(['year', 'race'], as_index=False).halex.transform(lambda x: filter(x, 100)).values
 nhis.loc[nhis.halex < 0, 'halex'] = 0
@@ -1032,13 +1032,13 @@ c_nominal = 1e6 * c_nominal / population
 
 # Compute average consumption by year and race
 cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
-cex = cex.loc[cex.year.isin(years) & cex.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).agg({'consumption': lambda x: weighted_average(x, data=cex, weights='weight')})
+cex = cex.loc[cex.year.isin(years) & cex.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption': np.average(x.consumption, weights=x.weight)}))
 cex = cex.groupby('year', as_index=False).agg({'consumption': lambda x: x.iloc[1] / x.iloc[0]})
 
 # Compute average earnings by year and race
 cps = pd.read_csv(os.path.join(cps_f_data, 'cps.csv'))
 cps.loc[:, 'year'] = cps.year - 1
-cps = cps.loc[cps.year.isin(years) & cps.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).agg({'earnings': lambda x: weighted_average(x, data=cps, weights='weight')})
+cps = cps.loc[cps.year.isin(years) & cps.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'earnings': np.average(x.earnings, weights=x.weight)}))
 cps = cps.groupby('year', as_index=False).agg({'earnings': lambda x: x.iloc[1] / x.iloc[0]})
 
 # Compute average wealth by year and race
@@ -1455,8 +1455,8 @@ plt.close()
 
 # Load the NHIS data and calculate the average HALex by year, race and age
 nhis = pd.read_csv(os.path.join(nhis_f_data, 'nhis.csv'))
-nhis_u_bar = nhis.loc[nhis.year == 2006, :].groupby('age', as_index=False).agg({'halex': lambda x: weighted_average(x, data=nhis, weights='weight')})
-nhis = nhis.loc[(nhis.year == 2018) & nhis.race.isin([1, 2]), :].groupby(['race', 'age'], as_index=False).agg({'halex': lambda x: weighted_average(x, data=nhis, weights='weight')})
+nhis_u_bar = nhis.loc[nhis.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
+nhis = nhis.loc[(nhis.year == 2018) & nhis.race.isin([1, 2]), :].groupby(['race', 'age'], as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
 nhis_u_bar = pd.merge(expand({'age': range(101)}), nhis_u_bar, how='left')
 nhis = pd.merge(expand({'race': nhis.race.unique(), 'age': range(101)}), nhis, how='left')
 nhis_u_bar.loc[:, 'halex'] = nhis_u_bar.halex.transform(lambda x: filter(x, 100)).values
@@ -1596,8 +1596,8 @@ years = range(1997, 2018 + 1)
 
 # Load the NHIS data and calculate the average HALex by year, race and age
 nhis = pd.read_csv(os.path.join(nhis_f_data, 'nhis.csv'))
-nhis_u_bar = nhis.loc[nhis.year == 2006, :].groupby('age', as_index=False).agg({'halex': lambda x: weighted_average(x, data=nhis, weights='weight')})
-nhis = nhis.loc[nhis.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).agg({'halex': lambda x: weighted_average(x, data=nhis, weights='weight')})
+nhis_u_bar = nhis.loc[nhis.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
+nhis = nhis.loc[nhis.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
 nhis_u_bar = pd.merge(expand({'age': range(101)}), nhis_u_bar, how='left')
 nhis = pd.merge(expand({'year': years, 'race': nhis.race.unique(), 'age': range(101)}), nhis, how='left')
 nhis_u_bar.loc[:, 'halex'] = nhis_u_bar.halex.transform(lambda x: filter(x, 100)).values
@@ -1701,8 +1701,8 @@ years = range(1997, 2018 + 1)
 
 # Load the NHIS data and calculate the average HALex by year, race and age
 nhis = pd.read_csv(os.path.join(nhis_f_data, 'nhis.csv'))
-nhis_u_bar = nhis.loc[nhis.year == 2006, :].groupby('age', as_index=False).agg({'halex': lambda x: weighted_average(x, data=nhis, weights='weight')})
-nhis = nhis.loc[nhis.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).agg({'halex': lambda x: weighted_average(x, data=nhis, weights='weight')})
+nhis_u_bar = nhis.loc[nhis.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
+nhis = nhis.loc[nhis.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
 nhis_u_bar = pd.merge(expand({'age': range(101)}), nhis_u_bar, how='left')
 nhis = pd.merge(expand({'year': years, 'race': nhis.race.unique(), 'age': range(101)}), nhis, how='left')
 nhis_u_bar.loc[:, 'halex'] = nhis_u_bar.halex.transform(lambda x: filter(x, 100)).values
@@ -1824,12 +1824,12 @@ ncr.loc[:, 'incarceration'] = ncr.incarcerated / ncr.population
 
 # Load the CEX data
 cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
-cex.loc[:, 'consumption'] = cex.consumption / weighted_average(cex.loc[cex.year == 2019, 'consumption'], data=cex, weights='weight')
+cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[cex.year == 2019, 'consumption'], cex.loc[cex.year == 2019, 'weight'])
 cex = cex.loc[cex.year.isin([2006, 2019]) & (cex.education == 1), :]
 
 # Calculate CEX consumption statistics by age for individuals with a high school education or less
-cex_u_bar = cex.loc[cex.year == 2006, :].groupby('age', as_index=False).agg({'consumption': lambda x: weighted_average(x, data=cex.loc[cex.year == 2006, :], weights='weight')}).rename(columns={'consumption': 'c_u_barᴵ'})
-cex = cex.loc[cex.year == 2019, :].groupby('age', as_index=False).agg({'consumption': lambda x: weighted_average(np.log(x), data=cex.loc[cex.year == 2019, :], weights='weight')}).rename(columns={'consumption': 'Elog_of_cᴵ'})
+cex_u_bar = cex.loc[cex.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'c_u_barᴵ': np.average(x.consumption, weights=x.weight)}))
+cex = cex.loc[cex.year == 2019, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'Elog_of_cᴵ': np.average(np.log(x.consumption), weights=x.weight)}))
 cex_u_bar = pd.merge(pd.DataFrame({'age': range(101)}), cex_u_bar, how='left')
 cex = pd.merge(pd.DataFrame({'age': range(101)}), cex, how='left')
 cex_u_bar.loc[:, 'c_u_barᴵ'] = filter(cex_u_bar.loc[:, 'c_u_barᴵ'], 1600)
@@ -1841,8 +1841,8 @@ cps = cps.loc[cps.year.isin([2007, 2020]) & (cps.education == 1), :]
 cps.loc[:, 'year'] = cps.year - 1
 
 # Calculate cps leisure statistics by age for individuals with a high school education or less
-cps_u_bar = cps.loc[cps.year == 2006, :].groupby('age', as_index=False).agg({'leisure': lambda x: weighted_average(x, data=cps.loc[cps.year == 2006, :], weights='weight')}).rename(columns={'leisure': 'ℓ_u_barᴵ'})
-cps = cps.loc[cps.year == 2019, :].groupby('age', as_index=False).agg({'leisure': lambda x: weighted_average(v_of_ℓ(x), data=cps.loc[cps.year == 2019, :], weights='weight')}).rename(columns={'leisure': 'Ev_of_ℓᴵ'})
+cps_u_bar = cps.loc[cps.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'ℓ_u_barᴵ': np.average(x.leisure, weights=x.weight)}))
+cps = cps.loc[cps.year == 2019, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'Ev_of_ℓᴵ': np.average(v_of_ℓ(x.leisure), weights=x.weight)}))
 cps_u_bar = pd.merge(pd.DataFrame({'age': range(101)}), cps_u_bar, how='left')
 cps = pd.merge(pd.DataFrame({'age': range(101)}), cps, how='left')
 cps_u_bar.loc[:, 'ℓ_u_barᴵ'] = filter(cps_u_bar.loc[:, 'ℓ_u_barᴵ'], 100)
@@ -1987,12 +1987,12 @@ ncr.loc[:, 'incarceration'] = ncr.incarcerated / ncr.population
 
 # Load the CEX data
 cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
-cex.loc[:, 'consumption'] = cex.consumption / weighted_average(cex.loc[cex.year == 2019, 'consumption'], data=cex, weights='weight')
+cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[cex.year == 2019, 'consumption'], weights=cex.loc[cex.year == 2019, 'weight'])
 cex = cex.loc[cex.year.isin(years) & (cex.education == 1), :]
 
 # Calculate CEX consumption statistics by age for individuals with a high school education or less
-cex_u_bar = cex.loc[cex.year == 2006, :].groupby('age', as_index=False).agg({'consumption': lambda x: weighted_average(x, data=cex.loc[cex.year == 2006, :], weights='weight')}).rename(columns={'consumption': 'c_u_barᴵ'})
-cex = cex.groupby(['year', 'age'], as_index=False).agg({'consumption': lambda x: weighted_average(np.log(x), data=cex, weights='weight')}).rename(columns={'consumption': 'Elog_of_cᴵ'})
+cex_u_bar = cex.loc[cex.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'c_u_barᴵ': np.average(x.consumption, weights=x.weight)}))
+cex = cex.groupby(['year', 'age'], as_index=False).apply(lambda x: pd.Series({'Elog_of_cᴵ': np.average(np.log(x.consumption), weights=x.weight)}))
 cex_u_bar = pd.merge(pd.DataFrame({'age': range(101)}), cex_u_bar, how='left')
 cex = pd.merge(expand({'year': years, 'age': range(101)}), cex, how='left')
 cex_u_bar.loc[:, 'c_u_barᴵ'] = filter(cex_u_bar.loc[:, 'c_u_barᴵ'], 1600)
@@ -2004,8 +2004,8 @@ cps = cps.loc[cps.year.isin(range(2007, 2020 + 1)) & (cps.education == 1), :]
 cps.loc[:, 'year'] = cps.year - 1
 
 # Calculate CPS leisure statistics by age for individuals with a high school education or less
-cps_u_bar = cps.loc[cps.year == 2006, :].groupby('age', as_index=False).agg({'leisure': lambda x: weighted_average(x, data=cps.loc[cps.year == 2006, :], weights='weight')}).rename(columns={'leisure': 'ℓ_u_barᴵ'})
-cps = cps.groupby(['year', 'age'], as_index=False).agg({'leisure': lambda x: weighted_average(v_of_ℓ(x), data=cps, weights='weight')}).rename(columns={'leisure': 'Ev_of_ℓᴵ'})
+cps_u_bar = cps.loc[cps.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'ℓ_u_barᴵ': np.average(x.leisure, weights=x.weight)}))
+cps = cps.groupby(['year', 'age'], as_index=False).apply(lambda x: pd.Series({'Ev_of_ℓᴵ': np.average(v_of_ℓ(x.leisure), weights=x.weight)}))
 cps_u_bar = pd.merge(pd.DataFrame({'age': range(101)}), cps_u_bar, how='left')
 cps = pd.merge(expand({'year': years, 'age': range(101)}), cps, how='left')
 cps_u_bar.loc[:, 'ℓ_u_barᴵ'] = filter(cps_u_bar.loc[:, 'ℓ_u_barᴵ'], 100)
@@ -2154,8 +2154,8 @@ cps = pd.read_csv(os.path.join(cps_f_data, 'cps.csv'))
 
 # Calculate average leisure by year and race
 cps.loc[:, 'adjusted_weekly_leisure'] = cps.weekly_leisure - cps.Δ_leisure
-df = cps.loc[cps.year.isin(range(1984, 2019 + 1)), :].groupby(['year', 'race'], as_index=False).agg({'leisure':                 lambda x: weighted_average(x, data=cps, weights='weight'),
-                                                                                                     'adjusted_weekly_leisure': lambda x: weighted_average(x, data=cps, weights='weight')})
+df = cps.loc[cps.year.isin(range(1984, 2019 + 1)), :].groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'leisure':                 np.average(x.leisure, weights=x.weight),
+                                                                                                                           'adjusted_weekly_leisure': np.average(x.adjusted_weekly_leisure, weights=x.weight)}))
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
@@ -2210,9 +2210,9 @@ df = pd.DataFrame({'parameter': np.linspace(0, 1, 101)})
 df.loc[:, 'logλ'] = np.nan
 
 # Calculate the consumption-equivalent welfare of Black relative to White Americans without the unemployment adjustment
-df_cps = pd.merge(cps.groupby(['race', 'age'], as_index=False).agg({'weekly_leisure': lambda x: weighted_average(v_of_ℓ(x), data=cps, weights='weight')}).rename(columns={'weekly_leisure': 'Ev_of_ℓ'}),
-                  cps.groupby(['race', 'age'], as_index=False).agg({'weekly_leisure': lambda x: weighted_average(x, data=cps, weights='weight')}).rename(columns={'weekly_leisure': 'ℓ_bar'}), how='left')
-df_cps_u_bar = cps.groupby('age', as_index=False).agg({'weekly_leisure': lambda x: weighted_average(x, data=cps, weights='weight')}).rename(columns={'weekly_leisure': 'ℓ_bar'})
+df_cps = cps.groupby(['race', 'age'], as_index=False).apply(lambda x: pd.Series({'Ev_of_ℓ': np.average(v_of_ℓ(x.weekly_leisure), weights=x.weight),
+                                                                                 'ℓ_bar':   np.average(x.weekly_leisure, weights=x.weight)}))
+df_cps_u_bar = cps.groupby('age', as_index=False).apply(lambda x: pd.Series({'ℓ_bar': np.average(x.weekly_leisure, weights=x.weight)}))
 df_cps = pd.merge(expand({'race': [1, 2], 'age': range(101)}), df_cps, how='left')
 df_cps_u_bar = pd.merge(pd.DataFrame({'age': range(101)}), df_cps_u_bar, how='left')
 df_cps.loc[:, ['Ev_of_ℓ', 'ℓ_bar']] = df_cps.groupby('race', as_index=False)[['Ev_of_ℓ', 'ℓ_bar']].transform(lambda x: filter(x, 100)).values
@@ -2245,9 +2245,9 @@ logλ = np.sum([d.get(x) for x in ['LE', 'C', 'CI', 'L']])
 # Calculate the consumption-equivalent welfare of Black relative to White Americans with the unemployment adjustment
 for i in np.linspace(0, 1, 101):
     cps.loc[:, 'adjusted_leisure'] = cps.weekly_leisure - (1 - i) * cps.Δ_leisure
-    df_cps = pd.merge(cps.groupby(['race', 'age'], as_index=False).agg({'adjusted_leisure': lambda x: weighted_average(v_of_ℓ(x), data=cps, weights='weight')}).rename(columns={'adjusted_leisure': 'Ev_of_ℓ'}),
-                      cps.groupby(['race', 'age'], as_index=False).agg({'adjusted_leisure': lambda x: weighted_average(x, data=cps, weights='weight')}).rename(columns={'adjusted_leisure': 'ℓ_bar'}), how='left')
-    df_cps_u_bar = cps.groupby('age', as_index=False).agg({'weekly_leisure': lambda x: weighted_average(x, data=cps, weights='weight')}).rename(columns={'weekly_leisure': 'ℓ_bar'})
+    df_cps = cps.groupby(['race', 'age'], as_index=False).apply(lambda x: pd.Series({'Ev_of_ℓ': np.average(v_of_ℓ(x.adjusted_leisure), weights=x.weight),
+                                                                                     'ℓ_bar':   np.average(x.adjusted_leisure, weights=x.weight)}))
+    df_cps_u_bar = cps.groupby('age', as_index=False).apply(lambda x: pd.Series({'ℓ_bar': np.average(x.weekly_leisure, weights=x.weight)}))
     df_cps = pd.merge(expand({'race': [1, 2], 'age': range(101)}), df_cps, how='left')
     df_cps_u_bar = pd.merge(pd.DataFrame({'age': range(101)}), df_cps_u_bar, how='left')
     df_cps.loc[:, ['Ev_of_ℓ', 'ℓ_bar']] = df_cps.groupby('race', as_index=False)[['Ev_of_ℓ', 'ℓ_bar']].transform(lambda x: filter(x, 100)).values
@@ -2610,12 +2610,12 @@ years = range(1991, 2019 + 1)
 
 # Compute average consumption by year and race
 cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
-cex = cex.loc[cex.year.isin(years) & cex.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).agg({'consumption': lambda x: weighted_average(x, data=cex, weights='weight')})
+cex = cex.loc[cex.year.isin(years) & cex.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption': np.average(x.consumption, weights=x.weight)}))
 
 # Compute average earnings by year and race
 cps = pd.read_csv(os.path.join(cps_f_data, 'cps.csv'))
 cps.loc[:, 'year'] = cps.year - 1
-cps = cps.loc[cps.year.isin(years) & cps.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).agg({'income': lambda x: weighted_average(x, data=cps, weights='weight')})
+cps = cps.loc[cps.year.isin(years) & cps.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'income': np.average(x.income, weights=x.weight)}))
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))

@@ -295,16 +295,16 @@ cps.loc[:, 'income'] = cps.income / cps.FAMSIZE
 cps = cps.drop('FAMSIZE', axis=1)
 
 # Rescale earnings such that it aggregates to the NIPA personal earnings
-cps = pd.merge(cps, cps.groupby('YEAR', as_index=False).agg({'earnings': lambda x: weighted_average(x, data=cps, weights='ASECWT')}).rename(columns={'earnings': 'earnings_μ'}), how='left')
+cps = pd.merge(cps, cps.groupby('YEAR', as_index=False).apply(lambda x: pd.Series({'earnings_average': np.average(x.earnings, weights=x.ASECWT)})), how='left')
 cps = pd.merge(cps, pd.DataFrame({'YEAR': years, 'earnings_per_capita': earnings_per_capita}), how='left')
-cps.loc[:, 'earnings'] = cps.earnings_per_capita + cps.earnings_per_capita * (cps.earnings - cps.earnings_μ) / cps.earnings_μ
-cps = cps.drop(['earnings_μ', 'earnings_per_capita'], axis=1)
+cps.loc[:, 'earnings'] = cps.earnings_per_capita + cps.earnings_per_capita * (cps.earnings - cps.earnings_average) / cps.earnings_average
+cps = cps.drop(['earnings_average', 'earnings_per_capita'], axis=1)
 
 # Rescale income such that it aggregates to the NIPA personal income
-cps = pd.merge(cps, cps.groupby('YEAR', as_index=False).agg({'income': lambda x: weighted_average(x, data=cps, weights='ASECWT')}).rename(columns={'income': 'income_μ'}), how='left')
+cps = pd.merge(cps, cps.groupby('YEAR', as_index=False).apply(lambda x: pd.Series({'income_average': np.average(x.income, weights=x.ASECWT)})), how='left')
 cps = pd.merge(cps, pd.DataFrame({'YEAR': years, 'income_per_capita': income_per_capita}), how='left')
-cps.loc[:, 'income'] = cps.income_per_capita + cps.income_per_capita * (cps.income - cps.income_μ) / cps.income_μ
-cps = cps.drop(['income_μ', 'income_per_capita'], axis=1)
+cps.loc[:, 'income'] = cps.income_per_capita + cps.income_per_capita * (cps.income - cps.income_average) / cps.income_average
+cps = cps.drop(['income_average', 'income_per_capita'], axis=1)
 cps.loc[cps.YEAR <= 1991, 'income'] = np.nan
 
 # Recode the hours worked per week variables
@@ -337,7 +337,7 @@ cps = cps.drop(['EMPSTAT', 'WKSTAT', 'WANTJOB'], axis=1)
 cps.loc[:, 'LABFORCE'] = cps.LABFORCE.map({0: np.nan, 1: 0, 2: 1})
 
 # Calculate average leisure for the employed
-cps = pd.merge(cps, cps.loc[cps.status == 'employed', :].groupby(['YEAR', 'RACE', 'HISPAN'], as_index=False).agg({'weekly_leisure': lambda x: weighted_average(x, data=cps, weights='ASECWT')}).rename(columns={'weekly_leisure': 'employed_leisure'}))
+cps = pd.merge(cps, cps.loc[cps.status == 'employed', :].groupby(['YEAR', 'RACE', 'HISPAN'], as_index=False).apply(lambda x: pd.Series({'employed_leisure': np.average(x.weekly_leisure, weights=x.ASECWT)})), how='left')
 
 # Calculate the leisure difference for the unemployed
 cps.loc[cps.status == 'unemployed', 'Δ_leisure'] = cps.weekly_leisure - cps.employed_leisure

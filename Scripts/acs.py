@@ -347,19 +347,19 @@ for chunk in chunks:
 	chunk = pd.concat([chunk, pd.get_dummies(chunk.EDUC.astype('int'), prefix='education')], axis=1)
 
 	# Calculate the percentage deviation of each imputation variable from their average
-	chunk.loc[:, 'earnings_Δ'] = (chunk.earnings - weighted_average(chunk.earnings, data=chunk, weights='PERWT')) / weighted_average(chunk.earnings, data=chunk, weights='PERWT')
-	chunk.loc[:, 'race_1_Δ'] = (chunk.race_1 - weighted_average(chunk.race_1, data=chunk, weights='PERWT')) / weighted_average(chunk.race_1, data=chunk, weights='PERWT')
-	chunk.loc[:, 'race_2_Δ'] = (chunk.race_2 - weighted_average(chunk.race_2, data=chunk, weights='PERWT')) / weighted_average(chunk.race_2, data=chunk, weights='PERWT')
-	chunk.loc[:, 'race_3_Δ'] = (chunk.race_3 - weighted_average(chunk.race_3, data=chunk, weights='PERWT')) / weighted_average(chunk.race_3, data=chunk, weights='PERWT')
-	chunk.loc[:, 'race_4_Δ'] = (chunk.race_4 - weighted_average(chunk.race_4, data=chunk, weights='PERWT')) / weighted_average(chunk.race_4, data=chunk, weights='PERWT')
-	chunk.loc[:, 'education_1_Δ'] = (chunk.education_1 - weighted_average(chunk.education_1, data=chunk, weights='PERWT')) / weighted_average(chunk.education_1, data=chunk, weights='PERWT')
-	chunk.loc[:, 'education_2_Δ'] = (chunk.education_2 - weighted_average(chunk.education_2, data=chunk, weights='PERWT')) / weighted_average(chunk.education_2, data=chunk, weights='PERWT')
-	chunk.loc[:, 'education_3_Δ'] = (chunk.education_3 - weighted_average(chunk.education_3, data=chunk, weights='PERWT')) / weighted_average(chunk.education_3, data=chunk, weights='PERWT')
-	chunk.loc[:, 'education_4_Δ'] = (chunk.education_4 - weighted_average(chunk.education_4, data=chunk, weights='PERWT')) / weighted_average(chunk.education_4, data=chunk, weights='PERWT')
-	chunk.loc[:, 'family_size_Δ'] = (chunk.FAMSIZE - weighted_average(chunk.FAMSIZE, data=chunk, weights='PERWT')) / weighted_average(chunk.FAMSIZE, data=chunk, weights='PERWT')
-	chunk.loc[:, 'latin_Δ'] = (chunk.HISPAN - weighted_average(chunk.HISPAN, data=chunk, weights='PERWT')) / weighted_average(chunk.HISPAN, data=chunk, weights='PERWT')
-	chunk.loc[:, 'gender_Δ'] = (chunk.SEX.map({1: 1, 2: 0}) - weighted_average(chunk.SEX.map({1: 1, 2: 0}), data=chunk, weights='PERWT')) / weighted_average(chunk.SEX.map({1: 1, 2: 0}), data=chunk, weights='PERWT')
-	chunk.loc[:, 'age_Δ'] = (chunk.AGE - weighted_average(chunk.AGE, data=chunk, weights='PERWT')) / weighted_average(chunk.AGE, data=chunk, weights='PERWT')
+	chunk.loc[:, 'earnings_Δ'] = (chunk.earnings - np.average(chunk.earnings, weights=chunk.PERWT)) / np.average(chunk.earnings, weights=chunk.PERWT)
+	chunk.loc[:, 'race_1_Δ'] = (chunk.race_1 - np.average(chunk.race_1, weights=chunk.PERWT)) / np.average(chunk.race_1, weights=chunk.PERWT)
+	chunk.loc[:, 'race_2_Δ'] = (chunk.race_2 - np.average(chunk.race_2, weights=chunk.PERWT)) / np.average(chunk.race_2, weights=chunk.PERWT)
+	chunk.loc[:, 'race_3_Δ'] = (chunk.race_3 - np.average(chunk.race_3, weights=chunk.PERWT)) / np.average(chunk.race_3, weights=chunk.PERWT)
+	chunk.loc[:, 'race_4_Δ'] = (chunk.race_4 - np.average(chunk.race_4, weights=chunk.PERWT)) / np.average(chunk.race_4, weights=chunk.PERWT)
+	chunk.loc[:, 'education_1_Δ'] = (chunk.education_1 - np.average(chunk.education_1, weights=chunk.PERWT)) / np.average(chunk.education_1, weights=chunk.PERWT)
+	chunk.loc[:, 'education_2_Δ'] = (chunk.education_2 - np.average(chunk.education_2, weights=chunk.PERWT)) / np.average(chunk.education_2, weights=chunk.PERWT)
+	chunk.loc[:, 'education_3_Δ'] = (chunk.education_3 - np.average(chunk.education_3, weights=chunk.PERWT)) / np.average(chunk.education_3, weights=chunk.PERWT)
+	chunk.loc[:, 'education_4_Δ'] = (chunk.education_4 - np.average(chunk.education_4, weights=chunk.PERWT)) / np.average(chunk.education_4, weights=chunk.PERWT)
+	chunk.loc[:, 'family_size_Δ'] = (chunk.FAMSIZE - np.average(chunk.FAMSIZE, weights=chunk.PERWT)) / np.average(chunk.FAMSIZE, weights=chunk.PERWT)
+	chunk.loc[:, 'latin_Δ'] = (chunk.HISPAN - np.average(chunk.HISPAN, weights=chunk.PERWT)) / np.average(chunk.HISPAN, weights=chunk.PERWT)
+	chunk.loc[:, 'gender_Δ'] = (chunk.SEX.map({1: 1, 2: 0}) - np.average(chunk.SEX.map({1: 1, 2: 0}), weights=chunk.PERWT)) / np.average(chunk.SEX.map({1: 1, 2: 0}), weights=chunk.PERWT)
+	chunk.loc[:, 'age_Δ'] = (chunk.AGE - np.average(chunk.AGE, weights=chunk.PERWT)) / np.average(chunk.AGE, weights=chunk.PERWT)
 
 	# Impute consumption
 	if int(chunk.YEAR.unique()) == 1940:
@@ -372,7 +372,7 @@ for chunk in chunks:
 	chunk = pd.merge(chunk, BEA, how='left')
 
 	# Re-scale personal earnings and consumption expenditures such that it aggregates to the NIPA values
-	chunk.loc[:, 'earnings'] = chunk.earnings_nipa + chunk.earnings_nipa * (chunk.earnings - weighted_average(chunk.earnings, data=chunk, weights='PERWT')) / weighted_average(chunk.earnings, data=chunk, weights='PERWT')
+	chunk.loc[:, 'earnings'] = chunk.earnings_nipa + chunk.earnings_nipa * (chunk.earnings - np.average(chunk.earnings, weights=chunk.PERWT)) / np.average(chunk.earnings, weights=chunk.PERWT)
 	chunk.loc[chunk.missing_earnings == True, 'earnings'] = np.nan
 	chunk.loc[:, 'consumption'] = chunk.consumption_nipa + chunk.consumption_nipa * chunk.consumption
 	chunk = chunk.drop(['earnings_nipa', 'consumption_nipa'], axis=1)
@@ -421,9 +421,9 @@ acs = acs.drop('SLWT', axis=1)
 
 # Calculate the ratio of the average of the first leisure variable to the average of the other leisure variables in 1980 and 1990
 sample = ((acs.YEAR == 1980) | (acs.YEAR == 1990))
-scale_2 = weighted_average(acs.loc[sample, 'leisure_1'], data=acs.loc[sample, :], weights='leisure_weight') / weighted_average(acs.loc[sample, 'leisure_2'], data=acs.loc[sample, :], weights='leisure_weight')
-scale_3 = weighted_average(acs.loc[sample, 'leisure_1'], data=acs.loc[sample, :], weights='leisure_weight') / weighted_average(acs.loc[sample, 'leisure_3'], data=acs.loc[sample, :], weights='leisure_weight')
-scale_4 = weighted_average(acs.loc[sample, 'leisure_1'], data=acs.loc[sample, :], weights='leisure_weight') / weighted_average(acs.loc[sample, 'leisure_4'], data=acs.loc[sample, :], weights='leisure_weight')
+scale_2 = np.average(acs.loc[sample, 'leisure_1'], weights=acs.loc[sample, 'leisure_weight']) / np.average(acs.loc[sample, 'leisure_2'], weights=acs.loc[sample, 'leisure_weight'])
+scale_3 = np.average(acs.loc[sample, 'leisure_1'], weights=acs.loc[sample, 'leisure_weight']) / np.average(acs.loc[sample, 'leisure_3'], weights=acs.loc[sample, 'leisure_weight'])
+scale_4 = np.average(acs.loc[sample, 'leisure_1'], weights=acs.loc[sample, 'leisure_weight']) / np.average(acs.loc[sample, 'leisure_4'], weights=acs.loc[sample, 'leisure_weight'])
 
 # Rescale the leisure variables
 acs.loc[:, 'leisure_2'] = scale_2 * acs.leisure_2
@@ -438,24 +438,23 @@ acs.loc[acs.leisure_1.isna() & acs.leisure_2.isna() & acs.leisure_3.isna() & acs
 acs = acs.drop(['leisure_1', 'leisure_2', 'leisure_3', 'leisure_4'], axis=1)
 
 # Create a data frame with all levels of all variables
-df = expand({'YEAR':      acs.YEAR.unique(),
-			 'RACE':      acs.RACE.unique(),
-			 'HISPAN':    acs.HISPAN.unique(),
-			 'SEX':       acs.SEX.unique(),
-			 'EDUC':      acs.EDUC.unique(),
-			 'AGE':       acs.AGE.unique()})
+df = expand({'YEAR':   acs.YEAR.unique(),
+			 'RACE':   acs.RACE.unique(),
+			 'HISPAN': acs.HISPAN.unique(),
+			 'SEX':    acs.SEX.unique(),
+			 'EDUC':   acs.EDUC.unique(),
+			 'AGE':    acs.AGE.unique()})
 
 # Calculate weighted averages of each variable
-acs = acs.groupby(['YEAR',
-				   'RACE',
-				   'HISPAN',
-				   'SEX',
-				   'EDUC',
-				   'AGE'], as_index=False).agg({'leisure':        lambda x: weighted_average(x, data=acs, weights='leisure_weight'),
-				   								'consumption':    lambda x: weighted_average(x, data=acs, weights='PERWT'),
-												'earnings':       lambda x: weighted_average(x, data=acs, weights='PERWT'),
-												'leisure_weight': 'sum',
-												'PERWT':          'sum'})
+def f(x):
+    d = {}
+    d['leisure'] = np.average(x.leisure, weights=x.leisure_weight)
+    d['consumption'] = np.average(x.consumption, weights=x.PERWT)
+    d['earnings'] = np.average(x.earnings, weights=x.PERWT)
+    d['leisure_weight'] = np.sum(x.leisure_weight)
+    d['PERWT'] = np.sum(x.PERWT)
+    return pd.Series(d, index=[key for key, value in d.items()])
+acs = acs.groupby(['YEAR', 'RACE', 'HISPAN', 'SEX', 'EDUC', 'AGE'], as_index=False).apply(f)
 
 # Merge the data frames
 acs = pd.merge(df, acs, how='left')
@@ -475,16 +474,16 @@ acs = acs.rename(columns={'YEAR':   'year',
 						  'PERWT':  'weight'})
 
 # Define the variable types
-acs = acs.astype({'year':          'int',
-				  'gender':        'int',
-				  'race':          'int',
-				  'latin':         'int',
-				  'education':     'float',
-				  'age':           'int',
-				  'leisure':       'float',
-				  'consumption':   'float',
-				  'earnings':      'float',
-				  'weight':        'float',
+acs = acs.astype({'year':           'int',
+				  'gender':         'int',
+				  'race':           'int',
+				  'latin':          'int',
+				  'education':      'float',
+				  'age':            'int',
+				  'leisure':        'float',
+				  'consumption':    'float',
+				  'earnings':       'float',
+				  'weight':         'float',
 				  'leisure_weight': 'float'})
 
 # Save the data
