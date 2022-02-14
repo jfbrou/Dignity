@@ -61,7 +61,7 @@ def bootstrap_statistics(b):
         return pd.Series(d, index=[key for key, value in d.items()])
     def f_cex_simple(x):
         d = {}
-        d['consumption_average'] = np.log(np.average(x.consumtpion))
+        d['consumption_average'] = np.log(np.average(x.consumption))
         d['consumption_sd'] = np.std(np.log(x.consumption_nd))
         return pd.Series(d, index=[key for key, value in d.items()])
 
