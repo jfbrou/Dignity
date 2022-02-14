@@ -68,12 +68,6 @@ def bootstrap_statistics(b):
     # Define a list of column names
     columns = ['Elog_of_c', 'Elog_of_c_nd', 'c_bar', 'c_bar_nd']
 
-    # Calculate CEX consumption statistics by year and age in the current bootstrap sample
-    df = df_cex.groupby(['year', 'age'], as_index=False).apply(f_cex)
-    df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [-1], 'latin': [-1], 'bootstrap': [b]}), df, how='left')
-    df.loc[:, columns] = df.groupby('year', as_index=False)[columns].transform(lambda x: filter(x, 1600)).values
-    df_consumption = df_consumption.append(df, ignore_index=True)
-
     # Calculate CEX consumption statistics by year, race and age in the current bootstrap sample
     df = df_cex.loc[df_cex.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(f_cex)
     df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'latin': [-1], 'bootstrap': [b]}), df, how='left')
@@ -118,14 +112,6 @@ def bootstrap_statistics(b):
         d['leisure_average'] = np.average(x.leisure)
         d['leisure_sd'] = np.std(x.leisure)
         return pd.Series(d, index=[key for key, value in d.items()])
-
-    # Calculate CPS leisure statistics by year and age in the current bootstrap sample
-    df = df_cps.groupby(['year', 'age'], as_index=False).apply(f_cps)
-    df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [-1], 'latin': [-1], 'bootstrap': [b]}), df, how='left')
-    df.loc[:, ['Ev_of_ℓ', 'ℓ_bar']] = df.groupby('year', as_index=False)[['Ev_of_ℓ', 'ℓ_bar']].transform(lambda x: filter(x, 100)).values
-    df.loc[df.loc[:, 'Ev_of_ℓ'] > 0, 'Ev_of_ℓ'] = 0
-    df.loc[df.loc[:, 'ℓ_bar'] > 1, 'ℓ_bar'] = 1
-    df_leisure = df_leisure.append(df, ignore_index=True)
 
     # Calculate CPS leisure statistics by year, race and age in the current bootstrap sample
     df = df_cps.loc[df_cps.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(f_cps)
