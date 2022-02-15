@@ -46,7 +46,7 @@ def bootstrap_statistics(b):
         df_cps = df_cps.append(cps.loc[cps.year == year, :].sample(n=cps.loc[cps.year == year, :].shape[0], replace=True, weights='weight', random_state=b), ignore_index=True)
 
     # Normalize consumption in the CEX data
-    df_cex_simple = df_cex
+    df_cex_simple = df_cex.copy()
     for column in ['consumption', 'consumption_nd']:
         df_cex_simple.loc[:, column] = df_cex_simple.loc[:, column] / np.average(df_cex_simple.loc[(df_cex_simple.year == 2019) & (df_cex_simple.race == 1), column])
         df_cex.loc[:, column] = df_cex.loc[:, column] / np.average(df_cex.loc[df_cex.year == 2019, column])
