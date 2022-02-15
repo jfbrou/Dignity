@@ -32,15 +32,9 @@ cps.loc[:, 'year'] = cps.year - 1
 
 # Define a function to calculate CEX consumption and CPS leisure statistics across bootstrap samples
 def bootstrap_statistics(b):
-    # Instantiate empty data frames
-    df_consumption = pd.DataFrame()
-    df_consumption_simple = pd.DataFrame()
-    df_cex = pd.DataFrame()
-    df_leisure = pd.DataFrame()
-    df_leisure_simple = pd.DataFrame()
-    df_cps = pd.DataFrame()
-
     # Sample from the CEX and CPS data
+    df_cex = pd.DataFrame()
+    df_cps = pd.DataFrame()
     for year in range(1984, 2020 + 1):
         df_cex = df_cex.append(cex.loc[cex.year == year, :].sample(n=cex.loc[cex.year == year, :].shape[0], replace=True, weights='weight', random_state=b), ignore_index=True)
         df_cps = df_cps.append(cps.loc[cps.year == year, :].sample(n=cps.loc[cps.year == year, :].shape[0], replace=True, weights='weight', random_state=b), ignore_index=True)
@@ -65,7 +59,11 @@ def bootstrap_statistics(b):
         d['consumption_sd'] = np.std(np.log(x.consumption_nd))
         return pd.Series(d, index=[key for key, value in d.items()])
 
-    # Define a list of column names
+    # Instantiate empty data frames
+    df_consumption = pd.DataFrame()
+    df_consumption_simple = pd.DataFrame()
+
+    # Define a list of CEX column names
     columns = ['Elog_of_c', 'Elog_of_c_nd', 'c_bar', 'c_bar_nd']
 
     # Calculate CEX consumption statistics by year, race and age in the current bootstrap sample
@@ -101,6 +99,9 @@ def bootstrap_statistics(b):
     df = pd.merge(expand({'year': df.year.unique(), 'race': [1, 2], 'latin': [0], 'bootstrap': [b]}), df, how='left')
     df_consumption_simple = df_consumption_simple.append(df, ignore_index=True)
 
+    # Clear the CEX bootstrap sample from memory
+    del df_cex, df_cex_simple
+
     # Define functions to perform the CEX aggregation
     def f_cps(x):
         d = {}
@@ -112,6 +113,10 @@ def bootstrap_statistics(b):
         d['leisure_average'] = np.average(x.leisure)
         d['leisure_sd'] = np.std(x.leisure)
         return pd.Series(d, index=[key for key, value in d.items()])
+
+    # Instantiate empty data frames
+    df_leisure = pd.DataFrame()
+    df_leisure_simple = pd.DataFrame()
 
     # Calculate CPS leisure statistics by year, race and age in the current bootstrap sample
     df = df_cps.loc[df_cps.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(f_cps)
@@ -152,20 +157,16 @@ def bootstrap_statistics(b):
     df = pd.merge(expand({'year': df.year.unique(), 'race': [1, 2], 'latin': [0], 'bootstrap': [b]}), df, how='left')
     df_leisure_simple = df_leisure_simple.append(df, ignore_index=True)
 
-    # Merge and return the data frames
+    # Clear the CEX bootstrap sample from memory
+    del df_cps
+
+    # Merge and save the data frames
     df = pd.merge(df_consumption, df_leisure, how='left')
+    df.to_csv(os.path.join(data, 'dignity_bootstrap_ ' + str(b) + '.csv'), index=False)
+    del df
     df_simple = pd.merge(df_consumption_simple, df_leisure_simple, how='left')
-    return df, df_simple
+    df_simple.to_csv(os.path.join(data, 'dignity_bootstrap_simple_ ' + str(b) + '.csv'), index=False)
+    del df_simple
 
-# Calculate CEX consumption and CPS leisure statistics across bootstrap samples
-results = Parallel(n_jobs=n_cpu)(delayed(bootstrap_statistics)(b) for b in range(1000))
-df_bootstrap = pd.DataFrame()
-df_bootstrap_simple = pd.DataFrame()
-for result in results:
-    df_bootstrap = df_bootstrap.append(result[0], ignore_index=True)
-    df_bootstrap_simple = df_bootstrap_simple.append(result[1], ignore_index=True)
-del cex, cps
-
-# Save the data frame
-df_bootstrap.to_csv(os.path.join(data, 'dignity_bootstrap.csv'), index=False)
-df_bootstrap_simple.to_csv(os.path.join(data, 'dignity_bootstrap_simple.csv'), index=False)
+# Calculate CEX consumption and CPS leisure statistics across 1000 bootstrap samples
+Parallel(n_jobs=n_cpu)(delayed(bootstrap_statistics)(b) for b in range(1000))
