@@ -48,7 +48,7 @@ cex = cex.loc[cex.year.isin(range(1984, 2019 + 1)), :]
 cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[(cex.year == 2019) & (cex.race == 1), 'consumption'], weights=cex.loc[(cex.year == 2019) & (cex.race == 1), 'weight'])
 
 # Calculate the logarithm of average consumption by year and race
-df = cex.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption': np.average(x.consumption, weights=x.weight)}))
+df = cex.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption': np.log(np.average(x.consumption, weights=x.weight))}))
 
 # Load the bootstrapped CEX data and calculate the 95% confidence interval
 cex_bs = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap_simple.csv'))

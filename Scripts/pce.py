@@ -136,7 +136,7 @@ for year in years:
         df.loc[df.category == 'FDHOME', 'COST'] = df.COST / np.exp(-0.10795)
 
     # Aggregate expenditures, create the year variable and append the data frames for all years
-    dftemp = df.groupby(['NEWID', 'UCC'], as_index=False).agg({'COST': 'sum'})
+    df = df.groupby(['NEWID', 'UCC'], as_index=False).agg({'COST': 'sum'})
     df.loc[:, 'year'] = year
     cex_expenditures = cex_expenditures.append(df, ignore_index=True)
 
@@ -197,7 +197,7 @@ cex = cex.drop(['COST', 'expenditures'], axis=1)
 
 # Merge back with the crosswalk
 cex = pd.merge(cw.loc[:, ['UCC', 'series', 'share']], cex, how='inner')
-cex = cex.groupby(['year', 'UCC'], as_index=False).apply(lambda x: pd.Series({'ratio': np.log(np.average(x.ratio, weights=x.share))}))
+cex = cex.groupby(['year', 'UCC'], as_index=False).apply(lambda x: pd.Series({'ratio': np.average(x.ratio, weights=x.share)}))
 
 # Eliminate ratios of zero or infinity
 cex = cex.loc[(cex.ratio != np.inf) & (cex.ratio != 0), :]

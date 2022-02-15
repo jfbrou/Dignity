@@ -509,13 +509,13 @@ cex_memi = cex_memi.drop('race_weight', axis=1)
 
 # Aggregate variables over interviews in the MEMI data frame
 cex_memi = cex_memi.groupby(['year', 'member_id'], as_index=False).agg({'FINLWT21': 'mean',
-                                                                       'family_id': lambda x: x.iloc[0],
-                                                                       'SEX':       lambda x: x.iloc[0],
-                                                                       'RACE':      lambda x: x.iloc[0],
-                                                                       'HORIGIN':   lambda x: x.iloc[0],
-                                                                       'EDUCA':     lambda x: x.iloc[0],
-                                                                       'AGE':       lambda x: x.iloc[0],
-                                                                       'CU_CODE':   lambda x: x.iloc[0]}).drop('member_id', axis=1)
+                                                                        'family_id': lambda x: x.iloc[0],
+                                                                        'SEX':       lambda x: x.iloc[0],
+                                                                        'RACE':      lambda x: x.iloc[0],
+                                                                        'HORIGIN':   lambda x: x.iloc[0],
+                                                                        'EDUCA':     lambda x: x.iloc[0],
+                                                                        'AGE':       lambda x: x.iloc[0],
+                                                                        'CU_CODE':   lambda x: x.iloc[0]}).drop('member_id', axis=1)
 
 ################################################################################
 #                                                                              #
@@ -585,13 +585,13 @@ for year in years:
         df.loc[df.category == 'FDHOME', 'COST'] = df.COST / np.exp(-0.10795)
 
     # Calculate the average NIPA PCE scaling ratio
-    df_temp = df.groupby(['NEWID', 'UCC'], as_index=False).agg({'COST': 'sum'})
-    df_temp = pd.merge(df_temp, cex_fmli.loc[cex_fmli.year == year, ['NEWID', 'FINLWT21']], how='left')
-    df_temp.loc[:, 'COST'] = df_temp.COST * df_temp.FINLWT21
-    df_temp = df_temp.groupby('UCC', as_index=False).agg({'COST': 'sum'})
-    df_temp = pd.merge(df_temp, nipa.loc[nipa.year == year, ['UCC', 'ratio']], how='inner')
-    df_temp.loc[:, 'COST'] = df_temp.COST / df_temp.COST.sum()
-    ratio_average = np.sum(df_temp.ratio * df_temp.COST)
+    df_nipa = df.groupby(['NEWID', 'UCC'], as_index=False).agg({'COST': 'sum'})
+    df_nipa = pd.merge(df_nipa, cex_fmli.loc[cex_fmli.year == year, ['NEWID', 'FINLWT21']], how='left')
+    df_nipa.loc[:, 'COST'] = df_nipa.COST * df_nipa.FINLWT21
+    df_nipa = df_nipa.groupby('UCC', as_index=False).agg({'COST': 'sum'})
+    df_nipa = pd.merge(df_nipa, nipa.loc[nipa.year == year, ['UCC', 'ratio']], how='inner')
+    df_nipa.loc[:, 'COST'] = df_nipa.COST / df_nipa.COST.sum()
+    ratio_average = np.sum(df_nipa.ratio * df_nipa.COST)
 
     # Merge the expenditures data frame with the NIPA PCE aggregation data and re-scale CEX expenditures
     df = pd.merge(df, nipa.loc[nipa.year == year, ['UCC', 'ratio']], how='left')
@@ -601,15 +601,15 @@ for year in years:
     df.loc[:, 'COST_nipa'] = df.COST / df.ratio
 
     # Aggregate expenditures, create the year variable and append the data frames for all years
-    df_temp = df.groupby('NEWID', as_index=False).agg({'COST': 'sum', 'COST_nipa': 'sum'}).rename(columns={'COST': 'consumption', 'COST_nipa': 'consumption_nipa'})
-    df_temp_nd = df.loc[df.durable == 0, :].groupby('NEWID', as_index=False).agg({'COST': 'sum', 'COST_nipa': 'sum'}).rename(columns={'COST': 'consumption_nd', 'COST_nipa': 'consumption_nipa_nd'})
-    df_temp_nh = df.loc[df.health == 0, :].groupby('NEWID', as_index=False).agg({'COST': 'sum'}).rename(columns={'COST': 'consumption_nh'})
-    df_temp_nh_nd = df.loc[(df.health == 0) & (df.durable == 0), :].groupby('NEWID', as_index=False).agg({'COST': 'sum'}).rename(columns={'COST': 'consumption_nh_nd'})
-    df_temp_rent = df.loc[df.rent == 1, :].groupby('NEWID', as_index=False).agg({'COST': 'sum'}).rename(columns={'COST': 'consumption_rent'})
-    df = pd.merge(df_temp, df_temp_nd, how='outer')
-    df = pd.merge(df, df_temp_nh, how='outer')
-    df = pd.merge(df, df_temp_nh_nd, how='outer')
-    df = pd.merge(df, df_temp_rent, how='outer')
+    df_aggregate = df.groupby('NEWID', as_index=False).agg({'COST': 'sum', 'COST_nipa': 'sum'}).rename(columns={'COST': 'consumption', 'COST_nipa': 'consumption_nipa'})
+    df_aggregate_nd = df.loc[df.durable == 0, :].groupby('NEWID', as_index=False).agg({'COST': 'sum', 'COST_nipa': 'sum'}).rename(columns={'COST': 'consumption_nd', 'COST_nipa': 'consumption_nipa_nd'})
+    df_aggregate_nh = df.loc[df.health == 0, :].groupby('NEWID', as_index=False).agg({'COST': 'sum'}).rename(columns={'COST': 'consumption_nh'})
+    df_aggregate_nh_nd = df.loc[(df.health == 0) & (df.durable == 0), :].groupby('NEWID', as_index=False).agg({'COST': 'sum'}).rename(columns={'COST': 'consumption_nh_nd'})
+    df_aggregate_rent = df.loc[df.rent == 1, :].groupby('NEWID', as_index=False).agg({'COST': 'sum'}).rename(columns={'COST': 'consumption_rent'})
+    df = pd.merge(df_aggregate, df_aggregate_nd, how='outer')
+    df = pd.merge(df, df_aggregate_nh, how='outer')
+    df = pd.merge(df, df_aggregate_nh_nd, how='outer')
+    df = pd.merge(df, df_aggregate_rent, how='outer')
     df.loc[:, 'year'] = year
     cex_expenditures = cex_expenditures.append(df, ignore_index=True)
 
@@ -636,7 +636,7 @@ cex = cex.groupby(['year', 'member_id'], as_index=False).agg({'consumption':    
                                                               'FSALARYX':            'mean',
                                                               'ROOMSQ':              lambda x: x.iloc[0],
                                                               'RESPSTAT':            lambda x: x.iloc[0],
-                                                              'family_id':            lambda x: x.iloc[0],
+                                                              'family_id':           lambda x: x.iloc[0],
                                                               'FAM_SIZE':            lambda x: x.iloc[0],
                                                               'interviews':          lambda x: x.iloc[0],
                                                               'RACE':                lambda x: x.iloc[0]}).drop('member_id', axis=1)
@@ -745,7 +745,7 @@ cex = pd.merge(cex, pd.DataFrame(data={'year':      years,
 cex.loc[:, 'consumption_cex'] = cex.consumption
 cex.loc[:, 'consumption_nipa_cex'] = cex.consumption_nipa
 
-# Define a function to calculate the average log nondurable consumption by year
+# Define a function to calculate the average consumption by year
 def f(x):
     d = {}
     columns = [column for column in x.columns if column.startswith('consumption') and not column.endswith('cex')]
