@@ -10,7 +10,7 @@ from directories import *
 
 # Load the survival rates data
 survival = pd.read_csv(os.path.join(cdc_f_data, 'survival.csv'))
-survival = survival.loc[survival.gender == -1, :]
+survival = survival.loc[survival.gender == -1, :].drop('gender', axis=1)
 
 # Load the CEX data
 cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
@@ -125,68 +125,68 @@ df_leisure = pd.DataFrame()
 # Define a function to perform the CPS aggregation
 def f_cps(x):
     d = {}
-    d['Ev_of_ℓ'] = np.average(v_of_ℓ(x.leisure), weights=x.weight)
-    d['ℓ_bar'] = np.average(x.leisure, weights=x.weight)
+    d['Ev_of_ell'] = np.average(v_of_ell(x.leisure), weights=x.weight)
+    d['ell_bar'] = np.average(x.leisure, weights=x.weight)
     return pd.Series(d, index=[key for key, value in d.items()])
 
 # Calculate CPS leisure statistics by year and age
 df = cps.groupby(['year', 'age'], as_index=False).apply(f_cps)
 df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [-1], 'latin': [-1], 'historical': [False]}), df, how='left')
-df.loc[:, ['Ev_of_ℓ', 'ℓ_bar']] = df.groupby('year', as_index=False)[['Ev_of_ℓ', 'ℓ_bar']].transform(lambda x: filter(x, 100)).values
-df.loc[df.loc[:, 'Ev_of_ℓ'] > 0, 'Ev_of_ℓ'] = 0
-df.loc[df.loc[:, 'ℓ_bar'] > 1, 'ℓ_bar'] = 1
+df.loc[:, ['Ev_of_ell', 'ell_bar']] = df.groupby('year', as_index=False)[['Ev_of_ell', 'ell_bar']].transform(lambda x: filter(x, 100)).values
+df.loc[df.loc[:, 'Ev_of_ell'] > 0, 'Ev_of_ell'] = 0
+df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
 df_leisure = df_leisure.append(df, ignore_index=True)
 
 # Calculate CPS leisure statistics by year, race and age
 df = cps.loc[cps.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(f_cps)
 df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'latin': [-1], 'historical': [False]}), df, how='left')
-df.loc[:, ['Ev_of_ℓ', 'ℓ_bar']] = df.groupby(['year', 'race'], as_index=False)[['Ev_of_ℓ', 'ℓ_bar']].transform(lambda x: filter(x, 100)).values
-df.loc[df.loc[:, 'Ev_of_ℓ'] > 0, 'Ev_of_ℓ'] = 0
-df.loc[df.loc[:, 'ℓ_bar'] > 1, 'ℓ_bar'] = 1
+df.loc[:, ['Ev_of_ell', 'ell_bar']] = df.groupby(['year', 'race'], as_index=False)[['Ev_of_ell', 'ell_bar']].transform(lambda x: filter(x, 100)).values
+df.loc[df.loc[:, 'Ev_of_ell'] > 0, 'Ev_of_ell'] = 0
+df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
 df_leisure = df_leisure.append(df, ignore_index=True)
 
 # Calculate CPS leisure statistics by year and age for Latinos
 df = cps.loc[(cps.latin == 1) & (cps.year >= 2006), :].groupby(['year', 'age'], as_index=False).apply(f_cps)
 df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [-1], 'latin': [1], 'historical': [False]}), df, how='left')
-df.loc[:, ['Ev_of_ℓ', 'ℓ_bar']] = df.groupby('year', as_index=False)[['Ev_of_ℓ', 'ℓ_bar']].transform(lambda x: filter(x, 100)).values
-df.loc[df.loc[:, 'Ev_of_ℓ'] > 0, 'Ev_of_ℓ'] = 0
-df.loc[df.loc[:, 'ℓ_bar'] > 1, 'ℓ_bar'] = 1
+df.loc[:, ['Ev_of_ell', 'ell_bar']] = df.groupby('year', as_index=False)[['Ev_of_ell', 'ell_bar']].transform(lambda x: filter(x, 100)).values
+df.loc[df.loc[:, 'Ev_of_ell'] > 0, 'Ev_of_ell'] = 0
+df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
 df_leisure = df_leisure.append(df, ignore_index=True)
 
 # Calculate CPS leisure statistics by year, race and age for non-Latinos
 df = cps.loc[cps.race.isin([1, 2]) & (cps.latin == 0) & (cps.year >= 2006), :].groupby(['year', 'race', 'age'], as_index=False).apply(f_cps)
 df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'latin': [0], 'historical': [False]}), df, how='left')
-df.loc[:, ['Ev_of_ℓ', 'ℓ_bar']] = df.groupby(['year', 'race'], as_index=False)[['Ev_of_ℓ', 'ℓ_bar']].transform(lambda x: filter(x, 100)).values
-df.loc[df.loc[:, 'Ev_of_ℓ'] > 0, 'Ev_of_ℓ'] = 0
-df.loc[df.loc[:, 'ℓ_bar'] > 1, 'ℓ_bar'] = 1
+df.loc[:, ['Ev_of_ell', 'ell_bar']] = df.groupby(['year', 'race'], as_index=False)[['Ev_of_ell', 'ell_bar']].transform(lambda x: filter(x, 100)).values
+df.loc[df.loc[:, 'Ev_of_ell'] > 0, 'Ev_of_ell'] = 0
+df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
 df_leisure = df_leisure.append(df, ignore_index=True)
 
 # Calculate ACS leisure statistics by year and age
-df = acs.groupby(['year', 'age'], as_index=False).apply(lambda x: pd.Series({'ℓ_bar': np.average(x.leisure, weights=x.weight)}))
+df = acs.groupby(['year', 'age'], as_index=False).apply(lambda x: pd.Series({'ell_bar': np.average(x.leisure, weights=x.weight)}))
 df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [-1], 'latin': [-1], 'historical': [True]}), df, how='left')
-df.loc[:, 'ℓ_bar'] = df.groupby('year', as_index=False)['ℓ_bar'].transform(lambda x: filter(x, 100)).values
-df.loc[df.loc[:, 'ℓ_bar'] > 1, 'ℓ_bar'] = 1
+df.loc[:, 'ell_bar'] = df.groupby('year', as_index=False)['ell_bar'].transform(lambda x: filter(x, 100)).values
+df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
 df_leisure = df_leisure.append(df, ignore_index=True)
 
 # Calculate ACS leisure statistics by year, race and age
-df = acs.loc[acs.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(lambda x: pd.Series({'ℓ_bar': np.average(x.leisure, weights=x.weight)}))
+df = acs.loc[acs.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(lambda x: pd.Series({'ell_bar': np.average(x.leisure, weights=x.weight)}))
 df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'latin': [-1], 'historical': [True]}), df, how='left')
-df.loc[:, 'ℓ_bar'] = df.groupby(['year', 'race'], as_index=False)['ℓ_bar'].transform(lambda x: filter(x, 100)).values
-df.loc[df.loc[:, 'ℓ_bar'] > 1, 'ℓ_bar'] = 1
+df.loc[:, 'ell_bar'] = df.groupby(['year', 'race'], as_index=False)['ell_bar'].transform(lambda x: filter(x, 100)).values
+df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
 df_leisure = df_leisure.append(df, ignore_index=True)
 
 # Calculate ACS leisure statistics by year and age for Latinos
-df = acs.loc[(acs.latin == 1) & (acs.year >= 2006), :].groupby(['year', 'age'], as_index=False).apply(lambda x: pd.Series({'ℓ_bar': np.average(x.leisure, weights=x.weight)}))
+df = acs.loc[(acs.latin == 1) & (acs.year >= 2006), :].groupby(['year', 'age'], as_index=False).apply(lambda x: pd.Series({'ell_bar': np.average(x.leisure, weights=x.weight)}))
 df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [-1], 'latin': [1], 'historical': [True]}), df, how='left')
-df.loc[:, 'ℓ_bar'] = df.groupby('year', as_index=False)['ℓ_bar'].transform(lambda x: filter(x, 100)).values
-df.loc[df.loc[:, 'ℓ_bar'] > 1, 'ℓ_bar'] = 1
+df.loc[:, 'ell_bar'] = df.groupby('year', as_index=False)['ell_bar'].transform(lambda x: filter(x, 100)).values
+df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
 df_leisure = df_leisure.append(df, ignore_index=True)
 
 # Calculate ACS leisure statistics by year, race and age for non-Latinos
-df = acs.loc[acs.race.isin([1, 2]) & (acs.latin == 0) & (acs.year >= 2006), :].groupby(['year', 'race', 'age'], as_index=False).apply(lambda x: pd.Series({'ℓ_bar': np.average(x.leisure, weights=x.weight)}))
+df = acs.loc[acs.race.isin([1, 2]) & (acs.latin == 0) & (acs.year >= 2006), :].groupby(['year', 'race', 'age'], as_index=False).apply(lambda x: pd.Series({'ell_bar': np.average(x.leisure, weights=x.weight)}))
 df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'latin': [0], 'historical': [True]}), df, how='left')
-df.loc[:, 'ℓ_bar'] = df.groupby(['year', 'race'], as_index=False)['ℓ_bar'].transform(lambda x: filter(x, 100)).values
-df.loc[df.loc[:, 'ℓ_bar'] > 1, 'ℓ_bar'] = 1
+df.loc[:, 'ell_bar'] = df.groupby(['year', 'race'], as_index=False)['ell_bar'].transform(lambda x: filter(x, 100)).values
+df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
 df_leisure = df_leisure.append(df, ignore_index=True)
 
 ################################################################################

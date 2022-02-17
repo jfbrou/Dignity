@@ -392,32 +392,59 @@ for chunk in chunks:
 
 	# Create the leisure variables
 	for i in range(4):
-	    if bool(calendar.isleap(chunk.YEAR.unique())):
-	        chunk.loc[:, 'leisure_' + str(i + 1)] = (16 * 366 - chunk.loc[:, 'hours_' + str(i + 1)]) / (16 * 366)
-	    else:
-	        chunk.loc[:, 'leisure_' + str(i + 1)] = (16 * 365 - chunk.loc[:, 'hours_' + str(i + 1)]) / (16 * 365)
+		if bool(calendar.isleap(chunk.YEAR.unique())):
+			chunk.loc[:, 'leisure_' + str(i + 1)] = (16 * 366 - chunk.loc[:, 'hours_' + str(i + 1)]) / (16 * 366)
+		else:
+			chunk.loc[:, 'leisure_' + str(i + 1)] = (16 * 365 - chunk.loc[:, 'hours_' + str(i + 1)]) / (16 * 365)
 	chunk = chunk.drop(['hours_1', 'hours_2', 'hours_3', 'hours_4'], axis=1)
+
+	# Calculate food stamps, medicaid and medicare usage by race in 2019
+	if chunk.YEAR.unique() == 2019:
+		d_bea = dict(zip(['foodstamps', 'medicaid', 'medicare'], ['TRP600', 'W729RC', 'W824RC']))
+		deflator = 1e2 / bea.data('nipa', tablename='t10104', frequency='a', year=2019).data.DPCERG
+		welfare = pd.DataFrame({'race': chunk.RACE.unique()})
+		for i in ['foodstamps', 'medicaid', 'medicare']:
+			df = chunk.loc[chunk.loc[:, i] == 1, :].groupby('RACE', as_index=False).agg({'PERWT': 'sum'})
+			df.loc[:, 'PERWT'] = df.PERWT / df.PERWT.sum()
+			df.loc[:, 'expenditures'] = 1e6 * deflator * bea.data('nipa', tablename='t31200', frequency='a', year=2019).data[d_bea[i]]
+			df.loc[:, i] = df.loc[:, 'PERWT'] * df.loc[:, 'expenditures']
+			df = df.drop(['PERWT', 'expenditures'], axis=1).rename(columns={'RACE': 'race'})
+			welfare = pd.merge(welfare, df)
+		welfare.to_csv(os.path.join(acs_f_data, 'welfare.csv'), index=False)
+
+	# Calculate weighted averages of each variable
+	if chunk.YEAR.unique() == 1950:
+		def f(x):
+			d = {}
+			d['consumption'] = np.average(x.consumption, weights=x.PERWT)
+			d['PERWT'] = np.sum(x.PERWT)
+			return pd.Series(d, index=[key for key, value in d.items()])
+		def f_leisure(x):
+			d = {}
+			d['leisure_1'] = np.average(x.leisure_1, weights=x.SLWT)
+			d['leisure_2'] = np.average(x.leisure_2, weights=x.SLWT)
+			d['leisure_3'] = np.average(x.leisure_3, weights=x.SLWT)
+			d['leisure_4'] = np.average(x.leisure_4, weights=x.SLWT)
+			d['leisure_weight'] = np.sum(x.SLWT)
+			return pd.Series(d, index=[key for key, value in d.items()])
+		chunk_leisure = chunk.loc[chunk.SLWT != 0, :].groupby(['YEAR', 'RACE', 'HISPAN', 'SEX', 'EDUC', 'AGE'], as_index=False).apply(f_leisure)
+		chunk = chunk.groupby(['YEAR', 'RACE', 'HISPAN', 'SEX', 'EDUC', 'AGE'], as_index=False).apply(f)
+		chunk = pd.merge(chunk, chunk_leisure, how='left')
+	else:
+		def f(x):
+			d = {}
+			d['leisure_1'] = np.average(x.leisure_1, weights=x.PERWT)
+			d['leisure_2'] = np.average(x.leisure_2, weights=x.PERWT)
+			d['leisure_3'] = np.average(x.leisure_3, weights=x.PERWT)
+			d['leisure_4'] = np.average(x.leisure_4, weights=x.PERWT)
+			d['consumption'] = np.average(x.consumption, weights=x.PERWT)
+			d['leisure_weight'] = np.sum(x.PERWT)
+			d['PERWT'] = np.sum(x.PERWT)
+			return pd.Series(d, index=[key for key, value in d.items()])
+		chunk = chunk.groupby(['YEAR', 'RACE', 'HISPAN', 'SEX', 'EDUC', 'AGE'], as_index=False).apply(f)
 
 	# Append the data frames for all chunks
 	acs = acs.append(chunk, ignore_index=True)
-
-# Calculate food stamps, medicaid and medicare usage by race in 2019
-d_bea = dict(zip(['foodstamps', 'medicaid', 'medicare'], ['TRP600', 'W729RC', 'W824RC']))
-deflator = 1e2 / bea.data('nipa', tablename='t10104', frequency='a', year=2019).data.DPCERG
-welfare = pd.DataFrame({'race': acs.RACE.unique()})
-for i in ['foodstamps', 'medicaid', 'medicare']:
-    df = acs.loc[(acs.YEAR == 2019) & (acs.loc[:, i] == 1), :].groupby('RACE', as_index=False).agg({'PERWT': 'sum'})
-    df.loc[:, 'PERWT'] = df.PERWT / df.PERWT.sum()
-    df.loc[:, 'expenditures'] = 1e6 * deflator * bea.data('nipa', tablename='t31200', frequency='a', year=2019).data[d_bea[i]]
-    df.loc[:, i] = df.loc[:, 'PERWT'] * df.loc[:, 'expenditures']
-    df = df.drop(['PERWT', 'expenditures'], axis=1).rename(columns={'RACE': 'race'})
-    welfare = pd.merge(welfare, df)
-welfare.to_csv(os.path.join(acs_f_data, 'welfare.csv'), index=False)
-
-# Create the leisure weight variable
-acs.loc[acs.YEAR != 1950, 'leisure_weight'] = acs.PERWT
-acs.loc[acs.YEAR == 1950, 'leisure_weight'] = acs.SLWT
-acs = acs.drop('SLWT', axis=1)
 
 # Calculate the ratio of the average of the first leisure variable to the average of the other leisure variables in 1980 and 1990
 sample = ((acs.YEAR == 1980) | (acs.YEAR == 1990))
@@ -437,52 +464,24 @@ acs.loc[acs.leisure_1.isna() & acs.leisure_2.isna() & acs.leisure_3.notna(), 'le
 acs.loc[acs.leisure_1.isna() & acs.leisure_2.isna() & acs.leisure_3.isna() & acs.leisure_4.notna(), 'leisure'] = acs.leisure_4
 acs = acs.drop(['leisure_1', 'leisure_2', 'leisure_3', 'leisure_4'], axis=1)
 
-# Create a data frame with all levels of all variables
-df = expand({'YEAR':   acs.YEAR.unique(),
-			 'RACE':   acs.RACE.unique(),
-			 'HISPAN': acs.HISPAN.unique(),
-			 'SEX':    acs.SEX.unique(),
-			 'EDUC':   acs.EDUC.unique(),
-			 'AGE':    acs.AGE.unique()})
-
-# Calculate weighted averages of each variable
-def f(x):
-    d = {}
-    d['leisure'] = np.average(x.leisure, weights=x.leisure_weight)
-    d['consumption'] = np.average(x.consumption, weights=x.PERWT)
-    d['earnings'] = np.average(x.earnings, weights=x.PERWT)
-    d['leisure_weight'] = np.sum(x.leisure_weight)
-    d['PERWT'] = np.sum(x.PERWT)
-    return pd.Series(d, index=[key for key, value in d.items()])
-acs = acs.groupby(['YEAR', 'RACE', 'HISPAN', 'SEX', 'EDUC', 'AGE'], as_index=False).apply(f)
-
-# Merge the data frames
-acs = pd.merge(df, acs, how='left')
-acs.loc[acs.leisure_weight.isna(), 'leisure_weight'] = 0
-acs.loc[acs.PERWT.isna(), 'PERWT'] = 0
-
-# Recode the education variable
-acs.loc[acs.EDUC == 4, 'EDUC'] = np.nan
-
 # Rename variables
 acs = acs.rename(columns={'YEAR':   'year',
-						  'SEX':    'gender',
 						  'RACE':   'race',
 						  'HISPAN': 'latin',
+						  'SEX':    'gender',
 						  'EDUC':   'education',
 						  'AGE':    'age',
 						  'PERWT':  'weight'})
 
 # Define the variable types
 acs = acs.astype({'year':           'int',
-				  'gender':         'int',
 				  'race':           'int',
 				  'latin':          'int',
-				  'education':      'float',
+				  'gender':         'int',
+				  'education':      'int',
 				  'age':            'int',
 				  'leisure':        'float',
 				  'consumption':    'float',
-				  'earnings':       'float',
 				  'weight':         'float',
 				  'leisure_weight': 'float'})
 

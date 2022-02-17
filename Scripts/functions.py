@@ -1,20 +1,20 @@
 # Import libraries
 from numpy import *
 import pandas as pd
-import itertools
+import itertools as it
 import statsmodels.api as sm
 
 # Define a function to create a data frame of the right form
-def expand(dictionary):
-    rows = itertools.product(*dictionary.values())
-    return pd.DataFrame.from_records(rows, columns=dictionary.keys())
+def expand(d):
+    rows = it.product(*d.values())
+    return pd.DataFrame.from_records(rows, columns=d.keys())
 
 # Define the leisure utility function
-def v_of_ℓ(x, ϵ=1.0, θ=14.2):
+def v_of_ell(x, ϵ=1.0, θ=14.2):
     return -(θ * ϵ / (1 + ϵ)) * (1 - x)**((1 + ϵ) / ϵ)
 
 # Define the Beer population interpolation function
-def beerpopulation(x):
+def beer_population(x):
     # Convert the population series to a numpy array
     x = x.to_numpy()
 
@@ -57,7 +57,7 @@ def beerpopulation(x):
     return append(P, nan)
 
 # Define the Beer death interpolation function
-def beerdeath(x):
+def beer_death(x):
     # Convert the death series to a numpy array
     x = x.to_numpy()
 
@@ -113,504 +113,504 @@ def filter(x, penalty):
     return x.interpolate(method='ffill', limit_direction='forward')
 
 # Define the level consumption-equivalent welfare calculation function
-def logλ_level(Sᵢ=None, Sⱼ=None, cᵢ_bar=None, cⱼ_bar=None, ℓᵢ_bar=None, ℓⱼ_bar=None, β=1, g=0, agemin=0, agemax=100, # Standard parameters
-               S_u_bar=None, c_u_bar=None, ℓ_u_bar=None, vsl=7.4e6, c_nominal=None, agemin_u_bar=40, agemax_u_bar=100, # Intercept parameters
-               inequality=False, cᵢ_bar_nd=None, cⱼ_bar_nd=None, Elog_of_cᵢ=None, Elog_of_cⱼ=None, Elog_of_cᵢ_nd=None, Elog_of_cⱼ_nd=None, Ev_of_ℓᵢ=None, Ev_of_ℓⱼ=None): # Inequality parameters
+def cew_level(S_i=None, S_j=None, c_i_bar=None, c_j_bar=None, ell_i_bar=None, ell_j_bar=None, beta=1, g=0, age_min=0, age_max=100, # Standard parameters
+              S_intercept=None, c_intercept=None, ell_intercept=None, vsl=7.4e6, c_nominal=None, age_min_intercept=40, age_max_intercept=100, # Intercept parameters
+              inequality=False, c_i_bar_nd=None, c_j_bar_nd=None, Elog_of_c_i=None, Elog_of_c_j=None, Elog_of_c_i_nd=None, Elog_of_c_j_nd=None, Ev_of_ell_i=None, Ev_of_ell_j=None): # Inequality parameters
     # Restrict on selected ages
-    Sᵢ = Sᵢ[agemin:agemax + 1]
-    Sⱼ = Sⱼ[agemin:agemax + 1]
-    cᵢ_bar = cᵢ_bar[agemin:agemax + 1]
-    cⱼ_bar = cⱼ_bar[agemin:agemax + 1]
-    ℓᵢ_bar = ℓᵢ_bar[agemin:agemax + 1]
-    ℓⱼ_bar = ℓⱼ_bar[agemin:agemax + 1]
-    S_u_bar = S_u_bar[agemin_u_bar:agemax_u_bar + 1]
-    c_u_bar = c_u_bar[agemin_u_bar:agemax_u_bar + 1]
-    ℓ_u_bar = ℓ_u_bar[agemin_u_bar:agemax_u_bar + 1]
+    S_i = S_i[age_min:age_max + 1]
+    S_j = S_j[age_min:age_max + 1]
+    c_i_bar = c_i_bar[age_min:age_max + 1]
+    c_j_bar = c_j_bar[age_min:age_max + 1]
+    ell_i_bar = ell_i_bar[age_min:age_max + 1]
+    ell_j_bar = ell_j_bar[age_min:age_max + 1]
+    S_intercept = S_intercept[age_min_intercept:age_max_intercept + 1]
+    c_intercept = c_intercept[age_min_intercept:age_max_intercept + 1]
+    ell_intercept = ell_intercept[age_min_intercept:age_max_intercept + 1]
 
     # Define the sequence of discount rates
-    βᵃ = β**linspace(agemin, agemax, agemax - agemin + 1)
-    βᵃ_u_bar = β**linspace(agemin_u_bar, agemax_u_bar, agemax_u_bar - agemin_u_bar + 1)
+    beta_age = beta**linspace(age_min, age_max, age_max - age_min + 1)
+    beta_age_intercept = beta**linspace(age_min_intercept, age_max_intercept, age_max_intercept - age_min_intercept + 1)
 
     # Define the sequence of growth rates
-    ga = g * linspace(agemin, agemax, agemax - agemin + 1)
-    ga_u_bar = g * linspace(agemin_u_bar, agemax_u_bar, agemax_u_bar - agemin_u_bar + 1)
+    g_age = g * linspace(age_min, age_max, age_max - age_min + 1)
+    g_age_intercept = g * linspace(age_min_intercept, age_max_intercept, age_max_intercept - age_min_intercept + 1)
 
     # Calculate the intercept
-    u_bar = (vsl / c_nominal - dot(βᵃ_u_bar * S_u_bar, log(c_u_bar) + v_of_ℓ(ℓ_u_bar) + ga_u_bar)) / sum(βᵃ_u_bar * S_u_bar)
+    u_bar = (vsl / c_nominal - dot(beta_age_intercept * S_intercept, log(c_intercept) + v_of_ell(ell_intercept) + g_age_intercept)) / sum(beta_age_intercept * S_intercept)
 
     # Define the lower case survival rates
-    sᵢ = βᵃ * Sᵢ / sum(βᵃ * Sᵢ)
-    sⱼ = βᵃ * Sⱼ / sum(βᵃ * Sⱼ)
-    Δs_EV = βᵃ * (Sⱼ - Sᵢ) / sum(βᵃ * Sᵢ)
-    Δs_CV = βᵃ * (Sⱼ - Sᵢ) / sum(βᵃ * Sⱼ)
+    s_i = beta_age * S_i / sum(beta_age * S_i)
+    s_j = beta_age * S_j / sum(beta_age * S_j)
+    Delta_s_EV = beta_age * (S_j - S_i) / sum(beta_age * S_i)
+    Delta_s_CV = beta_age * (S_j - S_i) / sum(beta_age * S_j)
 
     # Calculate consumption-equivalent welfare with the inequality terms
     if inequality:
         # Restrict on selected ages for the inequality terms
-        Elog_of_cᵢ = Elog_of_cᵢ[agemin:agemax + 1]
-        Elog_of_cⱼ = Elog_of_cⱼ[agemin:agemax + 1]
-        Elog_of_cᵢ_nd = Elog_of_cᵢ_nd[agemin:agemax + 1]
-        Elog_of_cⱼ_nd = Elog_of_cⱼ_nd[agemin:agemax + 1]
-        cᵢ_bar_nd = cᵢ_bar_nd[agemin:agemax + 1]
-        cⱼ_bar_nd = cⱼ_bar_nd[agemin:agemax + 1]
-        Ev_of_ℓᵢ = Ev_of_ℓᵢ[agemin:agemax + 1]
-        Ev_of_ℓⱼ = Ev_of_ℓⱼ[agemin:agemax + 1]
+        Elog_of_c_i = Elog_of_c_i[age_min:age_max + 1]
+        Elog_of_c_j = Elog_of_c_j[age_min:age_max + 1]
+        Elog_of_c_i_nd = Elog_of_c_i_nd[age_min:age_max + 1]
+        Elog_of_c_j_nd = Elog_of_c_j_nd[age_min:age_max + 1]
+        c_i_bar_nd = c_i_bar_nd[age_min:age_max + 1]
+        c_j_bar_nd = c_j_bar_nd[age_min:age_max + 1]
+        Ev_of_ell_i = Ev_of_ell_i[age_min:age_max + 1]
+        Ev_of_ell_j = Ev_of_ell_j[age_min:age_max + 1]
 
         # Calculate flow utility for each group
-        flow_EV = u_bar + ga + Elog_of_cⱼ + Ev_of_ℓⱼ
-        flow_CV = u_bar + ga + Elog_of_cᵢ + Ev_of_ℓᵢ
+        flow_EV = u_bar + g_age + Elog_of_c_j + Ev_of_ell_j
+        flow_CV = u_bar + g_age + Elog_of_c_i + Ev_of_ell_i
 
         # Calculate the EV and CV life expectancy terms, and average them
-        LE_EV = sum(Δs_EV * flow_EV)
-        LE_CV = sum(Δs_CV * flow_CV)
+        LE_EV = sum(Delta_s_EV * flow_EV)
+        LE_CV = sum(Delta_s_CV * flow_CV)
         LE = (LE_EV + LE_CV) / 2
 
         # Calculate the EV and CV consumption terms, and average them
-        C_EV = log(sum(sᵢ * cⱼ_bar * exp(ga))) - log(sum(sᵢ * cᵢ_bar * exp(ga)))
-        C_CV = log(sum(sⱼ * cⱼ_bar * exp(ga))) - log(sum(sⱼ * cᵢ_bar * exp(ga)))
+        C_EV = log(sum(s_i * c_j_bar * exp(g_age))) - log(sum(s_i * c_i_bar * exp(g_age)))
+        C_CV = log(sum(s_j * c_j_bar * exp(g_age))) - log(sum(s_j * c_i_bar * exp(g_age)))
         C = (C_EV + C_CV) / 2
 
         # Calculate the EV and CV consumption inequality terms, and average them
-        CI_EV = sum(sᵢ * (Elog_of_cⱼ_nd - Elog_of_cᵢ_nd)) - (log(sum(sᵢ * cⱼ_bar_nd * exp(ga))) - log(sum(sᵢ * cᵢ_bar_nd * exp(ga))))
-        CI_CV = sum(sⱼ * (Elog_of_cⱼ_nd - Elog_of_cᵢ_nd)) - (log(sum(sⱼ * cⱼ_bar_nd * exp(ga))) - log(sum(sⱼ * cᵢ_bar_nd * exp(ga))))
+        CI_EV = sum(s_i * (Elog_of_c_j_nd - Elog_of_c_i_nd)) - (log(sum(s_i * c_j_bar_nd * exp(g_age))) - log(sum(s_i * c_i_bar_nd * exp(g_age))))
+        CI_CV = sum(s_j * (Elog_of_c_j_nd - Elog_of_c_i_nd)) - (log(sum(s_j * c_j_bar_nd * exp(g_age))) - log(sum(s_j * c_i_bar_nd * exp(g_age))))
         CI = (CI_EV + CI_CV) / 2
 
         # Calculate the EV and CV leisure terms, and average them
-        L_EV = v_of_ℓ(sum(sᵢ * ℓⱼ_bar)) - v_of_ℓ(sum(sᵢ * ℓᵢ_bar))
-        L_CV = v_of_ℓ(sum(sⱼ * ℓⱼ_bar)) - v_of_ℓ(sum(sⱼ * ℓᵢ_bar))
+        L_EV = v_of_ell(sum(s_i * ell_j_bar)) - v_of_ell(sum(s_i * ell_i_bar))
+        L_CV = v_of_ell(sum(s_j * ell_j_bar)) - v_of_ell(sum(s_j * ell_i_bar))
         L = (L_EV + L_CV) / 2
 
         # Calculate the EV and CV leisure inequality terms, and average them
-        LI_EV = sum(sᵢ * (Ev_of_ℓⱼ - Ev_of_ℓᵢ)) - L_EV
-        LI_CV = sum(sⱼ * (Ev_of_ℓⱼ - Ev_of_ℓᵢ)) - L_CV
+        LI_EV = sum(s_i * (Ev_of_ell_j - Ev_of_ell_i)) - L_EV
+        LI_CV = sum(s_j * (Ev_of_ell_j - Ev_of_ell_i)) - L_CV
         LI = (LI_EV + LI_CV) / 2
 
         # Calculate the EV and CV consumption-equivalent welfare, and average them
-        logλ_EV = LE_EV + C_EV + CI_EV + L_EV + LI_EV
-        logλ_CV = LE_CV + C_CV + CI_CV + L_CV + LI_CV
-        logλ = (logλ_EV + logλ_CV) / 2
+        log_lambda_EV = LE_EV + C_EV + CI_EV + L_EV + LI_EV
+        log_lambda_CV = LE_CV + C_CV + CI_CV + L_CV + LI_CV
+        log_lambda = (log_lambda_EV + log_lambda_CV) / 2
 
         # Store the results in a dictionary
-        d = {'LE_CV':   LE_CV,
-             'LE_EV':   LE_EV,
-             'LE':      LE,
-             'C_CV':    C_CV,
-             'C_EV':    C_EV,
-             'C':       C,
-             'CI_CV':   CI_CV,
-             'CI_EV':   CI_EV,
-             'CI':      CI,
-             'L_CV':    L_CV,
-             'L_EV':    L_EV,
-             'L':       L,
-             'LI_CV':   LI_CV,
-             'LI_EV':   LI_EV,
-             'LI':      LI,
-             'logλ_CV': logλ_CV,
-             'logλ_EV': logλ_EV,
-             'logλ':    logλ,
-             'u_bar':   u_bar}
+        d = {'LE_CV':         LE_CV,
+             'LE_EV':         LE_EV,
+             'LE':            LE,
+             'C_CV':          C_CV,
+             'C_EV':          C_EV,
+             'C':             C,
+             'CI_CV':         CI_CV,
+             'CI_EV':         CI_EV,
+             'CI':            CI,
+             'L_CV':          L_CV,
+             'L_EV':          L_EV,
+             'L':             L,
+             'LI_CV':         LI_CV,
+             'LI_EV':         LI_EV,
+             'LI':            LI,
+             'log_lambda_CV': log_lambda_CV,
+             'log_lambda_EV': log_lambda_EV,
+             'log_lambda':    log_lambda,
+             'u_bar':         u_bar}
     else:
         # Compute flow utility for each group
-        flow_EV = u_bar + log(sum(sⱼ * cⱼ_bar * exp(ga))) + v_of_ℓ(sum(sⱼ * ℓⱼ_bar))
-        flow_CV = u_bar + log(sum(sᵢ * cᵢ_bar * exp(ga))) + v_of_ℓ(sum(sᵢ * ℓᵢ_bar))
+        flow_EV = u_bar + log(sum(s_j * c_j_bar * exp(g_age))) + v_of_ell(sum(s_j * ell_j_bar))
+        flow_CV = u_bar + log(sum(s_i * c_i_bar * exp(g_age))) + v_of_ell(sum(s_i * ell_i_bar))
 
         # Calculate the EV and CV life expectancy terms, and average them
-        LE_EV = sum(Δs_EV) * flow_EV
-        LE_CV = sum(Δs_CV) * flow_CV
+        LE_EV = sum(Delta_s_EV) * flow_EV
+        LE_CV = sum(Delta_s_CV) * flow_CV
         LE = (LE_EV + LE_CV) / 2
 
         # Calculate the EV and CV consumption terms, and average them
-        C_EV = log(sum(sᵢ * cⱼ_bar * exp(ga))) - log(sum(sᵢ * cᵢ_bar * exp(ga)))
-        C_CV = log(sum(sⱼ * cⱼ_bar * exp(ga))) - log(sum(sⱼ * cᵢ_bar * exp(ga)))
+        C_EV = log(sum(s_i * c_j_bar * exp(g_age))) - log(sum(s_i * c_i_bar * exp(g_age)))
+        C_CV = log(sum(s_j * c_j_bar * exp(g_age))) - log(sum(s_j * c_i_bar * exp(g_age)))
         C = (C_EV + C_CV) / 2
 
         # Calculate the EV and CV leisure terms, and average them
-        L_EV = v_of_ℓ(sum(sᵢ * ℓⱼ_bar)) - v_of_ℓ(sum(sᵢ * ℓᵢ_bar))
-        L_CV = v_of_ℓ(sum(sⱼ * ℓⱼ_bar)) - v_of_ℓ(sum(sⱼ * ℓᵢ_bar))
+        L_EV = v_of_ell(sum(s_i * ell_j_bar)) - v_of_ell(sum(s_i * ell_i_bar))
+        L_CV = v_of_ell(sum(s_j * ell_j_bar)) - v_of_ell(sum(s_j * ell_i_bar))
         L = (L_EV + L_CV) / 2
 
         # Calculate the EV and CV consumption-equivalent welfare, and average them
-        logλ_EV = LE_EV + C_EV + L_EV
-        logλ_CV = LE_CV + C_CV + L_CV
-        logλ = (logλ_EV + logλ_CV) / 2
+        log_lambda_EV = LE_EV + C_EV + L_EV
+        log_lambda_CV = LE_CV + C_CV + L_CV
+        log_lambda = (log_lambda_EV + log_lambda_CV) / 2
 
         # Store the results in a dictionary
-        d = {'LE_CV':   LE_CV,
-             'LE_EV':   LE_EV,
-             'LE':      LE,
-             'C_CV':    C_CV,
-             'C_EV':    C_EV,
-             'C':       C,
-             'L_CV':    L_CV,
-             'L_EV':    L_EV,
-             'L':       L,
-             'logλ_CV': logλ_CV,
-             'logλ_EV': logλ_EV,
-             'logλ':    logλ,
-             'u_bar':   u_bar}
+        d = {'LE_CV':         LE_CV,
+             'LE_EV':         LE_EV,
+             'LE':            LE,
+             'C_CV':          C_CV,
+             'C_EV':          C_EV,
+             'C':             C,
+             'L_CV':          L_CV,
+             'L_EV':          L_EV,
+             'L':             L,
+             'log_lambda_CV': log_lambda_CV,
+             'log_lambda_EV': log_lambda_EV,
+             'log_lambda':    log_lambda,
+             'u_bar':         u_bar}
 
     # Return the dictionary
     return d
 
 # Define the level consumption-equivalent welfare calculation function with the morbidity adjustment
-def logλ_level_morbidity(Sᵢ=None, Sⱼ=None, cᵢ_bar=None, cⱼ_bar=None, ℓᵢ_bar=None, ℓⱼ_bar=None, agemin=0, agemax=100, # Standard parameters
-                         S_u_bar=None, halex_u_bar=None, c_u_bar=None, ℓ_u_bar=None, vsl=7.4e6, c_nominal=None, agemin_u_bar=40, agemax_u_bar=100, # Intercept parameters
-                         cᵢ_bar_nd=None, cⱼ_bar_nd=None, Elog_of_cᵢ=None, Elog_of_cⱼ=None, Elog_of_cᵢ_nd=None, Elog_of_cⱼ_nd=None, Ev_of_ℓᵢ=None, Ev_of_ℓⱼ=None, # Inequality parameters
-                         halexᵢ=None, halexⱼ=None, morbidity_parameter=None): # Morbidity adjustment parameters
+def cew_level_morbidity(S_i=None, S_j=None, c_i_bar=None, c_j_bar=None, ell_i_bar=None, ell_j_bar=None, age_min=0, age_max=100, # Standard parameters
+                        S_intercept=None, halex_intercept=None, c_intercept=None, ell_intercept=None, vsl=7.4e6, c_nominal=None, age_min_intercept=40, age_max_intercept=100, # Intercept parameters
+                        c_i_bar_nd=None, c_j_bar_nd=None, Elog_of_c_i=None, Elog_of_c_j=None, Elog_of_c_i_nd=None, Elog_of_c_j_nd=None, Ev_of_ell_i=None, Ev_of_ell_j=None, # Inequality parameters
+                        halex_i=None, halex_j=None, morbidity_parameter=None): # Morbidity adjustment parameters
     # Restrict on selected ages
-    Sᵢ = Sᵢ[agemin:agemax + 1]
-    Sⱼ = Sⱼ[agemin:agemax + 1]
-    cᵢ_bar = cᵢ_bar[agemin:agemax + 1]
-    cⱼ_bar = cⱼ_bar[agemin:agemax + 1]
-    ℓᵢ_bar = ℓᵢ_bar[agemin:agemax + 1]
-    ℓⱼ_bar = ℓⱼ_bar[agemin:agemax + 1]
-    halexᵢ = halexᵢ[agemin:agemax + 1]
-    halexⱼ = halexⱼ[agemin:agemax + 1]
-    Elog_of_cᵢ = Elog_of_cᵢ[agemin:agemax + 1]
-    Elog_of_cⱼ = Elog_of_cⱼ[agemin:agemax + 1]
-    Elog_of_cᵢ_nd = Elog_of_cᵢ_nd[agemin:agemax + 1]
-    Elog_of_cⱼ_nd = Elog_of_cⱼ_nd[agemin:agemax + 1]
-    cᵢ_bar_nd = cᵢ_bar_nd[agemin:agemax + 1]
-    cⱼ_bar_nd = cⱼ_bar_nd[agemin:agemax + 1]
-    Ev_of_ℓᵢ = Ev_of_ℓᵢ[agemin:agemax + 1]
-    Ev_of_ℓⱼ = Ev_of_ℓⱼ[agemin:agemax + 1]
-    S_u_bar = S_u_bar[agemin_u_bar:agemax_u_bar + 1]
-    c_u_bar = c_u_bar[agemin_u_bar:agemax_u_bar + 1]
-    ℓ_u_bar = ℓ_u_bar[agemin_u_bar:agemax_u_bar + 1]
-    halex_u_bar = halex_u_bar[agemin_u_bar:agemax_u_bar + 1]
+    S_i = S_i[age_min:age_max + 1]
+    S_j = S_j[age_min:age_max + 1]
+    c_i_bar = c_i_bar[age_min:age_max + 1]
+    c_j_bar = c_j_bar[age_min:age_max + 1]
+    ell_i_bar = ell_i_bar[age_min:age_max + 1]
+    ell_j_bar = ell_j_bar[age_min:age_max + 1]
+    halex_i = halex_i[age_min:age_max + 1]
+    halex_j = halex_j[age_min:age_max + 1]
+    Elog_of_c_i = Elog_of_c_i[age_min:age_max + 1]
+    Elog_of_c_j = Elog_of_c_j[age_min:age_max + 1]
+    Elog_of_c_i_nd = Elog_of_c_i_nd[age_min:age_max + 1]
+    Elog_of_c_j_nd = Elog_of_c_j_nd[age_min:age_max + 1]
+    c_i_bar_nd = c_i_bar_nd[age_min:age_max + 1]
+    c_j_bar_nd = c_j_bar_nd[age_min:age_max + 1]
+    Ev_of_ell_i = Ev_of_ell_i[age_min:age_max + 1]
+    Ev_of_ell_j = Ev_of_ell_j[age_min:age_max + 1]
+    S_intercept = S_intercept[age_min_intercept:age_max_intercept + 1]
+    c_intercept = c_intercept[age_min_intercept:age_max_intercept + 1]
+    ell_intercept = ell_intercept[age_min_intercept:age_max_intercept + 1]
+    halex_intercept = halex_intercept[age_min_intercept:age_max_intercept + 1]
 
     # Calculate the quality of life terms from the HALex
-    Qᵢ = morbidity_parameter + (1 - morbidity_parameter) * halexᵢ
-    Qⱼ = morbidity_parameter + (1 - morbidity_parameter) * halexⱼ
-    Q_u_bar = morbidity_parameter + (1 - morbidity_parameter) * halex_u_bar
+    Q_i = morbidity_parameter + (1 - morbidity_parameter) * halex_i
+    Q_j = morbidity_parameter + (1 - morbidity_parameter) * halex_j
+    Q_intercept = morbidity_parameter + (1 - morbidity_parameter) * halex_intercept
 
     # Calculate the intercept
-    u_bar = (vsl / c_nominal - dot(S_u_bar * Q_u_bar, log(c_u_bar) + v_of_ℓ(ℓ_u_bar))) / sum(S_u_bar * Q_u_bar)
+    u_bar = (vsl / c_nominal - dot(S_intercept * Q_intercept, log(c_intercept) + v_of_ell(ell_intercept))) / sum(S_intercept * Q_intercept)
 
     # Define the lower case survival rates
-    sᵢ = Sᵢ * Qᵢ / sum(Sᵢ * Qᵢ)
-    sⱼ = Sⱼ * Qⱼ / sum(Sⱼ * Qⱼ)
-    Δs_EV = (Sⱼ - Sᵢ) * Qⱼ / sum(Sᵢ * Qᵢ)
-    Δs_CV = (Sⱼ - Sᵢ) * Qᵢ / sum(Sⱼ * Qⱼ)
-    Δq_EV = (Qⱼ - Qᵢ) * Sᵢ / sum(Sᵢ * Qᵢ)
-    Δq_CV = (Qⱼ - Qᵢ) * Sⱼ / sum(Sⱼ * Qⱼ)
+    s_i = S_i * Q_i / sum(S_i * Q_i)
+    s_j = S_j * Q_j / sum(S_j * Q_j)
+    Delta_s_EV = (S_j - S_i) * Q_j / sum(S_i * Q_i)
+    Delta_s_CV = (S_j - S_i) * Q_i / sum(S_j * Q_j)
+    Delta_q_EV = (Q_j - Q_i) * S_i / sum(S_i * Q_i)
+    Delta_q_CV = (Q_j - Q_i) * S_j / sum(S_j * Q_j)
 
     # Calculate flow utility for each group
-    flow_EV = u_bar + Elog_of_cⱼ + Ev_of_ℓⱼ
-    flow_CV = u_bar + Elog_of_cᵢ + Ev_of_ℓᵢ
+    flow_EV = u_bar + Elog_of_c_j + Ev_of_ell_j
+    flow_CV = u_bar + Elog_of_c_i + Ev_of_ell_i
 
     # Calculate the EV and CV life expectancy terms, and average them
-    LE_EV = sum(Δs_EV * flow_EV)
-    LE_CV = sum(Δs_CV * flow_CV)
+    LE_EV = sum(Delta_s_EV * flow_EV)
+    LE_CV = sum(Delta_s_CV * flow_CV)
     LE = (LE_EV + LE_CV) / 2
 
     # Calculate the EV and CV morbidity terms, and average them
-    M_EV = sum(Δq_EV * flow_EV)
-    M_CV = sum(Δq_CV * flow_CV)
+    M_EV = sum(Delta_q_EV * flow_EV)
+    M_CV = sum(Delta_q_CV * flow_CV)
     M = (M_EV + M_CV) / 2
 
     # Calculate the EV and CV consumption terms, and average them
-    C_EV = log(sum(sᵢ * cⱼ_bar)) - log(sum(sᵢ * cᵢ_bar))
-    C_CV = log(sum(sⱼ * cⱼ_bar)) - log(sum(sⱼ * cᵢ_bar))
+    C_EV = log(sum(s_i * c_j_bar)) - log(sum(s_i * c_i_bar))
+    C_CV = log(sum(s_j * c_j_bar)) - log(sum(s_j * c_i_bar))
     C = (C_EV + C_CV) / 2
 
     # Calculate the EV and CV consumption inequality terms, and average them
-    CI_EV = sum(sᵢ * (Elog_of_cⱼ_nd - Elog_of_cᵢ_nd)) - (log(sum(sᵢ * cⱼ_bar_nd)) - log(sum(sᵢ * cᵢ_bar_nd)))
-    CI_CV = sum(sⱼ * (Elog_of_cⱼ_nd - Elog_of_cᵢ_nd)) - (log(sum(sⱼ * cⱼ_bar_nd)) - log(sum(sⱼ * cᵢ_bar_nd)))
+    CI_EV = sum(s_i * (Elog_of_c_j_nd - Elog_of_c_i_nd)) - (log(sum(s_i * c_j_bar_nd)) - log(sum(s_i * c_i_bar_nd)))
+    CI_CV = sum(s_j * (Elog_of_c_j_nd - Elog_of_c_i_nd)) - (log(sum(s_j * c_j_bar_nd)) - log(sum(s_j * c_i_bar_nd)))
     CI = (CI_EV + CI_CV) / 2
 
     # Calculate the EV and CV leisure terms, and average them
-    L_EV = v_of_ℓ(sum(sᵢ * ℓⱼ_bar)) - v_of_ℓ(sum(sᵢ * ℓᵢ_bar))
-    L_CV = v_of_ℓ(sum(sⱼ * ℓⱼ_bar)) - v_of_ℓ(sum(sⱼ * ℓᵢ_bar))
+    L_EV = v_of_ell(sum(s_i * ell_j_bar)) - v_of_ell(sum(s_i * ell_i_bar))
+    L_CV = v_of_ell(sum(s_j * ell_j_bar)) - v_of_ell(sum(s_j * ell_i_bar))
     L = (L_EV + L_CV) / 2
 
     # Calculate the EV and CV leisure inequality terms, and average them
-    LI_EV = sum(sᵢ * (Ev_of_ℓⱼ - Ev_of_ℓᵢ)) - L_EV
-    LI_CV = sum(sⱼ * (Ev_of_ℓⱼ - Ev_of_ℓᵢ)) - L_CV
+    LI_EV = sum(s_i * (Ev_of_ell_j - Ev_of_ell_i)) - L_EV
+    LI_CV = sum(s_j * (Ev_of_ell_j - Ev_of_ell_i)) - L_CV
     LI = (LI_EV + LI_CV) / 2
 
     # Calculate the EV and CV consumption-equivalent welfare, and average them
-    logλ_EV = LE_EV + M_EV + C_EV + CI_EV + L_EV + LI_EV
-    logλ_CV = LE_CV + M_CV + C_CV + CI_CV + L_CV + LI_CV
-    logλ = (logλ_EV + logλ_CV) / 2
+    log_lambda_EV = LE_EV + M_EV + C_EV + CI_EV + L_EV + LI_EV
+    log_lambda_CV = LE_CV + M_CV + C_CV + CI_CV + L_CV + LI_CV
+    log_lambda = (log_lambda_EV + log_lambda_CV) / 2
 
     # Store the results in a dictionary
-    d = {'LE_CV':   LE_CV,
-         'LE_EV':   LE_EV,
-         'LE':      LE,
-         'M_CV':    M_CV,
-         'M_EV':    M_EV,
-         'M':       M,
-         'C_CV':    C_CV,
-         'C_EV':    C_EV,
-         'C':       C,
-         'CI_CV':   CI_CV,
-         'CI_EV':   CI_EV,
-         'CI':      CI,
-         'L_CV':    L_CV,
-         'L_EV':    L_EV,
-         'L':       L,
-         'LI_CV':   LI_CV,
-         'LI_EV':   LI_EV,
-         'LI':      LI,
-         'logλ_CV': logλ_CV,
-         'logλ_EV': logλ_EV,
-         'logλ':    logλ,
-         'u_bar':   u_bar}
+    d = {'LE_CV':         LE_CV,
+         'LE_EV':         LE_EV,
+         'LE':            LE,
+         'M_CV':          M_CV,
+         'M_EV':          M_EV,
+         'M':             M,
+         'C_CV':          C_CV,
+         'C_EV':          C_EV,
+         'C':             C,
+         'CI_CV':         CI_CV,
+         'CI_EV':         CI_EV,
+         'CI':            CI,
+         'L_CV':          L_CV,
+         'L_EV':          L_EV,
+         'L':             L,
+         'LI_CV':         LI_CV,
+         'LI_EV':         LI_EV,
+         'LI':            LI,
+         'log_lambda_CV': log_lambda_CV,
+         'log_lambda_EV': log_lambda_EV,
+         'log_lambda':    log_lambda,
+         'u_bar':         u_bar}
 
     # Return the dictionary
     return d
 
 # Define the level consumption-equivalent welfare calculation function with the morbidity adjustment
-def logλ_level_incarceration(Sᵢ=None, Sⱼ=None, cᵢ_bar=None, cⱼ_bar=None, ℓᵢ_bar=None, ℓⱼ_bar=None, agemin=0, agemax=100, # Standard parameters
-                             S_u_bar=None, I_u_bar=None, c_u_bar=None, c_u_barᴵ=None, ℓ_u_bar=None, ℓ_u_barᴵ=None, vsl=7.4e6, c_nominal=None, agemin_u_bar=40, agemax_u_bar=100, # Intercept parameters
-                             cᵢ_bar_nd=None, cⱼ_bar_nd=None, Elog_of_cᵢ=None, Elog_of_cⱼ=None, Elog_of_cᵢ_nd=None, Elog_of_cⱼ_nd=None, Ev_of_ℓᵢ=None, Ev_of_ℓⱼ=None, # Inequality parameters
-                             Elog_of_cᴵ=None, Ev_of_ℓᴵ=None, Iᵢ=None, Iⱼ=None, incarceration_parameter=None): # Incarceration adjustment parameters
+def cew_level_incarceration(S_i=None, S_j=None, c_i_bar=None, c_j_bar=None, ell_i_bar=None, ell_j_bar=None, age_min=0, age_max=100, # Standard parameters
+                            S_intercept=None, I_intercept=None, c_intercept=None, c_intercept_I=None, ell_intercept=None, ell_intercept_I=None, vsl=7.4e6, c_nominal=None, age_min_intercept=40, age_max_intercept=100, # Intercept parameters
+                            c_i_bar_nd=None, c_j_bar_nd=None, Elog_of_c_i=None, Elog_of_c_j=None, Elog_of_c_i_nd=None, Elog_of_c_j_nd=None, Ev_of_ell_i=None, Ev_of_ell_j=None, # Inequality parameters
+                            Elog_of_c_I=None, Ev_of_ell_I=None, I_i=None, I_j=None, incarceration_parameter=None): # Incarceration adjustment parameters
     # Restrict on selected ages
-    Sᵢ = Sᵢ[agemin:agemax + 1]
-    Sⱼ = Sⱼ[agemin:agemax + 1]
-    cᵢ_bar = cᵢ_bar[agemin:agemax + 1]
-    cⱼ_bar = cⱼ_bar[agemin:agemax + 1]
-    ℓᵢ_bar = ℓᵢ_bar[agemin:agemax + 1]
-    ℓⱼ_bar = ℓⱼ_bar[agemin:agemax + 1]
-    Elog_of_cᵢ = Elog_of_cᵢ[agemin:agemax + 1]
-    Elog_of_cⱼ = Elog_of_cⱼ[agemin:agemax + 1]
-    Elog_of_cᵢ_nd = Elog_of_cᵢ_nd[agemin:agemax + 1]
-    Elog_of_cⱼ_nd = Elog_of_cⱼ_nd[agemin:agemax + 1]
-    cᵢ_bar_nd = cᵢ_bar_nd[agemin:agemax + 1]
-    cⱼ_bar_nd = cⱼ_bar_nd[agemin:agemax + 1]
-    Ev_of_ℓᵢ = Ev_of_ℓᵢ[agemin:agemax + 1]
-    Ev_of_ℓⱼ = Ev_of_ℓⱼ[agemin:agemax + 1]
-    Elog_of_cᴵ = Elog_of_cᴵ[agemin:agemax + 1]
-    Ev_of_ℓᴵ = Ev_of_ℓᴵ[agemin:agemax + 1]
-    Iᵢ = Iᵢ[agemin:agemax + 1]
-    Iⱼ = Iⱼ[agemin:agemax + 1]
-    S_u_bar = S_u_bar[agemin_u_bar:agemax_u_bar + 1]
-    I_u_bar = I_u_bar[agemin_u_bar:agemax_u_bar + 1]
-    c_u_bar = c_u_bar[agemin_u_bar:agemax_u_bar + 1]
-    c_u_barᴵ = c_u_barᴵ[agemin_u_bar:agemax_u_bar + 1]
-    ℓ_u_bar = ℓ_u_bar[agemin_u_bar:agemax_u_bar + 1]
-    ℓ_u_barᴵ = ℓ_u_barᴵ[agemin_u_bar:agemax_u_bar + 1]
+    S_i = S_i[age_min:age_max + 1]
+    S_j = S_j[age_min:age_max + 1]
+    c_i_bar = c_i_bar[age_min:age_max + 1]
+    c_j_bar = c_j_bar[age_min:age_max + 1]
+    ell_i_bar = ell_i_bar[age_min:age_max + 1]
+    ell_j_bar = ell_j_bar[age_min:age_max + 1]
+    Elog_of_c_i = Elog_of_c_i[age_min:age_max + 1]
+    Elog_of_c_j = Elog_of_c_j[age_min:age_max + 1]
+    Elog_of_c_i_nd = Elog_of_c_i_nd[age_min:age_max + 1]
+    Elog_of_c_j_nd = Elog_of_c_j_nd[age_min:age_max + 1]
+    c_i_bar_nd = c_i_bar_nd[age_min:age_max + 1]
+    c_j_bar_nd = c_j_bar_nd[age_min:age_max + 1]
+    Ev_of_ell_i = Ev_of_ell_i[age_min:age_max + 1]
+    Ev_of_ell_j = Ev_of_ell_j[age_min:age_max + 1]
+    Elog_of_c_I = Elog_of_c_I[age_min:age_max + 1]
+    Ev_of_ell_I = Ev_of_ell_I[age_min:age_max + 1]
+    I_i = I_i[age_min:age_max + 1]
+    I_j = I_j[age_min:age_max + 1]
+    S_intercept = S_intercept[age_min_intercept:age_max_intercept + 1]
+    I_intercept = I_intercept[age_min_intercept:age_max_intercept + 1]
+    c_intercept = c_intercept[age_min_intercept:age_max_intercept + 1]
+    c_intercept_I = c_intercept_I[age_min_intercept:age_max_intercept + 1]
+    ell_intercept = ell_intercept[age_min_intercept:age_max_intercept + 1]
+    ell_intercept_I = ell_intercept_I[age_min_intercept:age_max_intercept + 1]
 
     # Calculate the intercept
-    u_bar = (vsl / c_nominal - dot(S_u_bar * (1 - I_u_bar), log(c_u_bar) + v_of_ℓ(ℓ_u_bar)) \
-                             - incarceration_parameter * dot(S_u_bar * I_u_bar, log(c_u_barᴵ) + v_of_ℓ(ℓ_u_barᴵ))) \
-                             / sum(S_u_bar * (1 - I_u_bar * (1 - incarceration_parameter)))
+    u_bar = (vsl / c_nominal - dot(S_intercept * (1 - I_intercept), log(c_intercept) + v_of_ell(ell_intercept)) \
+                             - incarceration_parameter * dot(S_intercept * I_intercept, log(c_intercept_I) + v_of_ell(ell_intercept_I))) \
+                             / sum(S_intercept * (1 - I_intercept * (1 - incarceration_parameter)))
 
     # Calculate the EV and CV incarceration terms, and average them
-    I_EV = incarceration_parameter * sum((u_bar + Elog_of_cᴵ + Ev_of_ℓᴵ) * (Sⱼ * Iⱼ - Sᵢ * Iᵢ)) / sum(Sᵢ * (1 - Iᵢ))
-    I_CV = incarceration_parameter * sum((u_bar + Elog_of_cᴵ + Ev_of_ℓᴵ) * (Sⱼ * Iⱼ - Sᵢ * Iᵢ)) / sum(Sⱼ * (1 - Iⱼ))
+    I_EV = incarceration_parameter * sum((u_bar + Elog_of_c_I + Ev_of_ell_I) * (S_j * I_j - S_i * I_i)) / sum(S_i * (1 - I_i))
+    I_CV = incarceration_parameter * sum((u_bar + Elog_of_c_I + Ev_of_ell_I) * (S_j * I_j - S_i * I_i)) / sum(S_j * (1 - I_j))
     I = (I_EV + I_CV) / 2
 
     # Adjust the survival rates for incarceration
-    Sᵢ = Sᵢ * (1 - Iᵢ)
-    Sⱼ = Sⱼ * (1 - Iⱼ)
+    S_i = S_i * (1 - I_i)
+    S_j = S_j * (1 - I_j)
 
     # Define the lower case survival rates
-    sᵢ = Sᵢ / sum(Sᵢ)
-    sⱼ = Sⱼ / sum(Sⱼ)
-    Δs_EV = (Sⱼ - Sᵢ) / sum(Sᵢ)
-    Δs_CV = (Sⱼ - Sᵢ) / sum(Sⱼ)
+    s_i = S_i / sum(S_i)
+    s_j = S_j / sum(S_j)
+    Delta_s_EV = (S_j - S_i) / sum(S_i)
+    Delta_s_CV = (S_j - S_i) / sum(S_j)
 
     # Calculate flow utility for each group
-    flow_EV = u_bar + Elog_of_cⱼ + Ev_of_ℓⱼ
-    flow_CV = u_bar + Elog_of_cᵢ + Ev_of_ℓᵢ
+    flow_EV = u_bar + Elog_of_c_j + Ev_of_ell_j
+    flow_CV = u_bar + Elog_of_c_i + Ev_of_ell_i
 
     # Calculate the EV and CV life expectancy terms, and average them
-    LE_EV = sum(Δs_EV * flow_EV)
-    LE_CV = sum(Δs_CV * flow_CV)
+    LE_EV = sum(Delta_s_EV * flow_EV)
+    LE_CV = sum(Delta_s_CV * flow_CV)
     LE = (LE_EV + LE_CV) / 2
 
     # Calculate the EV and CV consumption terms, and average them
-    C_EV = log(sum(sᵢ * cⱼ_bar)) - log(sum(sᵢ * cᵢ_bar))
-    C_CV = log(sum(sⱼ * cⱼ_bar)) - log(sum(sⱼ * cᵢ_bar))
+    C_EV = log(sum(s_i * c_j_bar)) - log(sum(s_i * c_i_bar))
+    C_CV = log(sum(s_j * c_j_bar)) - log(sum(s_j * c_i_bar))
     C = (C_EV + C_CV) / 2
 
     # Calculate the EV and CV consumption inequality terms, and average them
-    CI_EV = sum(sᵢ * (Elog_of_cⱼ_nd - Elog_of_cᵢ_nd)) - (log(sum(sᵢ * cⱼ_bar_nd)) - log(sum(sᵢ * cᵢ_bar_nd)))
-    CI_CV = sum(sⱼ * (Elog_of_cⱼ_nd - Elog_of_cᵢ_nd)) - (log(sum(sⱼ * cⱼ_bar_nd)) - log(sum(sⱼ * cᵢ_bar_nd)))
+    CI_EV = sum(s_i * (Elog_of_c_j_nd - Elog_of_c_i_nd)) - (log(sum(s_i * c_j_bar_nd)) - log(sum(s_i * c_i_bar_nd)))
+    CI_CV = sum(s_j * (Elog_of_c_j_nd - Elog_of_c_i_nd)) - (log(sum(s_j * c_j_bar_nd)) - log(sum(s_j * c_i_bar_nd)))
     CI = (CI_EV + CI_CV) / 2
 
     # Calculate the EV and CV leisure terms, and average them
-    L_EV = v_of_ℓ(sum(sᵢ * ℓⱼ_bar)) - v_of_ℓ(sum(sᵢ * ℓᵢ_bar))
-    L_CV = v_of_ℓ(sum(sⱼ * ℓⱼ_bar)) - v_of_ℓ(sum(sⱼ * ℓᵢ_bar))
+    L_EV = v_of_ell(sum(s_i * ell_j_bar)) - v_of_ell(sum(s_i * ell_i_bar))
+    L_CV = v_of_ell(sum(s_j * ell_j_bar)) - v_of_ell(sum(s_j * ell_i_bar))
     L = (L_EV + L_CV) / 2
 
     # Calculate the EV and CV leisure inequality terms, and average them
-    LI_EV = sum(sᵢ * (Ev_of_ℓⱼ - Ev_of_ℓᵢ)) - L_EV
-    LI_CV = sum(sⱼ * (Ev_of_ℓⱼ - Ev_of_ℓᵢ)) - L_CV
+    LI_EV = sum(s_i * (Ev_of_ell_j - Ev_of_ell_i)) - L_EV
+    LI_CV = sum(s_j * (Ev_of_ell_j - Ev_of_ell_i)) - L_CV
     LI = (LI_EV + LI_CV) / 2
 
     # Calculate the EV and CV consumption-equivalent welfare, and average them
-    logλ_EV = LE_EV + C_EV + CI_EV + L_EV + LI_EV + I_EV
-    logλ_CV = LE_CV + C_CV + CI_CV + L_CV + LI_CV + I_CV
-    logλ = (logλ_EV + logλ_CV) / 2
+    log_lambda_EV = LE_EV + C_EV + CI_EV + L_EV + LI_EV + I_EV
+    log_lambda_CV = LE_CV + C_CV + CI_CV + L_CV + LI_CV + I_CV
+    log_lambda = (log_lambda_EV + log_lambda_CV) / 2
 
     # Store the results in a dictionary
-    d = {'LE_CV':   LE_CV,
-         'LE_EV':   LE_EV,
-         'LE':      LE,
-         'C_CV':    C_CV,
-         'C_EV':    C_EV,
-         'C':       C,
-         'CI_CV':   CI_CV,
-         'CI_EV':   CI_EV,
-         'CI':      CI,
-         'L_CV':    L_CV,
-         'L_EV':    L_EV,
-         'L':       L,
-         'LI_CV':   LI_CV,
-         'LI_EV':   LI_EV,
-         'LI':      LI,
-         'I_CV':    I_CV,
-         'I_EV':    I_EV,
-         'I':       I,
-         'logλ_CV': logλ_CV,
-         'logλ_EV': logλ_EV,
-         'logλ':    logλ,
-         'u_bar':   u_bar}
+    d = {'LE_CV':         LE_CV,
+         'LE_EV':         LE_EV,
+         'LE':            LE,
+         'C_CV':          C_CV,
+         'C_EV':          C_EV,
+         'C':             C,
+         'CI_CV':         CI_CV,
+         'CI_EV':         CI_EV,
+         'CI':            CI,
+         'L_CV':          L_CV,
+         'L_EV':          L_EV,
+         'L':             L,
+         'LI_CV':         LI_CV,
+         'LI_EV':         LI_EV,
+         'LI':            LI,
+         'I_CV':          I_CV,
+         'I_EV':          I_EV,
+         'I':             I,
+         'log_lambda_CV': log_lambda_CV,
+         'log_lambda_EV': log_lambda_EV,
+         'log_lambda':    log_lambda,
+         'u_bar':         u_bar}
 
     # Return the dictionary
     return d
 
 # Define the growth consumption-equivalent welfare calculation function
-def logλ_growth(Sᵢ=None, Sⱼ=None, cᵢ_bar=None, cⱼ_bar=None, ℓᵢ_bar=None, ℓⱼ_bar=None, β=1, g=0, agemin=0, agemax=100, T=None, # Standard parameters
-                S_u_bar=None, c_u_bar=None, ℓ_u_bar=None, vsl=7.4e6, c_nominal=None, agemin_u_bar=40, agemax_u_bar=100, # Intercept parameters
-                inequality=False, cᵢ_bar_nd=None, cⱼ_bar_nd=None, Elog_of_cᵢ=None, Elog_of_cⱼ=None, Elog_of_cᵢ_nd=None, Elog_of_cⱼ_nd=None, Ev_of_ℓᵢ=None, Ev_of_ℓⱼ=None): # Inequality parameters
+def cew_growth(S_i=None, S_j=None, c_i_bar=None, c_j_bar=None, ell_i_bar=None, ell_j_bar=None, beta=1, g=0, age_min=0, age_max=100, T=None, # Standard parameters
+               S_intercept=None, c_intercept=None, ell_intercept=None, vsl=7.4e6, c_nominal=None, age_min_intercept=40, age_max_intercept=100, # Intercept parameters
+               inequality=False, c_i_bar_nd=None, c_j_bar_nd=None, Elog_of_c_i=None, Elog_of_c_j=None, Elog_of_c_i_nd=None, Elog_of_c_j_nd=None, Ev_of_ell_i=None, Ev_of_ell_j=None): # Inequality parameters
     # Restrict on selected ages
-    Sᵢ = Sᵢ[agemin:agemax + 1]
-    Sⱼ = Sⱼ[agemin:agemax + 1]
-    cᵢ_bar = cᵢ_bar[agemin:agemax + 1]
-    cⱼ_bar = cⱼ_bar[agemin:agemax + 1]
-    ℓᵢ_bar = ℓᵢ_bar[agemin:agemax + 1]
-    ℓⱼ_bar = ℓⱼ_bar[agemin:agemax + 1]
-    S_u_bar = S_u_bar[agemin_u_bar:agemax_u_bar + 1]
-    c_u_bar = c_u_bar[agemin_u_bar:agemax_u_bar + 1]
-    ℓ_u_bar = ℓ_u_bar[agemin_u_bar:agemax_u_bar + 1]
+    S_i = S_i[age_min:age_max + 1]
+    S_j = S_j[age_min:age_max + 1]
+    c_i_bar = c_i_bar[age_min:age_max + 1]
+    c_j_bar = c_j_bar[age_min:age_max + 1]
+    ell_i_bar = ell_i_bar[age_min:age_max + 1]
+    ell_j_bar = ell_j_bar[age_min:age_max + 1]
+    S_intercept = S_intercept[age_min_intercept:age_max_intercept + 1]
+    c_intercept = c_intercept[age_min_intercept:age_max_intercept + 1]
+    ell_intercept = ell_intercept[age_min_intercept:age_max_intercept + 1]
 
     # Define the sequence of discount rates
-    βᵃ = β**linspace(agemin, agemax, agemax - agemin + 1)
-    βᵃ_u_bar = β**linspace(agemin_u_bar, agemax_u_bar, agemax_u_bar - agemin_u_bar + 1)
+    beta_age = beta**linspace(age_min, age_max, age_max - age_min + 1)
+    beta_age_intercept = beta**linspace(age_min_intercept, age_max_intercept, age_max_intercept - age_min_intercept + 1)
 
     # Define the sequence of growth rates
-    ga = g * linspace(agemin, agemax, agemax - agemin + 1)
-    ga_u_bar = g * linspace(agemin_u_bar, agemax_u_bar, agemax_u_bar - agemin_u_bar + 1)
+    g_age = g * linspace(age_min, age_max, age_max - age_min + 1)
+    g_age_intercept = g * linspace(age_min_intercept, age_max_intercept, age_max_intercept - age_min_intercept + 1)
 
     # Calculate the intercept
-    u_bar = (vsl / c_nominal - dot(βᵃ_u_bar * S_u_bar, log(c_u_bar) + v_of_ℓ(ℓ_u_bar) + ga_u_bar)) / sum(βᵃ_u_bar * S_u_bar)
+    u_bar = (vsl / c_nominal - dot(beta_age_intercept * S_intercept, log(c_intercept) + v_of_ell(ell_intercept) + g_age_intercept)) / sum(beta_age_intercept * S_intercept)
 
     # Define the lower case survival rates
-    sᵢ = βᵃ * Sᵢ / sum(βᵃ * Sᵢ)
-    sⱼ = βᵃ * Sⱼ / sum(βᵃ * Sⱼ)
-    Δs_EV = βᵃ * (Sⱼ - Sᵢ) / sum(βᵃ * Sᵢ)
-    Δs_CV = βᵃ * (Sⱼ - Sᵢ) / sum(βᵃ * Sⱼ)
+    s_i = beta_age * S_i / sum(beta_age * S_i)
+    s_j = beta_age * S_j / sum(beta_age * S_j)
+    Delta_s_EV = beta_age * (S_j - S_i) / sum(beta_age * S_i)
+    Delta_s_CV = beta_age * (S_j - S_i) / sum(beta_age * S_j)
 
     # Calculate consumption-equivalent welfare with the inequality terms
     if inequality:
         # Restrict on selected ages for the inequality terms
-        Elog_of_cᵢ = Elog_of_cᵢ[agemin:agemax + 1]
-        Elog_of_cⱼ = Elog_of_cⱼ[agemin:agemax + 1]
-        Elog_of_cᵢ_nd = Elog_of_cᵢ_nd[agemin:agemax + 1]
-        Elog_of_cⱼ_nd = Elog_of_cⱼ_nd[agemin:agemax + 1]
-        cᵢ_bar_nd = cᵢ_bar_nd[agemin:agemax + 1]
-        cⱼ_bar_nd = cⱼ_bar_nd[agemin:agemax + 1]
-        Ev_of_ℓᵢ = Ev_of_ℓᵢ[agemin:agemax + 1]
-        Ev_of_ℓⱼ = Ev_of_ℓⱼ[agemin:agemax + 1]
+        Elog_of_c_i = Elog_of_c_i[age_min:age_max + 1]
+        Elog_of_c_j = Elog_of_c_j[age_min:age_max + 1]
+        Elog_of_c_i_nd = Elog_of_c_i_nd[age_min:age_max + 1]
+        Elog_of_c_j_nd = Elog_of_c_j_nd[age_min:age_max + 1]
+        c_i_bar_nd = c_i_bar_nd[age_min:age_max + 1]
+        c_j_bar_nd = c_j_bar_nd[age_min:age_max + 1]
+        Ev_of_ell_i = Ev_of_ell_i[age_min:age_max + 1]
+        Ev_of_ell_j = Ev_of_ell_j[age_min:age_max + 1]
 
         # Calculate flow utility for each group
-        flow_EV = u_bar + ga + Elog_of_cⱼ + Ev_of_ℓⱼ
-        flow_CV = u_bar + ga + Elog_of_cᵢ + Ev_of_ℓᵢ
+        flow_EV = u_bar + g_age + Elog_of_c_j + Ev_of_ell_j
+        flow_CV = u_bar + g_age + Elog_of_c_i + Ev_of_ell_i
 
         # Calculate the EV and CV life expectancy terms, and average them
-        LE_EV = sum(Δs_EV * flow_EV) / T
-        LE_CV = sum(Δs_CV * flow_CV) / T
+        LE_EV = sum(Delta_s_EV * flow_EV) / T
+        LE_CV = sum(Delta_s_CV * flow_CV) / T
         LE = (LE_EV + LE_CV) / 2
 
         # Calculate the EV and CV consumption terms, and average them
-        C_EV = (log(sum(sᵢ * cⱼ_bar)) - log(sum(sᵢ * cᵢ_bar))) / T
-        C_CV = (log(sum(sⱼ * cⱼ_bar)) - log(sum(sⱼ * cᵢ_bar))) / T
+        C_EV = (log(sum(s_i * c_j_bar)) - log(sum(s_i * c_i_bar))) / T
+        C_CV = (log(sum(s_j * c_j_bar)) - log(sum(s_j * c_i_bar))) / T
         C = (C_EV + C_CV) / 2
 
         # Calculate the EV and CV consumption inequality terms, and average them
-        CI_EV = (sum(sᵢ * (Elog_of_cⱼ_nd - Elog_of_cᵢ_nd)) - (log(sum(sᵢ * cⱼ_bar_nd)) - log(sum(sᵢ * cᵢ_bar_nd)))) / T
-        CI_CV = (sum(sⱼ * (Elog_of_cⱼ_nd - Elog_of_cᵢ_nd)) - (log(sum(sⱼ * cⱼ_bar_nd)) - log(sum(sⱼ * cᵢ_bar_nd)))) / T
+        CI_EV = (sum(s_i * (Elog_of_c_j_nd - Elog_of_c_i_nd)) - (log(sum(s_i * c_j_bar_nd)) - log(sum(s_i * c_i_bar_nd)))) / T
+        CI_CV = (sum(s_j * (Elog_of_c_j_nd - Elog_of_c_i_nd)) - (log(sum(s_j * c_j_bar_nd)) - log(sum(s_j * c_i_bar_nd)))) / T
         CI = (CI_EV + CI_CV) / 2
 
         # Calculate the EV and CV leisure terms, and average them
-        L_EV = (v_of_ℓ(sum(sᵢ * ℓⱼ_bar)) - v_of_ℓ(sum(sᵢ * ℓᵢ_bar))) / T
-        L_CV = (v_of_ℓ(sum(sⱼ * ℓⱼ_bar)) - v_of_ℓ(sum(sⱼ * ℓᵢ_bar))) / T
+        L_EV = (v_of_ell(sum(s_i * ell_j_bar)) - v_of_ell(sum(s_i * ell_i_bar))) / T
+        L_CV = (v_of_ell(sum(s_j * ell_j_bar)) - v_of_ell(sum(s_j * ell_i_bar))) / T
         L = (L_EV + L_CV) / 2
 
         # Calculate the EV and CV leisure inequality terms, and average them
-        LI_EV = (sum(sᵢ * (Ev_of_ℓⱼ - Ev_of_ℓᵢ)) - (v_of_ℓ(sum(sᵢ * ℓⱼ_bar)) - v_of_ℓ(sum(sᵢ * ℓᵢ_bar)))) / T
-        LI_CV = (sum(sⱼ * (Ev_of_ℓⱼ - Ev_of_ℓᵢ)) - (v_of_ℓ(sum(sⱼ * ℓⱼ_bar)) - v_of_ℓ(sum(sⱼ * ℓᵢ_bar)))) / T
+        LI_EV = (sum(s_i * (Ev_of_ell_j - Ev_of_ell_i)) - (v_of_ell(sum(s_i * ell_j_bar)) - v_of_ell(sum(s_i * ell_i_bar)))) / T
+        LI_CV = (sum(s_j * (Ev_of_ell_j - Ev_of_ell_i)) - (v_of_ell(sum(s_j * ell_j_bar)) - v_of_ell(sum(s_j * ell_i_bar)))) / T
         LI = (LI_EV + LI_CV) / 2
 
         # Calculate the EV and CV consumption-equivalent welfare, and average them
-        logλ_EV = LE_EV + C_EV + CI_EV + L_EV + LI_EV
-        logλ_CV = LE_CV + C_CV + CI_CV + L_CV + LI_CV
-        logλ = (logλ_EV + logλ_CV) / 2
+        log_lambda_EV = LE_EV + C_EV + CI_EV + L_EV + LI_EV
+        log_lambda_CV = LE_CV + C_CV + CI_CV + L_CV + LI_CV
+        log_lambda = (log_lambda_EV + log_lambda_CV) / 2
 
         # Store the results in a dictionary
-        d = {'LE_CV':   LE_CV,
-             'LE_EV':   LE_EV,
-             'LE':      LE,
-             'C_CV':    C_CV,
-             'C_EV':    C_EV,
-             'C':       C,
-             'CI_CV':   CI_CV,
-             'CI_EV':   CI_EV,
-             'CI':      CI,
-             'L_CV':    L_CV,
-             'L_EV':    L_EV,
-             'L':       L,
-             'LI_CV':   LI_CV,
-             'LI_EV':   LI_EV,
-             'LI':      LI,
-             'logλ_CV': logλ_CV,
-             'logλ_EV': logλ_EV,
-             'logλ':    logλ,
-             'u_bar':   u_bar}
+        d = {'LE_CV':         LE_CV,
+             'LE_EV':         LE_EV,
+             'LE':            LE,
+             'C_CV':          C_CV,
+             'C_EV':          C_EV,
+             'C':             C,
+             'CI_CV':         CI_CV,
+             'CI_EV':         CI_EV,
+             'CI':            CI,
+             'L_CV':          L_CV,
+             'L_EV':          L_EV,
+             'L':             L,
+             'LI_CV':         LI_CV,
+             'LI_EV':         LI_EV,
+             'LI':            LI,
+             'log_lambda_CV': log_lambda_CV,
+             'log_lambda_EV': log_lambda_EV,
+             'log_lambda':    log_lambda,
+             'u_bar':         u_bar}
     else:
         # Compute flow utility for each group
-        flow_EV = u_bar + log(sum(sⱼ * cⱼ_bar * exp(ga))) + v_of_ℓ(sum(sⱼ * ℓⱼ_bar))
-        flow_CV = u_bar + log(sum(sᵢ * cᵢ_bar * exp(ga))) + v_of_ℓ(sum(sᵢ * ℓᵢ_bar))
+        flow_EV = u_bar + log(sum(s_j * c_j_bar * exp(g_age))) + v_of_ell(sum(s_j * ell_j_bar))
+        flow_CV = u_bar + log(sum(s_i * c_i_bar * exp(g_age))) + v_of_ell(sum(s_i * ell_i_bar))
 
         # Calculate the EV and CV life expectancy terms, and average them
-        LE_EV = (sum(Δs_EV) * flow_EV) / T
-        LE_CV = (sum(Δs_CV) * flow_CV) / T
+        LE_EV = (sum(Delta_s_EV) * flow_EV) / T
+        LE_CV = (sum(Delta_s_CV) * flow_CV) / T
         LE = (LE_EV + LE_CV) / 2
 
         # Calculate the EV and CV consumption terms, and average them
-        C_EV = (log(sum(sᵢ * cⱼ_bar)) - log(sum(sᵢ * cᵢ_bar))) / T
-        C_CV = (log(sum(sⱼ * cⱼ_bar)) - log(sum(sⱼ * cᵢ_bar))) / T
+        C_EV = (log(sum(s_i * c_j_bar)) - log(sum(s_i * c_i_bar))) / T
+        C_CV = (log(sum(s_j * c_j_bar)) - log(sum(s_j * c_i_bar))) / T
         C = (C_EV + C_CV) / 2
 
         # Calculate the EV and CV leisure terms, and average them
-        L_EV = (v_of_ℓ(sum(sᵢ * ℓⱼ_bar)) - v_of_ℓ(sum(sᵢ * ℓᵢ_bar))) / T
-        L_CV = (v_of_ℓ(sum(sⱼ * ℓⱼ_bar)) - v_of_ℓ(sum(sⱼ * ℓᵢ_bar))) / T
+        L_EV = (v_of_ell(sum(s_i * ell_j_bar)) - v_of_ell(sum(s_i * ell_i_bar))) / T
+        L_CV = (v_of_ell(sum(s_j * ell_j_bar)) - v_of_ell(sum(s_j * ell_i_bar))) / T
         L = (L_EV + L_CV) / 2
 
         # Calculate the EV and CV consumption-equivalent welfare, and average them
-        logλ_EV = LE_EV + C_EV + L_EV
-        logλ_CV = LE_CV + C_CV + L_CV
-        logλ = (logλ_EV + logλ_CV) / 2
+        log_lambda_EV = LE_EV + C_EV + L_EV
+        log_lambda_CV = LE_CV + C_CV + L_CV
+        log_lambda = (log_lambda_EV + log_lambda_CV) / 2
 
         # Store the results in a dictionary
-        d = {'LE_CV':   LE_CV,
-             'LE_EV':   LE_EV,
-             'LE':      LE,
-             'C_CV':    C_CV,
-             'C_EV':    C_EV,
-             'C':       C,
-             'L_CV':    L_CV,
-             'L_EV':    L_EV,
-             'L':       L,
-             'logλ_CV': logλ_CV,
-             'logλ_EV': logλ_EV,
-             'logλ':    logλ,
-             'u_bar':   u_bar}
+        d = {'LE_CV':         LE_CV,
+             'LE_EV':         LE_EV,
+             'LE':            LE,
+             'C_CV':          C_CV,
+             'C_EV':          C_EV,
+             'C':             C,
+             'L_CV':          L_CV,
+             'L_EV':          L_EV,
+             'L':             L,
+             'log_lambda_CV': log_lambda_CV,
+             'log_lambda_EV': log_lambda_EV,
+             'log_lambda':    log_lambda,
+             'u_bar':         u_bar}
 
     # Return the dictionary
     return d

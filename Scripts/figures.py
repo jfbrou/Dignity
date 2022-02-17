@@ -52,17 +52,19 @@ df = cex.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'c
 
 # Load the bootstrapped CEX data and calculate the 95% confidence interval
 cex_bs = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap_simple.csv'))
-cex_bs = cex_bs.loc[cex_bs.year.isin(range(1984, 2019 + 1)) & cex_bs.race.isin([1, 2]) & (cex_bs.latin == -1), :]
-df_bs = pd.merge(cex_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.025)}).rename(columns={'consumption_average': 'lb'}),
-                 cex_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.975)}).rename(columns={'consumption_average': 'ub'}), how='left')
+df_bs = cex_bs.loc[cex_bs.year.isin(range(1984, 2019 + 1)) & cex_bs.race.isin([1, 2]) & (cex_bs.latin == -1), :]
+df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.025)}).rename(columns={'consumption_average': 'lb'}),
+                 df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.975)}).rename(columns={'consumption_average': 'ub'}), how='left')
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
 ax.plot(df.year.unique(), df.loc[df.race == 1, 'consumption'], color=colors[0], linewidth=2.5)
+ax.fill_between(df_bs.year.unique(), df_bs.loc[df_bs.race == 1, 'lb'], y2=df_bs.loc[df_bs.race == 1, 'ub'], color=colors[0], alpha=0.2, linewidth=0)
 ax.annotate('White', xy=(2019.25, df.loc[df.race == 1, 'consumption'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
 ax.plot(df.year.unique(), df.loc[df.race == 2, 'consumption'], color=colors[1], linewidth=2.5)
+ax.fill_between(df_bs.year.unique(), df_bs.loc[df_bs.race == 2, 'lb'], y2=df_bs.loc[df_bs.race == 2, 'ub'], color=colors[1], alpha=0.2, linewidth=0)
 ax.annotate('Black', xy=(2019.25, df.loc[df.race == 2, 'consumption'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
 
 # Set the horizontal axis
@@ -147,25 +149,27 @@ cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
 cex = cex.loc[cex.year.isin(range(1984, 2019 + 1)), :]
 
 # Normalize consumption by that of the reference group
-cex.loc[:, 'consumption_nd'] = cex.consumption_nd / np.average(cex.loc[cex.year == 2019, 'consumption_nd'], weights=cex.loc[cex.year == 2019, 'weight'])
+cex.loc[:, 'consumption_nd'] = cex.consumption_nd / np.average(cex.loc[(cex.year == 2019) & (cex.race == 1), 'consumption_nd'], weights=cex.loc[(cex.year == 2019) & (cex.race == 1), 'weight'])
 
 # Calculate the standard deviation of log consumption by year and race
 df = cex.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption_nd': np.sqrt(np.average((np.log(x.consumption_nd) - np.average(np.log(x.consumption_nd), weights=x.weight))**2, weights=x.weight))}))
 
 # Load the bootstrapped CEX data and calculate the 95% confidence interval
 cex_bs = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap_simple.csv'))
-cex_bs = cex_bs.loc[cex_bs.year.isin(range(1984, 2019 + 1)) & cex_bs.race.isin([1, 2]) & (cex_bs.latin == -1), :]
-df_bs = pd.merge(cex_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_sd': lambda x: x.quantile(0.025)}).rename(columns={'consumption_sd': 'lb'}),
-                 cex_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_sd': lambda x: x.quantile(0.975)}).rename(columns={'consumption_sd': 'ub'}), how='left')
+df_bs = cex_bs.loc[cex_bs.year.isin(range(1984, 2019 + 1)) & cex_bs.race.isin([1, 2]) & (cex_bs.latin == -1), :]
+df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_sd': lambda x: x.quantile(0.025)}).rename(columns={'consumption_sd': 'lb'}),
+                 df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_sd': lambda x: x.quantile(0.975)}).rename(columns={'consumption_sd': 'ub'}), how='left')
 
 # Initialize the figure
 fig, ax = plt.subplots()
 
 # Plot the lines
 ax.plot(df.year.unique(), df.loc[df.race == 1, 'consumption_nd'], color=colors[0], linewidth=2.5)
-ax.annotate('White', xy=(2000, 0.595), color='k', fontsize=12, ha='center', va='center', annotation_clip=False)
+ax.fill_between(df_bs.year.unique(), df_bs.loc[df_bs.race == 1, 'lb'], y2=df_bs.loc[df_bs.race == 1, 'ub'], color=colors[0], alpha=0.2, linewidth=0)
+ax.annotate('White', xy=(2000, 0.6), color='k', fontsize=12, ha='center', va='center', annotation_clip=False)
 ax.plot(df.year.unique(), df.loc[df.race == 2, 'consumption_nd'], color=colors[1], linewidth=2.5)
-ax.annotate('Black', xy=(2004, 0.51), color='k', fontsize=12, ha='center', va='center', annotation_clip=False)
+ax.fill_between(df_bs.year.unique(), df_bs.loc[df_bs.race == 2, 'lb'], y2=df_bs.loc[df_bs.race == 2, 'ub'], color=colors[1], alpha=0.2, linewidth=0)
+ax.annotate('Black', xy=(2004, 0.5), color='k', fontsize=12, ha='center', va='center', annotation_clip=False)
 
 # Set the horizontal axis
 ax.set_xlim(1984, 2019)
@@ -247,6 +251,15 @@ cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[(cex.year == 20
 # Calculate the logarithm of average consumption by year and race
 df = cex.groupby(['year', 'race', 'latin'], as_index=False).apply(lambda x: pd.Series({'consumption': np.log(np.average(x.consumption, weights=x.weight))}))
 df_latin = cex.groupby(['year', 'latin'], as_index=False).apply(lambda x: pd.Series({'consumption': np.log(np.average(x.consumption, weights=x.weight))}))
+
+# Load the bootstrapped CEX data and calculate the 95% confidence interval
+cex_bs = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap_simple.csv'))
+df_bs = cex_bs.loc[cex_bs.year.isin(range(1984, 2019 + 1)) & cex_bs.race.isin([1, 2]) & (cex_bs.latin == 0), :]
+df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.025)}).rename(columns={'consumption_average': 'lb'}),
+                 df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.975)}).rename(columns={'consumption_average': 'ub'}), how='left')
+df_bs_latin = cex_bs.loc[cex_bs.year.isin(range(1984, 2019 + 1)) & (cex_bs.race == -1) & (cex_bs.latin == 1), :]
+df_bs_latin = pd.merge(df_bs_latin.groupby('year', as_index=False).agg({'consumption_average': lambda x: x.quantile(0.025)}).rename(columns={'consumption_average': 'lb'}),
+                       df_bs_latin.groupby('year', as_index=False).agg({'consumption_average': lambda x: x.quantile(0.975)}).rename(columns={'consumption_average': 'ub'}), how='left')
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
@@ -392,13 +405,21 @@ cps.loc[:, 'year'] = cps.year - 1
 # Calculate average leisure by year and race
 df = cps.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'leisure': np.average(x.leisure, weights=x.weight)}))
 
+# Load the bootstrapped CEX data and calculate the 95% confidence interval
+cps_bs = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap_simple.csv'))
+df_bs = cps_bs.loc[cps_bs.year.isin(range(1984, 2019 + 1)) & cps_bs.race.isin([1, 2]) & (cps_bs.latin == -1), :]
+df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'leisure_average': lambda x: x.quantile(0.025)}).rename(columns={'leisure_average': 'lb'}),
+                 df_bs.groupby(['year', 'race'], as_index=False).agg({'leisure_average': lambda x: x.quantile(0.975)}).rename(columns={'leisure_average': 'ub'}), how='left')
+
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
 ax.plot(df.year.unique(), 100 * df.loc[df.race == 1, 'leisure'], color=colors[0], linewidth=2.5)
+ax.fill_between(df_bs.year.unique(), 100 * df_bs.loc[df_bs.race == 1, 'lb'], y2=100 * df_bs.loc[df_bs.race == 1, 'ub'], color=colors[0], alpha=0.2, linewidth=0)
 ax.annotate('White', xy=(2019.25, 100 * df.loc[df.race == 1, 'leisure'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
 ax.plot(df.year.unique(), 100 * df.loc[df.race == 2, 'leisure'], color=colors[1], linewidth=2.5)
+ax.fill_between(df_bs.year.unique(), 100 * df_bs.loc[df_bs.race == 2, 'lb'], y2=100 * df_bs.loc[df_bs.race == 2, 'ub'], color=colors[1], alpha=0.2, linewidth=0)
 ax.annotate('Black', xy=(2019.25, 100 * df.loc[df.race == 2, 'leisure'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
 
 # Set the horizontal axis
@@ -436,16 +457,28 @@ cps.loc[:, 'year'] = cps.year - 1
 df = cps.groupby(['year', 'race', 'latin'], as_index=False).apply(lambda x: pd.Series({'leisure': np.average(x.leisure, weights=x.weight)}))
 df_latin = cps.groupby(['year', 'latin'], as_index=False).apply(lambda x: pd.Series({'leisure': np.average(x.leisure, weights=x.weight)}))
 
+# Load the bootstrapped CEX data and calculate the 95% confidence interval
+cps_bs = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap_simple.csv'))
+df_bs = cps_bs.loc[cps_bs.year.isin(range(2006, 2019 + 1)) & cps_bs.race.isin([1, 2]) & (cps_bs.latin == 0), :]
+df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'leisure_average': lambda x: x.quantile(0.025)}).rename(columns={'leisure_average': 'lb'}),
+                 df_bs.groupby(['year', 'race'], as_index=False).agg({'leisure_average': lambda x: x.quantile(0.975)}).rename(columns={'leisure_average': 'ub'}), how='left')
+df_bs_latin = cps_bs.loc[cps_bs.year.isin(range(1984, 2019 + 1)) & (cps_bs.race == -1) & (cps_bs.latin == 1), :]
+df_bs_latin = pd.merge(df_bs_latin.groupby('year', as_index=False).agg({'leisure_average': lambda x: x.quantile(0.025)}).rename(columns={'leisure_average': 'lb'}),
+                       df_bs_latin.groupby('year', as_index=False).agg({'leisure_average': lambda x: x.quantile(0.975)}).rename(columns={'leisure_average': 'ub'}), how='left')
+
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
 ax.plot(range(2006, 2019 + 1), 100 * df.loc[(df.race == 1) & (df.latin == 0), 'leisure'], color=colors[0], linewidth=2.5)
+ax.fill_between(df_bs.year.unique(), 100 * df_bs.loc[df_bs.race == 1, 'lb'], y2=100 * df_bs.loc[df_bs.race == 1, 'ub'], color=colors[0], alpha=0.2, linewidth=0)
 ax.annotate('White non-Latinx', xy=(2008.5, 83.8), color='k', fontsize=12, va='center', annotation_clip=False)
 ax.plot(range(2006, 2019 + 1), 100 * df.loc[(df.race == 2) & (df.latin == 0), 'leisure'], color=colors[1], linewidth=2.5)
-ax.annotate('Black non-Latinx', xy=(2008.5, 87.3), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.fill_between(df_bs.year.unique(), 100 * df_bs.loc[df_bs.race == 2, 'lb'], y2=100 * df_bs.loc[df_bs.race == 2, 'ub'], color=colors[1], alpha=0.2, linewidth=0)
+ax.annotate('Black non-Latinx', xy=(2008.5, 87.4), color='k', fontsize=12, va='center', annotation_clip=False)
 ax.plot(range(2006, 2019 + 1), 100 * df_latin.loc[df_latin.latin == 1, 'leisure'], color=colors[2], linewidth=2.5)
-ax.annotate('Latinx', xy=(2006.35, 84.5), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.fill_between(df_bs_latin.year.unique(), 100 * df_bs_latin.lb, y2=100 * df_bs_latin.ub, color=colors[2], alpha=0.2, linewidth=0)
+ax.annotate('Latinx', xy=(2006.35, 84.3), color='k', fontsize=12, va='center', annotation_clip=False)
 
 # Set the horizontal axis
 ax.set_xlim(2006, 2019)
@@ -481,14 +514,22 @@ cps.loc[:, 'year'] = cps.year - 1
 # Calculate the standard deviation of leisure by year and race
 df = cps.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'leisure': np.sqrt(np.average((x.leisure - np.average(x.leisure, weights=x.weight))**2, weights=x.weight))}))
 
+# Load the bootstrapped CEX data and calculate the 95% confidence interval
+cps_bs = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap_simple.csv'))
+df_bs = cps_bs.loc[cps_bs.year.isin(range(1984, 2019 + 1)) & cps_bs.race.isin([1, 2]) & (cps_bs.latin == -1), :]
+df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'leisure_sd': lambda x: x.quantile(0.025)}).rename(columns={'leisure_sd': 'lb'}),
+                 df_bs.groupby(['year', 'race'], as_index=False).agg({'leisure_sd': lambda x: x.quantile(0.975)}).rename(columns={'leisure_sd': 'ub'}), how='left')
+
 # Initialize the figure
 fig, ax = plt.subplots()
 
 # Plot the lines
 ax.plot(df.year.unique(), df.loc[df.race == 1, 'leisure'], color=colors[0], linewidth=2.5)
+ax.fill_between(df_bs.year.unique(), df_bs.loc[df_bs.race == 1, 'lb'], y2=df_bs.loc[df_bs.race == 1, 'ub'], color=colors[0], alpha=0.2, linewidth=0)
 ax.annotate('White', xy=(2004.25, 0.171), color='k', fontsize=12, va='center', annotation_clip=False)
 ax.plot(df.year.unique(), df.loc[df.race == 2, 'leisure'], color=colors[1], linewidth=2.5)
-ax.annotate('Black', xy=(2008.5, 0.155), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.fill_between(df_bs.year.unique(), df_bs.loc[df_bs.race == 2, 'lb'], y2=df_bs.loc[df_bs.race == 2, 'ub'], color=colors[1], alpha=0.2, linewidth=0)
+ax.annotate('Black', xy=(2008.5, 0.154), color='k', fontsize=12, va='center', annotation_clip=False)
 
 # Set the horizontal axis
 ax.set_xlim(1984, 2019)
@@ -855,8 +896,8 @@ years = range(1984, 2019 + 1)
 
 # Load the dignity data
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
-dignity_u_bar = dignity.loc[(dignity.micro == True) & (dignity.race == -1) & (dignity.latin == -1) & (dignity.gender == -1) & (dignity.year == 2006), :]
-dignity = dignity.loc[(dignity.micro == True) & (dignity.race != -1) & (dignity.latin == -1) & (dignity.gender == -1), :]
+dignity_u_bar = dignity.loc[(dignity.historical == False) & (dignity.race == -1) & (dignity.latin == -1) & (dignity.year == 2006), :]
+dignity = dignity.loc[(dignity.historical == False) & (dignity.race != -1) & (dignity.latin == -1), :]
 
 # Retrieve nominal consumption per capita in 2006
 c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
@@ -864,36 +905,36 @@ population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006
 c_nominal = 1e6 * c_nominal / population
 
 # Calculate the consumption-equivalent welfare of Black relative to White Americans
-df = pd.DataFrame({'year': years, 'logλ': np.zeros(len(years))})
+df = pd.DataFrame({'year': years, 'log_lambda': np.zeros(len(years))})
 for year in years:
-    Sᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
-    Sⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
-    cᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
-    cⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
-    ℓᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ℓ_bar'].values
-    ℓⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ℓ_bar'].values
-    S_u_bar = dignity_u_bar.loc[:, 'S'].values
-    c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-    ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-    cᵢ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
-    cⱼ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
-    Elog_of_cᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
-    Elog_of_cⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
-    Elog_of_cᵢ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
-    Elog_of_cⱼ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
-    Ev_of_ℓᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ℓ'].values
-    Ev_of_ℓⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ℓ'].values
-    df.loc[df.year == year, 'logλ'] = logλ_level(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-                                                 S_u_bar=S_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal,
-                                                 inequality=True, cᵢ_bar_nd=cᵢ_bar_nd, cⱼ_bar_nd=cⱼ_bar_nd, Elog_of_cᵢ=Elog_of_cᵢ, Elog_of_cⱼ=Elog_of_cⱼ, Elog_of_cᵢ_nd=Elog_of_cᵢ_nd, Elog_of_cⱼ_nd=Elog_of_cⱼ_nd, Ev_of_ℓᵢ=Ev_of_ℓᵢ, Ev_of_ℓⱼ=Ev_of_ℓⱼ)['logλ']
+    S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
+    c_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
+    c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+    ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ell'].values
+    df.loc[df.year == year, 'log_lambda'] = cew_level(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                 S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                 inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
-ax.plot(years, df.logλ, color=colors[1], linewidth=2.5)
-ax.annotate('{0:.2f}'.format(np.exp(df.logλ.iloc[-1])), xy=(2019.25, df.logλ.iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
-ax.annotate('{0:.2f}'.format(np.exp(df.logλ.iloc[0])), xy=(1981.5, df.logλ.iloc[0]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.plot(years, df.log_lambda, color=colors[1], linewidth=2.5)
+ax.annotate('{0:.2f}'.format(np.exp(df.log_lambda.iloc[-1])), xy=(2019.25, df.log_lambda.iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('{0:.2f}'.format(np.exp(df.log_lambda.iloc[0])), xy=(1981.5, df.log_lambda.iloc[0]), color='k', fontsize=12, va='center', annotation_clip=False)
 
 # Set the horizontal axis
 ax.set_xlim(1984, 2019)
@@ -934,62 +975,62 @@ population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006
 c_nominal = 1e6 * c_nominal / population
 
 # Create a data frame
-df = pd.DataFrame({'year': years, 'logλ': np.zeros(len(years)), 'logλ_nipa': np.zeros(len(years))})
+df = pd.DataFrame({'year': years, 'log_lambda': np.zeros(len(years)), 'log_lambda_nipa': np.zeros(len(years))})
 
 # Calculate the consumption-equivalent welfare of Black relative to White Americans without the NIPA PCE adjustment
 for year in years:
-    Sᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
-    Sⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
-    cᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
-    cⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
-    ℓᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ℓ_bar'].values
-    ℓⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ℓ_bar'].values
-    S_u_bar = dignity_u_bar.loc[:, 'S'].values
-    c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-    ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-    cᵢ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
-    cⱼ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
-    Elog_of_cᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
-    Elog_of_cⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
-    Elog_of_cᵢ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
-    Elog_of_cⱼ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
-    Ev_of_ℓᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ℓ'].values
-    Ev_of_ℓⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ℓ'].values
-    df.loc[df.year == year, 'logλ'] = logλ_level(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-                                                 S_u_bar=S_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal,
-                                                 inequality=True, cᵢ_bar_nd=cᵢ_bar_nd, cⱼ_bar_nd=cⱼ_bar_nd, Elog_of_cᵢ=Elog_of_cᵢ, Elog_of_cⱼ=Elog_of_cⱼ, Elog_of_cᵢ_nd=Elog_of_cᵢ_nd, Elog_of_cⱼ_nd=Elog_of_cⱼ_nd, Ev_of_ℓᵢ=Ev_of_ℓᵢ, Ev_of_ℓⱼ=Ev_of_ℓⱼ)['logλ']
+    S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
+    c_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
+    c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+    ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ell'].values
+    df.loc[df.year == year, 'log_lambda'] = cew_level(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                 S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                 inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
 
 # Calculate the consumption-equivalent welfare of Black relative to White Americans with the NIPA PCE adjustment
 for year in years:
-    Sᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
-    Sⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
-    cᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nipa'].values
-    cⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nipa'].values
-    ℓᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ℓ_bar'].values
-    ℓⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ℓ_bar'].values
-    S_u_bar = dignity_u_bar.loc[:, 'S'].values
-    c_u_bar = dignity_u_bar.loc[:, 'c_bar_nipa'].values
-    ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-    cᵢ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nipa_nd'].values
-    cⱼ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nipa_nd'].values
-    Elog_of_cᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nipa'].values
-    Elog_of_cⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nipa'].values
-    Elog_of_cᵢ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nipa_nd'].values
-    Elog_of_cⱼ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nipa_nd'].values
-    Ev_of_ℓᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ℓ'].values
-    Ev_of_ℓⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ℓ'].values
-    df.loc[df.year == year, 'logλ_nipa'] = logλ_level(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-                                                      S_u_bar=S_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal,
-                                                      inequality=True, cᵢ_bar_nd=cᵢ_bar_nd, cⱼ_bar_nd=cⱼ_bar_nd, Elog_of_cᵢ=Elog_of_cᵢ, Elog_of_cⱼ=Elog_of_cⱼ, Elog_of_cᵢ_nd=Elog_of_cᵢ_nd, Elog_of_cⱼ_nd=Elog_of_cⱼ_nd, Ev_of_ℓᵢ=Ev_of_ℓᵢ, Ev_of_ℓⱼ=Ev_of_ℓⱼ)['logλ']
+    S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
+    c_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nipa'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nipa'].values
+    ell_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
+    c_intercept = dignity_u_bar.loc[:, 'c_bar_nipa'].values
+    ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nipa_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nipa_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nipa'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nipa'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nipa_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nipa_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ell'].values
+    df.loc[df.year == year, 'log_lambda_nipa'] = cew_level(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                      S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                      inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
-ax.plot(years, df.logλ, color=colors[1], linewidth=2.5)
-ax.plot(years, df.logλ_nipa, color=colors[1], linewidth=2.5, alpha=0.2)
-ax.annotate('{0:.2f}'.format(np.exp(df.logλ.iloc[-1])), xy=(2019.25, df.logλ.iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
-ax.annotate('{0:.2f}'.format(np.exp(df.logλ.iloc[0])), xy=(1981.5, df.logλ.iloc[0]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.plot(years, df.log_lambda, color=colors[1], linewidth=2.5)
+ax.plot(years, df.log_lambda_nipa, color=colors[1], linewidth=2.5, alpha=0.2)
+ax.annotate('{0:.2f}'.format(np.exp(df.log_lambda.iloc[-1])), xy=(2019.25, df.log_lambda.iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('{0:.2f}'.format(np.exp(df.log_lambda.iloc[0])), xy=(1981.5, df.log_lambda.iloc[0]), color='k', fontsize=12, va='center', annotation_clip=False)
 
 # Set the horizontal axis
 ax.set_xlim(1984, 2019)
@@ -1047,37 +1088,37 @@ SCF = SCF.loc[(SCF.index == 'White non-Hispanic') | (SCF.index == 'Black or Afri
 SCF.columns = SCF.columns.droplevel(level=1)
 
 # Calculate the consumption-equivalent welfare of Black relative to White Americans
-df = pd.DataFrame({'year': years, 'logλ': np.zeros(len(years))})
+df = pd.DataFrame({'year': years, 'log_lambda': np.zeros(len(years))})
 for year in years:
-    Sᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
-    Sⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
-    cᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
-    cⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
-    ℓᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ℓ_bar'].values
-    ℓⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ℓ_bar'].values
-    S_u_bar = dignity_u_bar.loc[:, 'S'].values
-    c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-    ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-    cᵢ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
-    cⱼ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
-    Elog_of_cᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
-    Elog_of_cⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
-    Elog_of_cᵢ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
-    Elog_of_cⱼ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
-    Ev_of_ℓᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ℓ'].values
-    Ev_of_ℓⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ℓ'].values
-    df.loc[df.year == year, 'logλ'] = logλ_level(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-                                                 S_u_bar=S_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal,
-                                                 inequality=True, cᵢ_bar_nd=cᵢ_bar_nd, cⱼ_bar_nd=cⱼ_bar_nd, Elog_of_cᵢ=Elog_of_cᵢ, Elog_of_cⱼ=Elog_of_cⱼ, Elog_of_cᵢ_nd=Elog_of_cᵢ_nd, Elog_of_cⱼ_nd=Elog_of_cⱼ_nd, Ev_of_ℓᵢ=Ev_of_ℓᵢ, Ev_of_ℓⱼ=Ev_of_ℓⱼ)['logλ']
+    S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
+    c_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
+    c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+    ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ell'].values
+    df.loc[df.year == year, 'log_lambda'] = cew_level(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                 S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                 inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
 
 # Initialize the figure
 fig, ax1 = plt.subplots(figsize=(6, 4))
 ax2 = ax1.twinx()
 
 # Plot the lines
-ax1.plot(years, df.logλ, color=colors[1], linewidth=2.5)
-ax1.annotate('{0:.2f}'.format(np.exp(df.logλ.iloc[-1])), xy=(2019.25, df.logλ.iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
-ax1.annotate('{0:.2f}'.format(np.exp(df.logλ.iloc[0])), xy=(1981.5, df.logλ.iloc[0]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax1.plot(years, df.log_lambda, color=colors[1], linewidth=2.5)
+ax1.annotate('{0:.2f}'.format(np.exp(df.log_lambda.iloc[-1])), xy=(2019.25, df.log_lambda.iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax1.annotate('{0:.2f}'.format(np.exp(df.log_lambda.iloc[0])), xy=(1981.5, df.log_lambda.iloc[0]), color='k', fontsize=12, va='center', annotation_clip=False)
 ax1.annotate('Welfare', xy=(2010, np.log(0.63)), color='k', fontsize=12, va='center', annotation_clip=False)
 ax1.plot(years, np.log(cex.consumption), color=colors[1], linewidth=2, linestyle='dashed')
 ax1.annotate('{0:.2f}'.format(cex.consumption.iloc[-1]), xy=(2019.25, np.log(cex.consumption.iloc[-1])), color='k', fontsize=12, va='center', annotation_clip=False)
@@ -1134,52 +1175,52 @@ c_nominal = 1e6 * c_nominal / population
 
 # Calculate the consumption-equivalent welfare of Black relative to White Americans from the U.S. censuses and ACS
 macroyears = list(range(1940, 1990 + 1, 10)) + list(range(2000, 2019 + 1))
-macrodf = pd.DataFrame({'year': macroyears, 'logλ': np.zeros(len(macroyears))})
+macrodf = pd.DataFrame({'year': macroyears, 'log_lambda': np.zeros(len(macroyears))})
 for year in macroyears:
-    Sᵢ = dignity.loc[(dignity.micro == False) & (dignity.year == year) & (dignity.race == 1), 'S'].values
-    Sⱼ = dignity.loc[(dignity.micro == False) & (dignity.year == year) & (dignity.race == 2), 'S'].values
-    cᵢ_bar = dignity.loc[(dignity.micro == False) & (dignity.year == year) & (dignity.race == 1), 'c_bar'].values
-    cⱼ_bar = dignity.loc[(dignity.micro == False) & (dignity.year == year) & (dignity.race == 2), 'c_bar'].values
-    ℓᵢ_bar = dignity.loc[(dignity.micro == False) & (dignity.year == year) & (dignity.race == 1), 'ℓ_bar'].values
-    ℓⱼ_bar = dignity.loc[(dignity.micro == False) & (dignity.year == year) & (dignity.race == 2), 'ℓ_bar'].values
-    S_u_bar = dignity_u_bar.loc[:, 'S'].values
-    c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-    ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-    macrodf.loc[macrodf.year == year, 'logλ'] = logλ_level(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-                                                           S_u_bar=S_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal)['logλ']
+    S_i = dignity.loc[(dignity.micro == False) & (dignity.year == year) & (dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.micro == False) & (dignity.year == year) & (dignity.race == 2), 'S'].values
+    c_i_bar = dignity.loc[(dignity.micro == False) & (dignity.year == year) & (dignity.race == 1), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.micro == False) & (dignity.year == year) & (dignity.race == 2), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.micro == False) & (dignity.year == year) & (dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.micro == False) & (dignity.year == year) & (dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
+    c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+    ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+    macrodf.loc[macrodf.year == year, 'log_lambda'] = cew_level(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                           S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal)['log_lambda']
 
 # Calculate the consumption-equivalent welfare of Black relative to White Americans from the CEX and CPS
 microyears = range(1984, 2019 + 1)
-microdf = pd.DataFrame({'year': microyears, 'logλ': np.zeros(len(microyears))})
+microdf = pd.DataFrame({'year': microyears, 'log_lambda': np.zeros(len(microyears))})
 for year in microyears:
-    Sᵢ = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 1), 'S'].values
-    Sⱼ = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 2), 'S'].values
-    cᵢ_bar = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 1), 'c_bar'].values
-    cⱼ_bar = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 2), 'c_bar'].values
-    ℓᵢ_bar = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 1), 'ℓ_bar'].values
-    ℓⱼ_bar = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 2), 'ℓ_bar'].values
-    S_u_bar = dignity_u_bar.loc[:, 'S'].values
-    c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-    ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-    cᵢ_bar_nd = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
-    cⱼ_bar_nd = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
-    Elog_of_cᵢ = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
-    Elog_of_cⱼ = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
-    Elog_of_cᵢ_nd = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
-    Elog_of_cⱼ_nd = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
-    Ev_of_ℓᵢ = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 1), 'Ev_of_ℓ'].values
-    Ev_of_ℓⱼ = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 2), 'Ev_of_ℓ'].values
-    microdf.loc[microdf.year == year, 'logλ'] = logλ_level(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-                                                           S_u_bar=S_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal,
-                                                           inequality=True, cᵢ_bar_nd=cᵢ_bar_nd, cⱼ_bar_nd=cⱼ_bar_nd, Elog_of_cᵢ=Elog_of_cᵢ, Elog_of_cⱼ=Elog_of_cⱼ, Elog_of_cᵢ_nd=Elog_of_cᵢ_nd, Elog_of_cⱼ_nd=Elog_of_cⱼ_nd, Ev_of_ℓᵢ=Ev_of_ℓᵢ, Ev_of_ℓⱼ=Ev_of_ℓⱼ)['logλ']
+    S_i = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 2), 'S'].values
+    c_i_bar = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 1), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 2), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
+    c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+    ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.micro == True) & (dignity.year == year) & (dignity.race == 2), 'Ev_of_ell'].values
+    microdf.loc[microdf.year == year, 'log_lambda'] = cew_level(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                           S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                           inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
-ax.scatter(microyears, microdf.logλ, color=colors[1], s=15, clip_on=False)
+ax.scatter(microyears, microdf.log_lambda, color=colors[1], s=15, clip_on=False)
 ax.annotate('CEX', xy=(2014, np.log(0.65)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
-ax.plot(macroyears, macrodf.logλ, color=colors[1], linewidth=2.5)
+ax.plot(macroyears, macrodf.log_lambda, color=colors[1], linewidth=2.5)
 ax.annotate('Census/ACS', xy=(1963, np.log(0.41)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
 
 # Set the horizontal axis
@@ -1223,61 +1264,61 @@ c_nominal = 1e6 * c_nominal / population
 
 # Create a data frame and a list of years
 df = expand({'year': years, 'latin': [0, 1]})
-df.loc[:, 'logλ'] = np.nan
+df.loc[:, 'log_lambda'] = np.nan
 
 # Calculate the consumption-equivalent welfare of Black non-Latino relative to White non-Latino Americans
 for year in years:
-    Sᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'S'].values
-    Sⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2) & (dignity.latin == 0), 'S'].values
-    cᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'c_bar'].values
-    cⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2) & (dignity.latin == 0), 'c_bar'].values
-    ℓᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'ℓ_bar'].values
-    ℓⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2) & (dignity.latin == 0), 'ℓ_bar'].values
-    S_u_bar = dignity_u_bar.loc[:, 'S'].values
-    c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-    ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-    cᵢ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'c_bar_nd'].values
-    cⱼ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2) & (dignity.latin == 0), 'c_bar_nd'].values
-    Elog_of_cᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'Elog_of_c'].values
-    Elog_of_cⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2) & (dignity.latin == 0), 'Elog_of_c'].values
-    Elog_of_cᵢ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'Elog_of_c_nd'].values
-    Elog_of_cⱼ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2) & (dignity.latin == 0), 'Elog_of_c_nd'].values
-    Ev_of_ℓᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'Ev_of_ℓ'].values
-    Ev_of_ℓⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2) & (dignity.latin == 0), 'Ev_of_ℓ'].values
-    df.loc[(df.year == year) & (df.latin == 0), 'logλ'] = logλ_level(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-                                                                     S_u_bar=S_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal,
-                                                                     inequality=True, cᵢ_bar_nd=cᵢ_bar_nd, cⱼ_bar_nd=cⱼ_bar_nd, Elog_of_cᵢ=Elog_of_cᵢ, Elog_of_cⱼ=Elog_of_cⱼ, Elog_of_cᵢ_nd=Elog_of_cᵢ_nd, Elog_of_cⱼ_nd=Elog_of_cⱼ_nd, Ev_of_ℓᵢ=Ev_of_ℓᵢ, Ev_of_ℓⱼ=Ev_of_ℓⱼ)['logλ']
+    S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == 2) & (dignity.latin == 0), 'S'].values
+    c_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2) & (dignity.latin == 0), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2) & (dignity.latin == 0), 'ell_bar'].values
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
+    c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+    ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2) & (dignity.latin == 0), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == 2) & (dignity.latin == 0), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2) & (dignity.latin == 0), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == 2) & (dignity.latin == 0), 'Ev_of_ell'].values
+    df.loc[(df.year == year) & (df.latin == 0), 'log_lambda'] = cew_level(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                                          S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                                          inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
 
 # Calculate the consumption-equivalent welfare of Latino relative to White non-Latino Americans
 for year in years:
-    Sᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'S'].values
-    Sⱼ = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == 1), 'S'].values
-    c_barᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'c_bar'].values
-    c_barⱼ = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == 1), 'c_bar'].values
-    ℓ_barᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'ℓ_bar'].values
-    ℓ_barⱼ = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == 1), 'ℓ_bar'].values
-    S_u_bar = dignity_u_bar.loc[:, 'S'].values
-    c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-    ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-    cᵢ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'c_bar_nd'].values
-    cⱼ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == 1), 'c_bar_nd'].values
-    Elog_of_cᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'Elog_of_c'].values
-    Elog_of_cⱼ = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == 1), 'Elog_of_c'].values
-    Elog_of_cᵢ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'Elog_of_c_nd'].values
-    Elog_of_cⱼ_nd = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == 1), 'Elog_of_c_nd'].values
-    Ev_of_ℓᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'Ev_of_ℓ'].values
-    Ev_of_ℓⱼ = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == 1), 'Ev_of_ℓ'].values
-    df.loc[(df.year == year) & (df.latin == 1), 'logλ'] = logλ_level(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-                                                                     S_u_bar=S_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal,
-                                                                     inequality=True, cᵢ_bar_nd=cᵢ_bar_nd, cⱼ_bar_nd=cⱼ_bar_nd, Elog_of_cᵢ=Elog_of_cᵢ, Elog_of_cⱼ=Elog_of_cⱼ, Elog_of_cᵢ_nd=Elog_of_cᵢ_nd, Elog_of_cⱼ_nd=Elog_of_cⱼ_nd, Ev_of_ℓᵢ=Ev_of_ℓᵢ, Ev_of_ℓⱼ=Ev_of_ℓⱼ)['logλ']
+    S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == 1), 'S'].values
+    c_bar_i = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'c_bar'].values
+    c_bar_j = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == 1), 'c_bar'].values
+    ell_bar_i = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'ell_bar'].values
+    ell_bar_j = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == 1), 'ell_bar'].values
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
+    c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+    ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == 1), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == 1), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == 1), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == 1), 'Ev_of_ell'].values
+    df.loc[(df.year == year) & (df.latin == 1), 'log_lambda'] = cew_level(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                                     S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                                     inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
-ax.plot(years, df.loc[df.latin == 0, 'logλ'], color=colors[1], linewidth=2.5)
+ax.plot(years, df.loc[df.latin == 0, 'log_lambda'], color=colors[1], linewidth=2.5)
 ax.annotate('Black non-Latinx', xy=(2010, np.log(0.60)), color='k', fontsize=12, va='center', annotation_clip=False)
-ax.plot(years, df.loc[df.latin == 1, 'logλ'], color=colors[2], linewidth=2.5)
+ax.plot(years, df.loc[df.latin == 1, 'log_lambda'], color=colors[2], linewidth=2.5)
 ax.annotate('Latinx', xy=(2016, np.log(0.99)), color='k', fontsize=12, va='center', annotation_clip=False)
 
 # Set the horizontal axis
@@ -1325,27 +1366,27 @@ df = pd.DataFrame({'year': years, 'LE': np.zeros(len(years)),
                                   'L':  np.zeros(len(years)),
                                   'LI': np.zeros(len(years))})
 for year in years:
-    Sᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
-    Sⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
-    cᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
-    cⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
-    ℓᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ℓ_bar'].values
-    ℓⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ℓ_bar'].values
-    S_u_bar = dignity_u_bar.loc[:, 'S'].values
-    c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-    ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-    cᵢ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
-    cⱼ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
-    Elog_of_cᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
-    Elog_of_cⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
-    Elog_of_cᵢ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
-    Elog_of_cⱼ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
-    Ev_of_ℓᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ℓ'].values
-    Ev_of_ℓⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ℓ'].values
+    S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
+    c_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
+    c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+    ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ell'].values
     for i in ['LE', 'C', 'CI', 'L', 'LI']:
-        df.loc[df.year == year, i] = logλ_level(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-                                                S_u_bar=S_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal,
-                                                inequality=True, cᵢ_bar_nd=cᵢ_bar_nd, cⱼ_bar_nd=cⱼ_bar_nd, Elog_of_cᵢ=Elog_of_cᵢ, Elog_of_cⱼ=Elog_of_cⱼ, Elog_of_cᵢ_nd=Elog_of_cᵢ_nd, Elog_of_cⱼ_nd=Elog_of_cⱼ_nd, Ev_of_ℓᵢ=Ev_of_ℓᵢ, Ev_of_ℓⱼ=Ev_of_ℓⱼ)[i]
+        df.loc[df.year == year, i] = cew_level(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)[i]
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
@@ -1404,18 +1445,18 @@ df = pd.DataFrame({'year': years, 'LE': np.zeros(len(years)),
                                   'C':  np.zeros(len(years)),
                                   'L':  np.zeros(len(years))})
 for year in years:
-    Sᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
-    Sⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
-    cᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
-    cⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
-    ℓᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ℓ_bar'].values
-    ℓⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ℓ_bar'].values
-    S_u_bar = dignity_u_bar.loc[:, 'S'].values
-    c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-    ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
+    S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
+    c_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
+    c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+    ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
     for i in ['LE', 'C', 'L']:
-        df.loc[df.year == year, i] = logλ_level(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-                                                S_u_bar=S_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal)[i]
+        df.loc[df.year == year, i] = cew_level(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal)[i]
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
 
@@ -1455,14 +1496,14 @@ plt.close()
 
 # Load the NHIS data and calculate the average HALex by year, race and age
 nhis = pd.read_csv(os.path.join(nhis_f_data, 'nhis.csv'))
-nhis_u_bar = nhis.loc[nhis.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
+nhiS_intercept = nhis.loc[nhis.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
 nhis = nhis.loc[(nhis.year == 2018) & nhis.race.isin([1, 2]), :].groupby(['race', 'age'], as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
-nhis_u_bar = pd.merge(expand({'age': range(101)}), nhis_u_bar, how='left')
+nhiS_intercept = pd.merge(expand({'age': range(101)}), nhiS_intercept, how='left')
 nhis = pd.merge(expand({'race': nhis.race.unique(), 'age': range(101)}), nhis, how='left')
-nhis_u_bar.loc[:, 'halex'] = nhis_u_bar.halex.transform(lambda x: filter(x, 100)).values
+nhiS_intercept.loc[:, 'halex'] = nhiS_intercept.halex.transform(lambda x: filter(x, 100)).values
 nhis.loc[:, 'halex'] = nhis.groupby('race', as_index=False).halex.transform(lambda x: filter(x, 100)).values
-nhis_u_bar.loc[nhis_u_bar.halex < 0, 'halex'] = 0
-nhis_u_bar.loc[nhis_u_bar.halex > 1, 'halex'] = 1
+nhiS_intercept.loc[nhiS_intercept.halex < 0, 'halex'] = 0
+nhiS_intercept.loc[nhiS_intercept.halex > 1, 'halex'] = 1
 nhis.loc[nhis.halex < 0, 'halex'] = 0
 nhis.loc[nhis.halex > 1, 'halex'] = 1
 
@@ -1470,7 +1511,7 @@ nhis.loc[nhis.halex > 1, 'halex'] = 1
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
 dignity_u_bar = dignity.loc[(dignity.micro == True) & (dignity.race == -1) & (dignity.latin == -1) & (dignity.gender == -1) & (dignity.year == 2006), :]
 dignity = dignity.loc[(dignity.micro == True) & dignity.race.isin([1, 2]) & (dignity.latin == -1) & (dignity.gender == -1) & (dignity.year == 2018), :]
-dignity_u_bar = pd.merge(dignity_u_bar, nhis_u_bar, how='left')
+dignity_u_bar = pd.merge(dignity_u_bar, nhiS_intercept, how='left')
 dignity = pd.merge(dignity, nhis, how='left')
 
 # Retrieve nominal consumption per capita in 2006
@@ -1479,62 +1520,62 @@ population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006
 c_nominal = 1e6 * c_nominal / population
 
 # Calculate the consumption-equivalent welfare of Black relative to White Americans without the morbidity adjustment
-Sᵢ = dignity.loc[(dignity.race == 1), 'S'].values
-Sⱼ = dignity.loc[(dignity.race == 2), 'S'].values
-cᵢ_bar = dignity.loc[(dignity.race == 1), 'c_bar'].values
-cⱼ_bar = dignity.loc[(dignity.race == 2), 'c_bar'].values
-ℓᵢ_bar = dignity.loc[(dignity.race == 1), 'ℓ_bar'].values
-ℓⱼ_bar = dignity.loc[(dignity.race == 2), 'ℓ_bar'].values
-S_u_bar = dignity_u_bar.loc[:, 'S'].values
-c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-cᵢ_bar_nd = dignity.loc[(dignity.race == 1), 'c_bar_nd'].values
-cⱼ_bar_nd = dignity.loc[(dignity.race == 2), 'c_bar_nd'].values
-Elog_of_cᵢ = dignity.loc[(dignity.race == 1), 'Elog_of_c'].values
-Elog_of_cⱼ = dignity.loc[(dignity.race == 2), 'Elog_of_c'].values
-Elog_of_cᵢ_nd = dignity.loc[(dignity.race == 1), 'Elog_of_c_nd'].values
-Elog_of_cⱼ_nd = dignity.loc[(dignity.race == 2), 'Elog_of_c_nd'].values
-Ev_of_ℓᵢ = dignity.loc[(dignity.race == 1), 'Ev_of_ℓ'].values
-Ev_of_ℓⱼ = dignity.loc[(dignity.race == 2), 'Ev_of_ℓ'].values
-logλ = logλ_level(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-                  S_u_bar=S_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal,
-                  inequality=True, cᵢ_bar_nd=cᵢ_bar_nd, cⱼ_bar_nd=cⱼ_bar_nd, Elog_of_cᵢ=Elog_of_cᵢ, Elog_of_cⱼ=Elog_of_cⱼ, Elog_of_cᵢ_nd=Elog_of_cᵢ_nd, Elog_of_cⱼ_nd=Elog_of_cⱼ_nd, Ev_of_ℓᵢ=Ev_of_ℓᵢ, Ev_of_ℓⱼ=Ev_of_ℓⱼ)['logλ']
+S_i = dignity.loc[(dignity.race == 1), 'S'].values
+S_j = dignity.loc[(dignity.race == 2), 'S'].values
+c_i_bar = dignity.loc[(dignity.race == 1), 'c_bar'].values
+c_j_bar = dignity.loc[(dignity.race == 2), 'c_bar'].values
+ell_i_bar = dignity.loc[(dignity.race == 1), 'ell_bar'].values
+ell_j_bar = dignity.loc[(dignity.race == 2), 'ell_bar'].values
+S_intercept = dignity_u_bar.loc[:, 'S'].values
+c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+c_i_bar_nd = dignity.loc[(dignity.race == 1), 'c_bar_nd'].values
+c_j_bar_nd = dignity.loc[(dignity.race == 2), 'c_bar_nd'].values
+Elog_of_c_i = dignity.loc[(dignity.race == 1), 'Elog_of_c'].values
+Elog_of_c_j = dignity.loc[(dignity.race == 2), 'Elog_of_c'].values
+Elog_of_c_i_nd = dignity.loc[(dignity.race == 1), 'Elog_of_c_nd'].values
+Elog_of_c_j_nd = dignity.loc[(dignity.race == 2), 'Elog_of_c_nd'].values
+Ev_of_ell_i = dignity.loc[(dignity.race == 1), 'Ev_of_ell'].values
+Ev_of_ell_j = dignity.loc[(dignity.race == 2), 'Ev_of_ell'].values
+log_lambda = cew_level(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                  S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                  inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
 
 # Calculate the consumption-equivalent welfare of Black relative to White Americans with the morbidity adjustment
 df = pd.DataFrame({'parameter': np.linspace(0, 1, 101)})
-df.loc[:, 'logλ'] = np.nan
+df.loc[:, 'log_lambda'] = np.nan
 for i in np.linspace(0, 1, 101):
-    Sᵢ = dignity.loc[(dignity.race == 1), 'S'].values
-    Sⱼ = dignity.loc[(dignity.race == 2), 'S'].values
-    cᵢ_bar = dignity.loc[(dignity.race == 1), 'c_bar_nh'].values
-    cⱼ_bar = dignity.loc[(dignity.race == 2), 'c_bar_nh'].values
-    ℓᵢ_bar = dignity.loc[(dignity.race == 1), 'ℓ_bar'].values
-    ℓⱼ_bar = dignity.loc[(dignity.race == 2), 'ℓ_bar'].values
-    S_u_bar = dignity_u_bar.loc[:, 'S'].values
+    S_i = dignity.loc[(dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.race == 2), 'S'].values
+    c_i_bar = dignity.loc[(dignity.race == 1), 'c_bar_nh'].values
+    c_j_bar = dignity.loc[(dignity.race == 2), 'c_bar_nh'].values
+    ell_i_bar = dignity.loc[(dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
     halex_u_bar = dignity_u_bar.loc[:, 'halex'].values
-    c_u_bar = dignity_u_bar.loc[:, 'c_bar_nh'].values
-    ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-    cᵢ_bar_nd = dignity.loc[(dignity.race == 1), 'c_bar_nh_nd'].values
-    cⱼ_bar_nd = dignity.loc[(dignity.race == 2), 'c_bar_nh_nd'].values
-    Elog_of_cᵢ = dignity.loc[(dignity.race == 1), 'Elog_of_c_nh'].values
-    Elog_of_cⱼ = dignity.loc[(dignity.race == 2), 'Elog_of_c_nh'].values
-    Elog_of_cᵢ_nd = dignity.loc[(dignity.race == 1), 'Elog_of_c_nh_nd'].values
-    Elog_of_cⱼ_nd = dignity.loc[(dignity.race == 2), 'Elog_of_c_nh_nd'].values
-    Ev_of_ℓᵢ = dignity.loc[(dignity.race == 1), 'Ev_of_ℓ'].values
-    Ev_of_ℓⱼ = dignity.loc[(dignity.race == 2), 'Ev_of_ℓ'].values
-    halexᵢ = dignity.loc[(dignity.race == 1), 'halex'].values
-    halexⱼ = dignity.loc[(dignity.race == 2), 'halex'].values
-    df.loc[df.parameter == i, 'logλ'] = logλ_level_morbidity(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-                                                             S_u_bar=S_u_bar, halex_u_bar=halex_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal,
-                                                             cᵢ_bar_nd=cᵢ_bar_nd, cⱼ_bar_nd=cⱼ_bar_nd, Elog_of_cᵢ=Elog_of_cᵢ, Elog_of_cⱼ=Elog_of_cⱼ, Elog_of_cᵢ_nd=Elog_of_cᵢ_nd, Elog_of_cⱼ_nd=Elog_of_cⱼ_nd, Ev_of_ℓᵢ=Ev_of_ℓᵢ, Ev_of_ℓⱼ=Ev_of_ℓⱼ,
-                                                             halexᵢ=halexᵢ, halexⱼ=halexⱼ, morbidity_parameter=i)['logλ']
+    c_intercept = dignity_u_bar.loc[:, 'c_bar_nh'].values
+    ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.race == 1), 'c_bar_nh_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.race == 2), 'c_bar_nh_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.race == 1), 'Elog_of_c_nh'].values
+    Elog_of_c_j = dignity.loc[(dignity.race == 2), 'Elog_of_c_nh'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.race == 1), 'Elog_of_c_nh_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.race == 2), 'Elog_of_c_nh_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.race == 2), 'Ev_of_ell'].values
+    halex_i = dignity.loc[(dignity.race == 1), 'halex'].values
+    halex_j = dignity.loc[(dignity.race == 2), 'halex'].values
+    df.loc[df.parameter == i, 'log_lambda'] = log_lambda_level_morbidity(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                             S_intercept=S_intercept, halex_u_bar=halex_u_bar, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                             c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j,
+                                                             halex_i=halex_i, halex_j=halex_j, morbidity_parameter=i)['log_lambda']
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
-ax.plot(np.linspace(0, 1, 101), df.logλ, color=colors[1], linewidth=2.5)
-ax.plot(0.1, float(df.loc[df.parameter == 0.1, 'logλ']), color=colors[1], marker='o', markersize=8)
+ax.plot(np.linspace(0, 1, 101), df.log_lambda, color=colors[1], linewidth=2.5)
+ax.plot(0.1, float(df.loc[df.parameter == 0.1, 'log_lambda']), color=colors[1], marker='o', markersize=8)
 
 # Set the horizontal axis
 ax.set_xlim(0, 1)
@@ -1560,8 +1601,8 @@ plt.close()
 fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
-ax.plot(np.linspace(0, 1, 101), 100 * (df.logλ - logλ), color=colors[1], linewidth=2.5)
-ax.plot(0.1, 100 * (float(df.loc[df.parameter == 0.1, 'logλ']) - logλ), color=colors[1], marker='o', markersize=8)
+ax.plot(np.linspace(0, 1, 101), 100 * (df.log_lambda - log_lambda), color=colors[1], linewidth=2.5)
+ax.plot(0.1, 100 * (float(df.loc[df.parameter == 0.1, 'log_lambda']) - log_lambda), color=colors[1], marker='o', markersize=8)
 
 # Set the horizontal axis
 ax.set_xlim(0, 1)
@@ -1596,14 +1637,14 @@ years = range(1997, 2018 + 1)
 
 # Load the NHIS data and calculate the average HALex by year, race and age
 nhis = pd.read_csv(os.path.join(nhis_f_data, 'nhis.csv'))
-nhis_u_bar = nhis.loc[nhis.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
+nhiS_intercept = nhis.loc[nhis.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
 nhis = nhis.loc[nhis.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
-nhis_u_bar = pd.merge(expand({'age': range(101)}), nhis_u_bar, how='left')
+nhiS_intercept = pd.merge(expand({'age': range(101)}), nhiS_intercept, how='left')
 nhis = pd.merge(expand({'year': years, 'race': nhis.race.unique(), 'age': range(101)}), nhis, how='left')
-nhis_u_bar.loc[:, 'halex'] = nhis_u_bar.halex.transform(lambda x: filter(x, 100)).values
+nhiS_intercept.loc[:, 'halex'] = nhiS_intercept.halex.transform(lambda x: filter(x, 100)).values
 nhis.loc[:, 'halex'] = nhis.groupby(['year', 'race'], as_index=False).halex.transform(lambda x: filter(x, 100)).values
-nhis_u_bar.loc[nhis_u_bar.halex < 0, 'halex'] = 0
-nhis_u_bar.loc[nhis_u_bar.halex > 1, 'halex'] = 1
+nhiS_intercept.loc[nhiS_intercept.halex < 0, 'halex'] = 0
+nhiS_intercept.loc[nhiS_intercept.halex > 1, 'halex'] = 1
 nhis.loc[nhis.halex < 0, 'halex'] = 0
 nhis.loc[nhis.halex > 1, 'halex'] = 1
 
@@ -1611,7 +1652,7 @@ nhis.loc[nhis.halex > 1, 'halex'] = 1
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
 dignity_u_bar = dignity.loc[(dignity.micro == True) & (dignity.race == -1) & (dignity.latin == -1) & (dignity.gender == -1) & (dignity.year == 2006), :]
 dignity = dignity.loc[(dignity.micro == True) & dignity.race.isin([1, 2]) & (dignity.latin == -1) & (dignity.gender == -1) & dignity.year.isin(years), :]
-dignity_u_bar = pd.merge(dignity_u_bar, nhis_u_bar, how='left')
+dignity_u_bar = pd.merge(dignity_u_bar, nhiS_intercept, how='left')
 dignity = pd.merge(dignity, nhis, how='left')
 
 # Retrieve nominal consumption per capita in 2006
@@ -1629,31 +1670,31 @@ df = pd.DataFrame({'year': years, 'LE': np.zeros(len(years)),
 
 # Calculate the consumption-equivalent welfare of Black relative to White Americans with the health adjustment
 for year in years:
-    Sᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
-    Sⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
-    cᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nh'].values
-    cⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nh'].values
-    ℓᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ℓ_bar'].values
-    ℓⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ℓ_bar'].values
-    S_u_bar = dignity_u_bar.loc[:, 'S'].values
+    S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
+    c_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nh'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nh'].values
+    ell_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
     halex_u_bar = dignity_u_bar.loc[:, 'halex'].values
-    c_u_bar = dignity_u_bar.loc[:, 'c_bar_nh'].values
-    ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-    cᵢ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nh_nd'].values
-    cⱼ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nh_nd'].values
-    Elog_of_cᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nh'].values
-    Elog_of_cⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nh'].values
-    Elog_of_cᵢ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nh_nd'].values
-    Elog_of_cⱼ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nh_nd'].values
-    Ev_of_ℓᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ℓ'].values
-    Ev_of_ℓⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ℓ'].values
-    halexᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'halex'].values
-    halexⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'halex'].values
+    c_intercept = dignity_u_bar.loc[:, 'c_bar_nh'].values
+    ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nh_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nh_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nh'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nh'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nh_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nh_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ell'].values
+    halex_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'halex'].values
+    halex_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'halex'].values
     for i in ['LE', 'M', 'C', 'CI', 'L', 'LI']:
-        df.loc[df.year == year, i] = logλ_level_morbidity(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-                                                          S_u_bar=S_u_bar, halex_u_bar=halex_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal,
-                                                          cᵢ_bar_nd=cᵢ_bar_nd, cⱼ_bar_nd=cⱼ_bar_nd, Elog_of_cᵢ=Elog_of_cᵢ, Elog_of_cⱼ=Elog_of_cⱼ, Elog_of_cᵢ_nd=Elog_of_cᵢ_nd, Elog_of_cⱼ_nd=Elog_of_cⱼ_nd, Ev_of_ℓᵢ=Ev_of_ℓᵢ, Ev_of_ℓⱼ=Ev_of_ℓⱼ,
-                                                          halexᵢ=halexᵢ, halexⱼ=halexⱼ, morbidity_parameter=0.1)[i]
+        df.loc[df.year == year, i] = log_lambda_level_morbidity(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                          S_intercept=S_intercept, halex_u_bar=halex_u_bar, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                          c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j,
+                                                          halex_i=halex_i, halex_j=halex_j, morbidity_parameter=0.1)[i]
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
@@ -1701,14 +1742,14 @@ years = range(1997, 2018 + 1)
 
 # Load the NHIS data and calculate the average HALex by year, race and age
 nhis = pd.read_csv(os.path.join(nhis_f_data, 'nhis.csv'))
-nhis_u_bar = nhis.loc[nhis.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
+nhiS_intercept = nhis.loc[nhis.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
 nhis = nhis.loc[nhis.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
-nhis_u_bar = pd.merge(expand({'age': range(101)}), nhis_u_bar, how='left')
+nhiS_intercept = pd.merge(expand({'age': range(101)}), nhiS_intercept, how='left')
 nhis = pd.merge(expand({'year': years, 'race': nhis.race.unique(), 'age': range(101)}), nhis, how='left')
-nhis_u_bar.loc[:, 'halex'] = nhis_u_bar.halex.transform(lambda x: filter(x, 100)).values
+nhiS_intercept.loc[:, 'halex'] = nhiS_intercept.halex.transform(lambda x: filter(x, 100)).values
 nhis.loc[:, 'halex'] = nhis.groupby(['year', 'race'], as_index=False).halex.transform(lambda x: filter(x, 100)).values
-nhis_u_bar.loc[nhis_u_bar.halex < 0, 'halex'] = 0
-nhis_u_bar.loc[nhis_u_bar.halex > 1, 'halex'] = 1
+nhiS_intercept.loc[nhiS_intercept.halex < 0, 'halex'] = 0
+nhiS_intercept.loc[nhiS_intercept.halex > 1, 'halex'] = 1
 nhis.loc[nhis.halex < 0, 'halex'] = 0
 nhis.loc[nhis.halex > 1, 'halex'] = 1
 
@@ -1716,7 +1757,7 @@ nhis.loc[nhis.halex > 1, 'halex'] = 1
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
 dignity_u_bar = dignity.loc[(dignity.micro == True) & (dignity.race == -1) & (dignity.latin == -1) & (dignity.gender == -1) & (dignity.year == 2006), :]
 dignity = dignity.loc[(dignity.micro == True) & dignity.race.isin([1, 2]) & (dignity.latin == -1) & (dignity.gender == -1) & dignity.year.isin(years), :]
-dignity_u_bar = pd.merge(dignity_u_bar, nhis_u_bar, how='left')
+dignity_u_bar = pd.merge(dignity_u_bar, nhiS_intercept, how='left')
 dignity = pd.merge(dignity, nhis, how='left')
 
 # Retrieve nominal consumption per capita in 2006
@@ -1725,69 +1766,69 @@ population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006
 c_nominal = 1e6 * c_nominal / population
 
 # Create a data frame
-df = pd.DataFrame({'year': years, 'logλ': np.zeros(len(years)), 'logλ_morbidity':  np.zeros(len(years))})
+df = pd.DataFrame({'year': years, 'log_lambda': np.zeros(len(years)), 'log_lambda_morbidity':  np.zeros(len(years))})
 
 # Calculate the consumption-equivalent welfare of Black relative to White Americans
-df = pd.DataFrame({'year': years, 'logλ': np.zeros(len(years))})
+df = pd.DataFrame({'year': years, 'log_lambda': np.zeros(len(years))})
 for year in years:
-    Sᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
-    Sⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
-    cᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
-    cⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
-    ℓᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ℓ_bar'].values
-    ℓⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ℓ_bar'].values
-    S_u_bar = dignity_u_bar.loc[:, 'S'].values
-    c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-    ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-    cᵢ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
-    cⱼ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
-    Elog_of_cᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
-    Elog_of_cⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
-    Elog_of_cᵢ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
-    Elog_of_cⱼ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
-    Ev_of_ℓᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ℓ'].values
-    Ev_of_ℓⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ℓ'].values
-    df.loc[df.year == year, 'logλ'] = logλ_level(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-                                                 S_u_bar=S_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal,
-                                                 inequality=True, cᵢ_bar_nd=cᵢ_bar_nd, cⱼ_bar_nd=cⱼ_bar_nd, Elog_of_cᵢ=Elog_of_cᵢ, Elog_of_cⱼ=Elog_of_cⱼ, Elog_of_cᵢ_nd=Elog_of_cᵢ_nd, Elog_of_cⱼ_nd=Elog_of_cⱼ_nd, Ev_of_ℓᵢ=Ev_of_ℓᵢ, Ev_of_ℓⱼ=Ev_of_ℓⱼ)['logλ']
+    S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
+    c_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
+    c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+    ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ell'].values
+    df.loc[df.year == year, 'log_lambda'] = cew_level(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                 S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                 inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
 
 # Calculate the consumption-equivalent welfare of Black relative to White Americans with the health adjustment
 for year in years:
-    Sᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
-    Sⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
-    cᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nh'].values
-    cⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nh'].values
-    ℓᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ℓ_bar'].values
-    ℓⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ℓ_bar'].values
-    S_u_bar = dignity_u_bar.loc[:, 'S'].values
+    S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
+    c_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nh'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nh'].values
+    ell_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
     halex_u_bar = dignity_u_bar.loc[:, 'halex'].values
-    c_u_bar = dignity_u_bar.loc[:, 'c_bar_nh'].values
-    ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-    cᵢ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nh_nd'].values
-    cⱼ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nh_nd'].values
-    Elog_of_cᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nh'].values
-    Elog_of_cⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nh'].values
-    Elog_of_cᵢ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nh_nd'].values
-    Elog_of_cⱼ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nh_nd'].values
-    Ev_of_ℓᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ℓ'].values
-    Ev_of_ℓⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ℓ'].values
-    halexᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'halex'].values
-    halexⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'halex'].values
-    df.loc[df.year == year, 'logλ_morbidity'] = logλ_level_morbidity(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-                                                                     S_u_bar=S_u_bar, halex_u_bar=halex_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal,
-                                                                     cᵢ_bar_nd=cᵢ_bar_nd, cⱼ_bar_nd=cⱼ_bar_nd, Elog_of_cᵢ=Elog_of_cᵢ, Elog_of_cⱼ=Elog_of_cⱼ, Elog_of_cᵢ_nd=Elog_of_cᵢ_nd, Elog_of_cⱼ_nd=Elog_of_cⱼ_nd, Ev_of_ℓᵢ=Ev_of_ℓᵢ, Ev_of_ℓⱼ=Ev_of_ℓⱼ,
-                                                                     halexᵢ=halexᵢ, halexⱼ=halexⱼ, morbidity_parameter=0.1)['logλ']
+    c_intercept = dignity_u_bar.loc[:, 'c_bar_nh'].values
+    ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nh_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nh_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nh'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nh'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nh_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nh_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ell'].values
+    halex_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'halex'].values
+    halex_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'halex'].values
+    df.loc[df.year == year, 'log_lambda_morbidity'] = log_lambda_level_morbidity(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                                     S_intercept=S_intercept, halex_u_bar=halex_u_bar, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                                     c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j,
+                                                                     halex_i=halex_i, halex_j=halex_j, morbidity_parameter=0.1)['log_lambda']
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
-ax.plot(years, df.logλ, color=colors[1], linewidth=2.5)
-ax.plot(years, df.logλ_morbidity, color=colors[1], linewidth=2.5, alpha=0.2)
-ax.annotate('{0:.2f}'.format(np.exp(df.logλ.iloc[-1])), xy=(2018.25, df.logλ.iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
-ax.annotate('{0:.2f}'.format(np.exp(df.logλ.iloc[0])), xy=(1995.5, df.logλ.iloc[0]), color='k', fontsize=12, va='center', annotation_clip=False)
-ax.annotate('{0:.2f}'.format(np.exp(df.logλ_morbidity.iloc[-1])), xy=(2018.25, df.logλ_morbidity.iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
-ax.annotate('{0:.2f}'.format(np.exp(df.logλ_morbidity.iloc[0])), xy=(1995.5, df.logλ_morbidity.iloc[0]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.plot(years, df.log_lambda, color=colors[1], linewidth=2.5)
+ax.plot(years, df.log_lambda_morbidity, color=colors[1], linewidth=2.5, alpha=0.2)
+ax.annotate('{0:.2f}'.format(np.exp(df.log_lambda.iloc[-1])), xy=(2018.25, df.log_lambda.iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('{0:.2f}'.format(np.exp(df.log_lambda.iloc[0])), xy=(1995.5, df.log_lambda.iloc[0]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('{0:.2f}'.format(np.exp(df.log_lambda_morbidity.iloc[-1])), xy=(2018.25, df.log_lambda_morbidity.iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('{0:.2f}'.format(np.exp(df.log_lambda_morbidity.iloc[0])), xy=(1995.5, df.log_lambda_morbidity.iloc[0]), color='k', fontsize=12, va='center', annotation_clip=False)
 
 # Set the horizontal axis
 ax.set_xlim(1997, 2018)
@@ -1828,11 +1869,11 @@ cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[cex.year == 201
 cex = cex.loc[cex.year.isin([2006, 2019]) & (cex.education == 1), :]
 
 # Calculate CEX consumption statistics by age for individuals with a high school education or less
-cex_u_bar = cex.loc[cex.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'c_u_barᴵ': np.average(x.consumption, weights=x.weight)}))
+cex_u_bar = cex.loc[cex.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'c_interceptᴵ': np.average(x.consumption, weights=x.weight)}))
 cex = cex.loc[cex.year == 2019, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'Elog_of_cᴵ': np.average(np.log(x.consumption), weights=x.weight)}))
 cex_u_bar = pd.merge(pd.DataFrame({'age': range(101)}), cex_u_bar, how='left')
 cex = pd.merge(pd.DataFrame({'age': range(101)}), cex, how='left')
-cex_u_bar.loc[:, 'c_u_barᴵ'] = filter(cex_u_bar.loc[:, 'c_u_barᴵ'], 1600)
+cex_u_bar.loc[:, 'c_interceptᴵ'] = filter(cex_u_bar.loc[:, 'c_interceptᴵ'], 1600)
 cex.loc[:, 'Elog_of_cᴵ'] = filter(cex.loc[:, 'Elog_of_cᴵ'], 1600)
 
 # Load the CPS data
@@ -1841,14 +1882,14 @@ cps = cps.loc[cps.year.isin([2007, 2020]) & (cps.education == 1), :]
 cps.loc[:, 'year'] = cps.year - 1
 
 # Calculate cps leisure statistics by age for individuals with a high school education or less
-cps_u_bar = cps.loc[cps.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'ℓ_u_barᴵ': np.average(x.leisure, weights=x.weight)}))
-cps = cps.loc[cps.year == 2019, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'Ev_of_ℓᴵ': np.average(v_of_ℓ(x.leisure), weights=x.weight)}))
-cps_u_bar = pd.merge(pd.DataFrame({'age': range(101)}), cps_u_bar, how='left')
+cpS_intercept = cps.loc[cps.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'ell_interceptᴵ': np.average(x.leisure, weights=x.weight)}))
+cps = cps.loc[cps.year == 2019, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'Ev_of_ellᴵ': np.average(v_of_ell(x.leisure), weights=x.weight)}))
+cpS_intercept = pd.merge(pd.DataFrame({'age': range(101)}), cpS_intercept, how='left')
 cps = pd.merge(pd.DataFrame({'age': range(101)}), cps, how='left')
-cps_u_bar.loc[:, 'ℓ_u_barᴵ'] = filter(cps_u_bar.loc[:, 'ℓ_u_barᴵ'], 100)
-cps.loc[:, 'Ev_of_ℓᴵ'] = filter(cps.loc[:, 'Ev_of_ℓᴵ'], 100)
-cps_u_bar.loc[cps_u_bar.loc[:, 'ℓ_u_barᴵ'] > 1, 'ℓ_u_barᴵ'] = 1
-cps.loc[cps.loc[:, 'Ev_of_ℓᴵ'] > 0, 'Ev_of_ℓᴵ'] = 0
+cpS_intercept.loc[:, 'ell_interceptᴵ'] = filter(cpS_intercept.loc[:, 'ell_interceptᴵ'], 100)
+cps.loc[:, 'Ev_of_ellᴵ'] = filter(cps.loc[:, 'Ev_of_ellᴵ'], 100)
+cpS_intercept.loc[cpS_intercept.loc[:, 'ell_interceptᴵ'] > 1, 'ell_interceptᴵ'] = 1
+cps.loc[cps.loc[:, 'Ev_of_ellᴵ'] > 0, 'Ev_of_ellᴵ'] = 0
 
 # Load the dignity data
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
@@ -1861,65 +1902,65 @@ population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006
 c_nominal = 1e6 * c_nominal / population
 
 # Calculate the consumption-equivalent welfare of Black non-Latino relative to White non-Latino Americans without the incarceration adjustment
-Sᵢ = dignity.loc[(dignity.race == 1), 'S'].values
-Sⱼ = dignity.loc[(dignity.race == 2), 'S'].values
-cᵢ_bar = dignity.loc[(dignity.race == 1), 'c_bar'].values
-cⱼ_bar = dignity.loc[(dignity.race == 2), 'c_bar'].values
-ℓᵢ_bar = dignity.loc[(dignity.race == 1), 'ℓ_bar'].values
-ℓⱼ_bar = dignity.loc[(dignity.race == 2), 'ℓ_bar'].values
-S_u_bar = dignity_u_bar.loc[:, 'S'].values
-c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-cᵢ_bar_nd = dignity.loc[(dignity.race == 1), 'c_bar_nd'].values
-cⱼ_bar_nd = dignity.loc[(dignity.race == 2), 'c_bar_nd'].values
-Elog_of_cᵢ = dignity.loc[(dignity.race == 1), 'Elog_of_c'].values
-Elog_of_cⱼ = dignity.loc[(dignity.race == 2), 'Elog_of_c'].values
-Elog_of_cᵢ_nd = dignity.loc[(dignity.race == 1), 'Elog_of_c_nd'].values
-Elog_of_cⱼ_nd = dignity.loc[(dignity.race == 2), 'Elog_of_c_nd'].values
-Ev_of_ℓᵢ = dignity.loc[(dignity.race == 1), 'Ev_of_ℓ'].values
-Ev_of_ℓⱼ = dignity.loc[(dignity.race == 2), 'Ev_of_ℓ'].values
-logλ = logλ_level(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-                  S_u_bar=S_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal,
-                  inequality=True, cᵢ_bar_nd=cᵢ_bar_nd, cⱼ_bar_nd=cⱼ_bar_nd, Elog_of_cᵢ=Elog_of_cᵢ, Elog_of_cⱼ=Elog_of_cⱼ, Elog_of_cᵢ_nd=Elog_of_cᵢ_nd, Elog_of_cⱼ_nd=Elog_of_cⱼ_nd, Ev_of_ℓᵢ=Ev_of_ℓᵢ, Ev_of_ℓⱼ=Ev_of_ℓⱼ)['logλ']
+S_i = dignity.loc[(dignity.race == 1), 'S'].values
+S_j = dignity.loc[(dignity.race == 2), 'S'].values
+c_i_bar = dignity.loc[(dignity.race == 1), 'c_bar'].values
+c_j_bar = dignity.loc[(dignity.race == 2), 'c_bar'].values
+ell_i_bar = dignity.loc[(dignity.race == 1), 'ell_bar'].values
+ell_j_bar = dignity.loc[(dignity.race == 2), 'ell_bar'].values
+S_intercept = dignity_u_bar.loc[:, 'S'].values
+c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+c_i_bar_nd = dignity.loc[(dignity.race == 1), 'c_bar_nd'].values
+c_j_bar_nd = dignity.loc[(dignity.race == 2), 'c_bar_nd'].values
+Elog_of_c_i = dignity.loc[(dignity.race == 1), 'Elog_of_c'].values
+Elog_of_c_j = dignity.loc[(dignity.race == 2), 'Elog_of_c'].values
+Elog_of_c_i_nd = dignity.loc[(dignity.race == 1), 'Elog_of_c_nd'].values
+Elog_of_c_j_nd = dignity.loc[(dignity.race == 2), 'Elog_of_c_nd'].values
+Ev_of_ell_i = dignity.loc[(dignity.race == 1), 'Ev_of_ell'].values
+Ev_of_ell_j = dignity.loc[(dignity.race == 2), 'Ev_of_ell'].values
+log_lambda = cew_level(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                  S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                  inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
 
 # Calculate the consumption-equivalent welfare of Black non-Latino relative to White non-Latino Americans with the incarceration adjustment
 df = pd.DataFrame({'parameter': np.linspace(0, 1, 101)})
-df.loc[:, 'logλ'] = np.nan
+df.loc[:, 'log_lambda'] = np.nan
 for i in np.linspace(0, 1, 101):
-    Sᵢ = dignity.loc[(dignity.race == 1), 'S'].values
-    Sⱼ = dignity.loc[(dignity.race == 2), 'S'].values
-    cᵢ_bar = dignity.loc[(dignity.race == 1), 'c_bar'].values
-    cⱼ_bar = dignity.loc[(dignity.race == 2), 'c_bar'].values
-    ℓᵢ_bar = dignity.loc[(dignity.race == 1), 'ℓ_bar'].values
-    ℓⱼ_bar = dignity.loc[(dignity.race == 2), 'ℓ_bar'].values
-    S_u_bar = dignity_u_bar.loc[:, 'S'].values
+    S_i = dignity.loc[(dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.race == 2), 'S'].values
+    c_i_bar = dignity.loc[(dignity.race == 1), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.race == 2), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
     I_u_bar = ncr_u_bar.loc[:, 'incarceration'].values
-    c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-    c_u_barᴵ = cex_u_bar.loc[:, 'c_u_barᴵ'].values
-    ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-    ℓ_u_barᴵ = cps_u_bar.loc[:, 'ℓ_u_barᴵ'].values
-    cᵢ_bar_nd = dignity.loc[(dignity.race == 1), 'c_bar_nd'].values
-    cⱼ_bar_nd = dignity.loc[(dignity.race == 2), 'c_bar_nd'].values
-    Elog_of_cᵢ = dignity.loc[(dignity.race == 1), 'Elog_of_c'].values
-    Elog_of_cⱼ = dignity.loc[(dignity.race == 2), 'Elog_of_c'].values
-    Elog_of_cᵢ_nd = dignity.loc[(dignity.race == 1), 'Elog_of_c_nd'].values
-    Elog_of_cⱼ_nd = dignity.loc[(dignity.race == 2), 'Elog_of_c_nd'].values
-    Ev_of_ℓᵢ = dignity.loc[(dignity.race == 1), 'Ev_of_ℓ'].values
-    Ev_of_ℓⱼ = dignity.loc[(dignity.race == 2), 'Ev_of_ℓ'].values
+    c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+    c_interceptᴵ = cex_u_bar.loc[:, 'c_interceptᴵ'].values
+    ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+    ell_interceptᴵ = cpS_intercept.loc[:, 'ell_interceptᴵ'].values
+    c_i_bar_nd = dignity.loc[(dignity.race == 1), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.race == 2), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.race == 1), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.race == 2), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.race == 1), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.race == 2), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.race == 2), 'Ev_of_ell'].values
     Elog_of_cᴵ = cex.loc[:, 'Elog_of_cᴵ'].values
-    Ev_of_ℓᴵ = cps.loc[:, 'Ev_of_ℓᴵ'].values
-    Iᵢ = ncr.loc[(ncr.race == 1), 'incarceration'].values
-    Iⱼ = ncr.loc[(ncr.race == 2), 'incarceration'].values
-    df.loc[df.parameter == i, 'logλ'] = logλ_level_incarceration(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-                                                                 S_u_bar=S_u_bar, I_u_bar=I_u_bar, c_u_bar=c_u_bar, c_u_barᴵ=c_u_barᴵ, ℓ_u_bar=ℓ_u_bar, ℓ_u_barᴵ=ℓ_u_barᴵ, c_nominal=c_nominal,
-                                                                 cᵢ_bar_nd=cᵢ_bar_nd, cⱼ_bar_nd=cⱼ_bar_nd, Elog_of_cᵢ=Elog_of_cᵢ, Elog_of_cⱼ=Elog_of_cⱼ, Elog_of_cᵢ_nd=Elog_of_cᵢ_nd, Elog_of_cⱼ_nd=Elog_of_cⱼ_nd, Ev_of_ℓᵢ=Ev_of_ℓᵢ, Ev_of_ℓⱼ=Ev_of_ℓⱼ,
-                                                                 Elog_of_cᴵ=Elog_of_cᴵ, Ev_of_ℓᴵ=Ev_of_ℓᴵ, Iᵢ=Iᵢ, Iⱼ=Iⱼ, incarceration_parameter=i)['logλ']
+    Ev_of_ellᴵ = cps.loc[:, 'Ev_of_ellᴵ'].values
+    I_i = ncr.loc[(ncr.race == 1), 'incarceration'].values
+    I_j = ncr.loc[(ncr.race == 2), 'incarceration'].values
+    df.loc[df.parameter == i, 'log_lambda'] = log_lambda_level_incarceration(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                                 S_intercept=S_intercept, I_u_bar=I_u_bar, c_intercept=c_intercept, c_interceptᴵ=c_interceptᴵ, ell_intercept=ell_intercept, ell_interceptᴵ=ell_interceptᴵ, c_nominal=c_nominal,
+                                                                 c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j,
+                                                                 Elog_of_cᴵ=Elog_of_cᴵ, Ev_of_ellᴵ=Ev_of_ellᴵ, I_i=I_i, I_j=I_j, incarceration_parameter=i)['log_lambda']
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
-ax.plot(np.linspace(0, 1, 101), df.logλ, color=colors[1], linewidth=2.5)
+ax.plot(np.linspace(0, 1, 101), df.log_lambda, color=colors[1], linewidth=2.5)
 
 # Set the horizontal axis
 ax.set_xlim(0, 1)
@@ -1945,7 +1986,7 @@ plt.close()
 fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
-ax.plot(np.linspace(0, 1, 101), 100 * (df.logλ - logλ), color=colors[1], linewidth=2.5)
+ax.plot(np.linspace(0, 1, 101), 100 * (df.log_lambda - log_lambda), color=colors[1], linewidth=2.5)
 
 # Set the horizontal axis
 ax.set_xlim(0, 1)
@@ -1991,11 +2032,11 @@ cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[cex.year == 201
 cex = cex.loc[cex.year.isin(years) & (cex.education == 1), :]
 
 # Calculate CEX consumption statistics by age for individuals with a high school education or less
-cex_u_bar = cex.loc[cex.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'c_u_barᴵ': np.average(x.consumption, weights=x.weight)}))
+cex_u_bar = cex.loc[cex.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'c_interceptᴵ': np.average(x.consumption, weights=x.weight)}))
 cex = cex.groupby(['year', 'age'], as_index=False).apply(lambda x: pd.Series({'Elog_of_cᴵ': np.average(np.log(x.consumption), weights=x.weight)}))
 cex_u_bar = pd.merge(pd.DataFrame({'age': range(101)}), cex_u_bar, how='left')
 cex = pd.merge(expand({'year': years, 'age': range(101)}), cex, how='left')
-cex_u_bar.loc[:, 'c_u_barᴵ'] = filter(cex_u_bar.loc[:, 'c_u_barᴵ'], 1600)
+cex_u_bar.loc[:, 'c_interceptᴵ'] = filter(cex_u_bar.loc[:, 'c_interceptᴵ'], 1600)
 cex.loc[:, 'Elog_of_cᴵ'] = cex.groupby('year', as_index=False)['Elog_of_cᴵ'].transform(lambda x: filter(x, 1600))['Elog_of_cᴵ'].values
 
 # Load the CPS data
@@ -2004,14 +2045,14 @@ cps = cps.loc[cps.year.isin(range(2007, 2020 + 1)) & (cps.education == 1), :]
 cps.loc[:, 'year'] = cps.year - 1
 
 # Calculate CPS leisure statistics by age for individuals with a high school education or less
-cps_u_bar = cps.loc[cps.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'ℓ_u_barᴵ': np.average(x.leisure, weights=x.weight)}))
-cps = cps.groupby(['year', 'age'], as_index=False).apply(lambda x: pd.Series({'Ev_of_ℓᴵ': np.average(v_of_ℓ(x.leisure), weights=x.weight)}))
-cps_u_bar = pd.merge(pd.DataFrame({'age': range(101)}), cps_u_bar, how='left')
+cpS_intercept = cps.loc[cps.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'ell_interceptᴵ': np.average(x.leisure, weights=x.weight)}))
+cps = cps.groupby(['year', 'age'], as_index=False).apply(lambda x: pd.Series({'Ev_of_ellᴵ': np.average(v_of_ell(x.leisure), weights=x.weight)}))
+cpS_intercept = pd.merge(pd.DataFrame({'age': range(101)}), cpS_intercept, how='left')
 cps = pd.merge(expand({'year': years, 'age': range(101)}), cps, how='left')
-cps_u_bar.loc[:, 'ℓ_u_barᴵ'] = filter(cps_u_bar.loc[:, 'ℓ_u_barᴵ'], 100)
-cps.loc[:, 'Ev_of_ℓᴵ'] = cps.groupby('year', as_index=False)['Ev_of_ℓᴵ'].transform(lambda x: filter(x, 100))['Ev_of_ℓᴵ'].values
-cps_u_bar.loc[cps_u_bar.loc[:, 'ℓ_u_barᴵ'] > 1, 'ℓ_u_barᴵ'] = 1
-cps.loc[cps.loc[:, 'Ev_of_ℓᴵ'] > 0, 'Ev_of_ℓᴵ'] = 0
+cpS_intercept.loc[:, 'ell_interceptᴵ'] = filter(cpS_intercept.loc[:, 'ell_interceptᴵ'], 100)
+cps.loc[:, 'Ev_of_ellᴵ'] = cps.groupby('year', as_index=False)['Ev_of_ellᴵ'].transform(lambda x: filter(x, 100))['Ev_of_ellᴵ'].values
+cpS_intercept.loc[cpS_intercept.loc[:, 'ell_interceptᴵ'] > 1, 'ell_interceptᴵ'] = 1
+cps.loc[cps.loc[:, 'Ev_of_ellᴵ'] > 0, 'Ev_of_ellᴵ'] = 0
 
 # Load the dignity data
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
@@ -2033,35 +2074,35 @@ df = pd.DataFrame({'year': years, 'LE': np.zeros(len(years)),
 
 # Calculate the consumption-equivalent welfare of Black non-Latino relative to White non-Latino Americans with the incarceration adjustment
 for year in years:
-    Sᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
-    Sⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
-    cᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
-    cⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
-    ℓᵢ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ℓ_bar'].values
-    ℓⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ℓ_bar'].values
-    S_u_bar = dignity_u_bar.loc[:, 'S'].values
+    S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
+    c_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
     I_u_bar = ncr_u_bar.loc[:, 'incarceration'].values
-    c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-    c_u_barᴵ = cex_u_bar.loc[:, 'c_u_barᴵ'].values
-    ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-    ℓ_u_barᴵ = cps_u_bar.loc[:, 'ℓ_u_barᴵ'].values
-    cᵢ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
-    cⱼ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
-    Elog_of_cᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
-    Elog_of_cⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
-    Elog_of_cᵢ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
-    Elog_of_cⱼ_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
-    Ev_of_ℓᵢ = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ℓ'].values
-    Ev_of_ℓⱼ = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ℓ'].values
+    c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+    c_interceptᴵ = cex_u_bar.loc[:, 'c_interceptᴵ'].values
+    ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+    ell_interceptᴵ = cpS_intercept.loc[:, 'ell_interceptᴵ'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ell'].values
     Elog_of_cᴵ = cex.loc[(cex.year == year), 'Elog_of_cᴵ'].values
-    Ev_of_ℓᴵ = cps.loc[(cps.year == year), 'Ev_of_ℓᴵ'].values
-    Iᵢ = ncr.loc[(ncr.year == year) & (ncr.race == 1), 'incarceration'].values
-    Iⱼ = ncr.loc[(ncr.year == year) & (ncr.race == 2), 'incarceration'].values
+    Ev_of_ellᴵ = cps.loc[(cps.year == year), 'Ev_of_ellᴵ'].values
+    I_i = ncr.loc[(ncr.year == year) & (ncr.race == 1), 'incarceration'].values
+    I_j = ncr.loc[(ncr.year == year) & (ncr.race == 2), 'incarceration'].values
     for i in ['LE', 'C', 'CI', 'L', 'LI', 'I']:
-        df.loc[df.year == year, i] = logλ_level_incarceration(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-                                                              S_u_bar=S_u_bar, I_u_bar=I_u_bar, c_u_bar=c_u_bar, c_u_barᴵ=c_u_barᴵ, ℓ_u_bar=ℓ_u_bar, ℓ_u_barᴵ=ℓ_u_barᴵ, c_nominal=c_nominal,
-                                                              cᵢ_bar_nd=cᵢ_bar_nd, cⱼ_bar_nd=cⱼ_bar_nd, Elog_of_cᵢ=Elog_of_cᵢ, Elog_of_cⱼ=Elog_of_cⱼ, Elog_of_cᵢ_nd=Elog_of_cᵢ_nd, Elog_of_cⱼ_nd=Elog_of_cⱼ_nd, Ev_of_ℓᵢ=Ev_of_ℓᵢ, Ev_of_ℓⱼ=Ev_of_ℓⱼ,
-                                                              Elog_of_cᴵ=Elog_of_cᴵ, Ev_of_ℓᴵ=Ev_of_ℓᴵ, Iᵢ=Iᵢ, Iⱼ=Iⱼ, incarceration_parameter=0.1)[i]
+        df.loc[df.year == year, i] = log_lambda_level_incarceration(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                              S_intercept=S_intercept, I_u_bar=I_u_bar, c_intercept=c_intercept, c_interceptᴵ=c_interceptᴵ, ell_intercept=ell_intercept, ell_interceptᴵ=ell_interceptᴵ, c_nominal=c_nominal,
+                                                              c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j,
+                                                              Elog_of_cᴵ=Elog_of_cᴵ, Ev_of_ellᴵ=Ev_of_ellᴵ, I_i=I_i, I_j=I_j, incarceration_parameter=0.1)[i]
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
@@ -2207,81 +2248,81 @@ c_nominal = 1e6 * c_nominal / population
 
 # Create a data frame
 df = pd.DataFrame({'parameter': np.linspace(0, 1, 101)})
-df.loc[:, 'logλ'] = np.nan
+df.loc[:, 'log_lambda'] = np.nan
 
 # Calculate the consumption-equivalent welfare of Black relative to White Americans without the unemployment adjustment
-df_cps = cps.groupby(['race', 'age'], as_index=False).apply(lambda x: pd.Series({'Ev_of_ℓ': np.average(v_of_ℓ(x.weekly_leisure), weights=x.weight),
-                                                                                 'ℓ_bar':   np.average(x.weekly_leisure, weights=x.weight)}))
-df_cps_u_bar = cps.groupby('age', as_index=False).apply(lambda x: pd.Series({'ℓ_bar': np.average(x.weekly_leisure, weights=x.weight)}))
+df_cps = cps.groupby(['race', 'age'], as_index=False).apply(lambda x: pd.Series({'Ev_of_ell': np.average(v_of_ell(x.weekly_leisure), weights=x.weight),
+                                                                                 'ell_bar':   np.average(x.weekly_leisure, weights=x.weight)}))
+df_cpS_intercept = cps.groupby('age', as_index=False).apply(lambda x: pd.Series({'ell_bar': np.average(x.weekly_leisure, weights=x.weight)}))
 df_cps = pd.merge(expand({'race': [1, 2], 'age': range(101)}), df_cps, how='left')
-df_cps_u_bar = pd.merge(pd.DataFrame({'age': range(101)}), df_cps_u_bar, how='left')
-df_cps.loc[:, ['Ev_of_ℓ', 'ℓ_bar']] = df_cps.groupby('race', as_index=False)[['Ev_of_ℓ', 'ℓ_bar']].transform(lambda x: filter(x, 100)).values
-df_cps_u_bar.loc[:, 'ℓ_bar'] = df_cps_u_bar.loc[:, 'ℓ_bar'].transform(lambda x: filter(x, 100)).values
-df_cps.loc[df_cps.loc[:, 'Ev_of_ℓ'] > 0, 'Ev_of_ℓ'] = 0
-df_cps.loc[df_cps.loc[:, 'ℓ_bar'] > 1, 'ℓ_bar'] = 1
-df_cps_u_bar.loc[df_cps_u_bar.loc[:, 'ℓ_bar'] > 1, 'ℓ_bar'] = 1
-Sᵢ = dignity.loc[(dignity.race == 1), 'S'].values
-Sⱼ = dignity.loc[(dignity.race == 2), 'S'].values
-cᵢ_bar = dignity.loc[(dignity.race == 1), 'c_bar'].values
-cⱼ_bar = dignity.loc[(dignity.race == 2), 'c_bar'].values
-ℓᵢ_bar = df_cps.loc[(df_cps.race == 1), 'ℓ_bar'].values
-ℓⱼ_bar = df_cps.loc[(df_cps.race == 2), 'ℓ_bar'].values
-S_u_bar = dignity_u_bar.loc[:, 'S'].values
-c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-ℓ_u_bar = df_cps_u_bar.loc[:, 'ℓ_bar'].values
-cᵢ_bar_nd = dignity.loc[(dignity.race == 1), 'c_bar_nd'].values
-cⱼ_bar_nd = dignity.loc[(dignity.race == 2), 'c_bar_nd'].values
-Elog_of_cᵢ = dignity.loc[(dignity.race == 1), 'Elog_of_c'].values
-Elog_of_cⱼ = dignity.loc[(dignity.race == 2), 'Elog_of_c'].values
-Elog_of_cᵢ_nd = dignity.loc[(dignity.race == 1), 'Elog_of_c_nd'].values
-Elog_of_cⱼ_nd = dignity.loc[(dignity.race == 2), 'Elog_of_c_nd'].values
-Ev_of_ℓᵢ = df_cps.loc[(df_cps.race == 1), 'Ev_of_ℓ'].values
-Ev_of_ℓⱼ = df_cps.loc[(df_cps.race == 2), 'Ev_of_ℓ'].values
-d = logλ_level(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-               S_u_bar=S_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal,
-               inequality=True, cᵢ_bar_nd=cᵢ_bar_nd, cⱼ_bar_nd=cⱼ_bar_nd, Elog_of_cᵢ=Elog_of_cᵢ, Elog_of_cⱼ=Elog_of_cⱼ, Elog_of_cᵢ_nd=Elog_of_cᵢ_nd, Elog_of_cⱼ_nd=Elog_of_cⱼ_nd, Ev_of_ℓᵢ=Ev_of_ℓᵢ, Ev_of_ℓⱼ=Ev_of_ℓⱼ)
-logλ = np.sum([d.get(x) for x in ['LE', 'C', 'CI', 'L']])
+df_cpS_intercept = pd.merge(pd.DataFrame({'age': range(101)}), df_cpS_intercept, how='left')
+df_cps.loc[:, ['Ev_of_ell', 'ell_bar']] = df_cps.groupby('race', as_index=False)[['Ev_of_ell', 'ell_bar']].transform(lambda x: filter(x, 100)).values
+df_cpS_intercept.loc[:, 'ell_bar'] = df_cpS_intercept.loc[:, 'ell_bar'].transform(lambda x: filter(x, 100)).values
+df_cps.loc[df_cps.loc[:, 'Ev_of_ell'] > 0, 'Ev_of_ell'] = 0
+df_cps.loc[df_cps.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
+df_cpS_intercept.loc[df_cpS_intercept.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
+S_i = dignity.loc[(dignity.race == 1), 'S'].values
+S_j = dignity.loc[(dignity.race == 2), 'S'].values
+c_i_bar = dignity.loc[(dignity.race == 1), 'c_bar'].values
+c_j_bar = dignity.loc[(dignity.race == 2), 'c_bar'].values
+ell_i_bar = df_cps.loc[(df_cps.race == 1), 'ell_bar'].values
+ell_j_bar = df_cps.loc[(df_cps.race == 2), 'ell_bar'].values
+S_intercept = dignity_u_bar.loc[:, 'S'].values
+c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+ell_intercept = df_cpS_intercept.loc[:, 'ell_bar'].values
+c_i_bar_nd = dignity.loc[(dignity.race == 1), 'c_bar_nd'].values
+c_j_bar_nd = dignity.loc[(dignity.race == 2), 'c_bar_nd'].values
+Elog_of_c_i = dignity.loc[(dignity.race == 1), 'Elog_of_c'].values
+Elog_of_c_j = dignity.loc[(dignity.race == 2), 'Elog_of_c'].values
+Elog_of_c_i_nd = dignity.loc[(dignity.race == 1), 'Elog_of_c_nd'].values
+Elog_of_c_j_nd = dignity.loc[(dignity.race == 2), 'Elog_of_c_nd'].values
+Ev_of_ell_i = df_cps.loc[(df_cps.race == 1), 'Ev_of_ell'].values
+Ev_of_ell_j = df_cps.loc[(df_cps.race == 2), 'Ev_of_ell'].values
+d = cew_level(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+               S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+               inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)
+log_lambda = np.sum([d.get(x) for x in ['LE', 'C', 'CI', 'L']])
 
 # Calculate the consumption-equivalent welfare of Black relative to White Americans with the unemployment adjustment
 for i in np.linspace(0, 1, 101):
     cps.loc[:, 'adjusted_leisure'] = cps.weekly_leisure - (1 - i) * cps.Δ_leisure
-    df_cps = cps.groupby(['race', 'age'], as_index=False).apply(lambda x: pd.Series({'Ev_of_ℓ': np.average(v_of_ℓ(x.adjusted_leisure), weights=x.weight),
-                                                                                     'ℓ_bar':   np.average(x.adjusted_leisure, weights=x.weight)}))
-    df_cps_u_bar = cps.groupby('age', as_index=False).apply(lambda x: pd.Series({'ℓ_bar': np.average(x.weekly_leisure, weights=x.weight)}))
+    df_cps = cps.groupby(['race', 'age'], as_index=False).apply(lambda x: pd.Series({'Ev_of_ell': np.average(v_of_ell(x.adjusted_leisure), weights=x.weight),
+                                                                                     'ell_bar':   np.average(x.adjusted_leisure, weights=x.weight)}))
+    df_cpS_intercept = cps.groupby('age', as_index=False).apply(lambda x: pd.Series({'ell_bar': np.average(x.weekly_leisure, weights=x.weight)}))
     df_cps = pd.merge(expand({'race': [1, 2], 'age': range(101)}), df_cps, how='left')
-    df_cps_u_bar = pd.merge(pd.DataFrame({'age': range(101)}), df_cps_u_bar, how='left')
-    df_cps.loc[:, ['Ev_of_ℓ', 'ℓ_bar']] = df_cps.groupby('race', as_index=False)[['Ev_of_ℓ', 'ℓ_bar']].transform(lambda x: filter(x, 100)).values
-    df_cps_u_bar.loc[:, 'ℓ_bar'] = df_cps_u_bar.loc[:, 'ℓ_bar'].transform(lambda x: filter(x, 100)).values
-    df_cps.loc[df_cps.loc[:, 'Ev_of_ℓ'] > 0, 'Ev_of_ℓ'] = 0
-    df_cps.loc[df_cps.loc[:, 'ℓ_bar'] > 1, 'ℓ_bar'] = 1
-    df_cps_u_bar.loc[df_cps_u_bar.loc[:, 'ℓ_bar'] > 1, 'ℓ_bar'] = 1
-    Sᵢ = dignity.loc[(dignity.race == 1), 'S'].values
-    Sⱼ = dignity.loc[(dignity.race == 2), 'S'].values
-    cᵢ_bar = dignity.loc[(dignity.race == 1), 'c_bar'].values
-    cⱼ_bar = dignity.loc[(dignity.race == 2), 'c_bar'].values
-    ℓᵢ_bar = df_cps.loc[(df_cps.race == 1), 'ℓ_bar'].values
-    ℓⱼ_bar = df_cps.loc[(df_cps.race == 2), 'ℓ_bar'].values
-    S_u_bar = dignity_u_bar.loc[:, 'S'].values
-    c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-    ℓ_u_bar = df_cps_u_bar.loc[:, 'ℓ_bar'].values
-    cᵢ_bar_nd = dignity.loc[(dignity.race == 1), 'c_bar_nd'].values
-    cⱼ_bar_nd = dignity.loc[(dignity.race == 2), 'c_bar_nd'].values
-    Elog_of_cᵢ = dignity.loc[(dignity.race == 1), 'Elog_of_c'].values
-    Elog_of_cⱼ = dignity.loc[(dignity.race == 2), 'Elog_of_c'].values
-    Elog_of_cᵢ_nd = dignity.loc[(dignity.race == 1), 'Elog_of_c_nd'].values
-    Elog_of_cⱼ_nd = dignity.loc[(dignity.race == 2), 'Elog_of_c_nd'].values
-    Ev_of_ℓᵢ = df_cps.loc[(df_cps.race == 1), 'Ev_of_ℓ'].values
-    Ev_of_ℓⱼ = df_cps.loc[(df_cps.race == 2), 'Ev_of_ℓ'].values
-    d = logλ_level(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar,
-                   S_u_bar=S_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal,
-                   inequality=True, cᵢ_bar_nd=cᵢ_bar_nd, cⱼ_bar_nd=cⱼ_bar_nd, Elog_of_cᵢ=Elog_of_cᵢ, Elog_of_cⱼ=Elog_of_cⱼ, Elog_of_cᵢ_nd=Elog_of_cᵢ_nd, Elog_of_cⱼ_nd=Elog_of_cⱼ_nd, Ev_of_ℓᵢ=Ev_of_ℓᵢ, Ev_of_ℓⱼ=Ev_of_ℓⱼ)
-    df.loc[df.parameter == i, 'logλ'] = np.sum([d.get(x) for x in ['LE', 'C', 'CI', 'L']])
+    df_cpS_intercept = pd.merge(pd.DataFrame({'age': range(101)}), df_cpS_intercept, how='left')
+    df_cps.loc[:, ['Ev_of_ell', 'ell_bar']] = df_cps.groupby('race', as_index=False)[['Ev_of_ell', 'ell_bar']].transform(lambda x: filter(x, 100)).values
+    df_cpS_intercept.loc[:, 'ell_bar'] = df_cpS_intercept.loc[:, 'ell_bar'].transform(lambda x: filter(x, 100)).values
+    df_cps.loc[df_cps.loc[:, 'Ev_of_ell'] > 0, 'Ev_of_ell'] = 0
+    df_cps.loc[df_cps.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
+    df_cpS_intercept.loc[df_cpS_intercept.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
+    S_i = dignity.loc[(dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.race == 2), 'S'].values
+    c_i_bar = dignity.loc[(dignity.race == 1), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.race == 2), 'c_bar'].values
+    ell_i_bar = df_cps.loc[(df_cps.race == 1), 'ell_bar'].values
+    ell_j_bar = df_cps.loc[(df_cps.race == 2), 'ell_bar'].values
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
+    c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+    ell_intercept = df_cpS_intercept.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.race == 1), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.race == 2), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.race == 1), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.race == 2), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.race == 1), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.race == 2), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = df_cps.loc[(df_cps.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = df_cps.loc[(df_cps.race == 2), 'Ev_of_ell'].values
+    d = cew_level(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                   S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                   inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)
+    df.loc[df.parameter == i, 'log_lambda'] = np.sum([d.get(x) for x in ['LE', 'C', 'CI', 'L']])
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
-ax.plot(np.linspace(0, 1, 101), 100 * (df.logλ - logλ), color=colors[1], linewidth=2.5)
+ax.plot(np.linspace(0, 1, 101), 100 * (df.log_lambda - log_lambda), color=colors[1], linewidth=2.5)
 
 # Set the horizontal axis
 ax.set_xlim(0, 1)
@@ -2325,28 +2366,28 @@ c_nominal = 1e6 * c_nominal / population
 
 # Calculate consumption-equivalent welfare growth
 df = expand({'year': years[1:], 'race': [1, 2]})
-df.loc[:, 'logλ'] = np.nan
+df.loc[:, 'log_lambda'] = np.nan
 for race in [1, 2]:
     for year in years[1:]:
-        Sᵢ = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'S'].values
-        Sⱼ = dignity.loc[(dignity.year == year) & (dignity.race == race), 'S'].values
-        cᵢ_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'c_bar'].values
-        cⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == race), 'c_bar'].values
-        ℓᵢ_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'ℓ_bar'].values
-        ℓⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == race), 'ℓ_bar'].values
+        S_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'S'].values
+        S_j = dignity.loc[(dignity.year == year) & (dignity.race == race), 'S'].values
+        c_i_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'c_bar'].values
+        c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == race), 'c_bar'].values
+        ell_i_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'ell_bar'].values
+        ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == race), 'ell_bar'].values
         T = year - years[years.index(year) - 1]
-        S_u_bar = dignity_u_bar.loc[:, 'S'].values
-        c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-        ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-        df.loc[(df.year == year) & (df.race == race), 'logλ'] = logλ_growth(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar, T=T,
-                                                                            S_u_bar=S_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal)['logλ']
+        S_intercept = dignity_u_bar.loc[:, 'S'].values
+        c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+        ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+        df.loc[(df.year == year) & (df.race == race), 'log_lambda'] = log_lambda_growth(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar, T=T,
+                                                                            S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal)['log_lambda']
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
-ax.plot(np.linspace(1950, 2020, 8), 100 * df.loc[df.race == 1, 'logλ'], color=colors[0], linewidth=2.5, marker='o', clip_on=False)
-ax.plot(np.linspace(1950, 2020, 8), 100 * df.loc[df.race == 2, 'logλ'], color=colors[1], linewidth=2.5, marker='o', clip_on=False)
+ax.plot(np.linspace(1950, 2020, 8), 100 * df.loc[df.race == 1, 'log_lambda'], color=colors[0], linewidth=2.5, marker='o', clip_on=False)
+ax.plot(np.linspace(1950, 2020, 8), 100 * df.loc[df.race == 2, 'log_lambda'], color=colors[1], linewidth=2.5, marker='o', clip_on=False)
 
 # Set the horizontal axis
 ax.set_xlim(1950, 2020)
@@ -2393,27 +2434,27 @@ population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006
 c_nominal = 1e6 * c_nominal / population
 
 # Calculate consumption-equivalent welfare growth
-df = pd.DataFrame({'year': years[1:], 'logλ': np.zeros(len(years[1:])), 'C': np.zeros(len(years[1:]))})
+df = pd.DataFrame({'year': years[1:], 'log_lambda': np.zeros(len(years[1:])), 'C': np.zeros(len(years[1:]))})
 for year in years[1:]:
-    Sᵢ = dignity.loc[dignity.year == years[years.index(year) - 1], 'S'].values
-    Sⱼ = dignity.loc[dignity.year == year, 'S'].values
-    cᵢ_bar = dignity.loc[dignity.year == years[years.index(year) - 1], 'c_bar'].values
-    cⱼ_bar = dignity.loc[dignity.year == year, 'c_bar'].values
-    ℓᵢ_bar = dignity.loc[dignity.year == years[years.index(year) - 1], 'ℓ_bar'].values
-    ℓⱼ_bar = dignity.loc[dignity.year == year, 'ℓ_bar'].values
+    S_i = dignity.loc[dignity.year == years[years.index(year) - 1], 'S'].values
+    S_j = dignity.loc[dignity.year == year, 'S'].values
+    c_i_bar = dignity.loc[dignity.year == years[years.index(year) - 1], 'c_bar'].values
+    c_j_bar = dignity.loc[dignity.year == year, 'c_bar'].values
+    ell_i_bar = dignity.loc[dignity.year == years[years.index(year) - 1], 'ell_bar'].values
+    ell_j_bar = dignity.loc[dignity.year == year, 'ell_bar'].values
     T = year - years[years.index(year) - 1]
-    S_u_bar = dignity_u_bar.loc[:, 'S'].values
-    c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-    ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-    for i in ['logλ', 'C']:
-        df.loc[df.year == year, i] = logλ_growth(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar, T=T,
-                                                 S_u_bar=S_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal)[i]
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
+    c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+    ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+    for i in ['log_lambda', 'C']:
+        df.loc[df.year == year, i] = log_lambda_growth(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar, T=T,
+                                                 S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal)[i]
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
-ax.plot(np.linspace(1950, 2020, 8), 100 * df.logλ, color=colors[1], linewidth=2.5, marker='o', clip_on=False)
+ax.plot(np.linspace(1950, 2020, 8), 100 * df.log_lambda, color=colors[1], linewidth=2.5, marker='o', clip_on=False)
 ax.plot(np.linspace(1950, 2020, 8), 100 * df.C, color=colors[0], linewidth=2.5, marker='o', clip_on=False)
 
 # Set the horizontal axis
@@ -2462,42 +2503,42 @@ c_nominal = 1e6 * c_nominal / population
 
 # Calculate consumption-equivalent welfare growth
 df = expand({'year': years[1:], 'race': [1, 2]})
-df.loc[:, 'logλ'] = np.nan
+df.loc[:, 'log_lambda'] = np.nan
 for race in [1, 2]:
     for year in years[1:]:
-        Sᵢ = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'S'].values
-        Sⱼ = dignity.loc[(dignity.year == year) & (dignity.race == race), 'S'].values
-        cᵢ_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'c_bar'].values
-        cⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == race), 'c_bar'].values
-        ℓᵢ_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'ℓ_bar'].values
-        ℓⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == race), 'ℓ_bar'].values
+        S_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'S'].values
+        S_j = dignity.loc[(dignity.year == year) & (dignity.race == race), 'S'].values
+        c_i_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'c_bar'].values
+        c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == race), 'c_bar'].values
+        ell_i_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'ell_bar'].values
+        ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == race), 'ell_bar'].values
         T = year - years[years.index(year) - 1]
-        S_u_bar = dignity_u_bar.loc[:, 'S'].values
-        c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-        ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-        cᵢ_bar_nd = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'c_bar_nd'].values
-        cⱼ_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == race), 'c_bar_nd'].values
-        Elog_of_cᵢ = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'Elog_of_c'].values
-        Elog_of_cⱼ = dignity.loc[(dignity.year == year) & (dignity.race == race), 'Elog_of_c'].values
-        Elog_of_cᵢ_nd = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'Elog_of_c_nd'].values
-        Elog_of_cⱼ_nd = dignity.loc[(dignity.year == year) & (dignity.race == race), 'Elog_of_c_nd'].values
-        Ev_of_ℓᵢ = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'Ev_of_ℓ'].values
-        Ev_of_ℓⱼ = dignity.loc[(dignity.year == year) & (dignity.race == race), 'Ev_of_ℓ'].values
-        df.loc[(df.year == year) & (df.race == race), 'logλ'] = logλ_growth(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar, T=T,
-                                                                            S_u_bar=S_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal,
-                                                                            inequality=True, cᵢ_bar_nd=cᵢ_bar_nd, cⱼ_bar_nd=cⱼ_bar_nd, Elog_of_cᵢ=Elog_of_cᵢ, Elog_of_cⱼ=Elog_of_cⱼ, Elog_of_cᵢ_nd=Elog_of_cᵢ_nd, Elog_of_cⱼ_nd=Elog_of_cⱼ_nd, Ev_of_ℓᵢ=Ev_of_ℓᵢ, Ev_of_ℓⱼ=Ev_of_ℓⱼ)['logλ']
+        S_intercept = dignity_u_bar.loc[:, 'S'].values
+        c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+        ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+        c_i_bar_nd = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'c_bar_nd'].values
+        c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == race), 'c_bar_nd'].values
+        Elog_of_c_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'Elog_of_c'].values
+        Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == race), 'Elog_of_c'].values
+        Elog_of_c_i_nd = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'Elog_of_c_nd'].values
+        Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == race), 'Elog_of_c_nd'].values
+        Ev_of_ell_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'Ev_of_ell'].values
+        Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == race), 'Ev_of_ell'].values
+        df.loc[(df.year == year) & (df.race == race), 'log_lambda'] = log_lambda_growth(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar, T=T,
+                                                                            S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                                            inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
 
 # Cumulate the growth rates
-df.loc[:, 'logλ'] = df.groupby('race', as_index=False).logλ.transform(lambda x: np.exp(np.cumsum(x))).logλ.values
+df.loc[:, 'log_lambda'] = df.groupby('race', as_index=False).log_lambda.transform(lambda x: np.exp(np.cumsum(x))).log_lambda.values
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
-ax.plot(years, np.log(np.append(1, df.loc[df.race == 1, 'logλ'])), color=colors[0], linewidth=2.5)
-ax.annotate(str(np.round_(df.loc[df.race == 1, 'logλ'].iloc[-1], decimals=1)) + 'x', xy=(2019.25, np.log(df.loc[df.race == 1, 'logλ'].iloc[-1])), color='k', fontsize=10, va='center', annotation_clip=False)
-ax.plot(years, np.log(np.append(1, df.loc[df.race == 2, 'logλ'])), color=colors[1], linewidth=2.5)
-ax.annotate(str(np.round_(df.loc[df.race == 2, 'logλ'].iloc[-1], decimals=1)) + 'x', xy=(2019.25, np.log(df.loc[df.race == 2, 'logλ'].iloc[-1])), color='k', fontsize=10, va='center', annotation_clip=False)
+ax.plot(years, np.log(np.append(1, df.loc[df.race == 1, 'log_lambda'])), color=colors[0], linewidth=2.5)
+ax.annotate(str(np.round_(df.loc[df.race == 1, 'log_lambda'].iloc[-1], decimals=1)) + 'x', xy=(2019.25, np.log(df.loc[df.race == 1, 'log_lambda'].iloc[-1])), color='k', fontsize=10, va='center', annotation_clip=False)
+ax.plot(years, np.log(np.append(1, df.loc[df.race == 2, 'log_lambda'])), color=colors[1], linewidth=2.5)
+ax.annotate(str(np.round_(df.loc[df.race == 2, 'log_lambda'].iloc[-1], decimals=1)) + 'x', xy=(2019.25, np.log(df.loc[df.race == 2, 'log_lambda'].iloc[-1])), color='k', fontsize=10, va='center', annotation_clip=False)
 
 # Set the horizontal axis
 ax.set_xlim(1984, 2019)
@@ -2543,35 +2584,35 @@ c_nominal = 1e6 * c_nominal / population
 
 # Calculate consumption-equivalent welfare growth
 df = expand({'year': years[1:], 'race': [-1, 1, 2]})
-df.loc[:, 'logλ'] = np.nan
+df.loc[:, 'log_lambda'] = np.nan
 df.loc[:, 'C'] = np.nan
 for race in [-1, 1, 2]:
     for year in years[1:]:
-        Sᵢ = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'S'].values
-        Sⱼ = dignity.loc[(dignity.year == year) & (dignity.race == race), 'S'].values
-        cᵢ_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'c_bar'].values
-        cⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == race), 'c_bar'].values
-        ℓᵢ_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'ℓ_bar'].values
-        ℓⱼ_bar = dignity.loc[(dignity.year == year) & (dignity.race == race), 'ℓ_bar'].values
+        S_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'S'].values
+        S_j = dignity.loc[(dignity.year == year) & (dignity.race == race), 'S'].values
+        c_i_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'c_bar'].values
+        c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == race), 'c_bar'].values
+        ell_i_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'ell_bar'].values
+        ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == race), 'ell_bar'].values
         T = year - years[years.index(year) - 1]
-        S_u_bar = dignity_u_bar.loc[:, 'S'].values
-        c_u_bar = dignity_u_bar.loc[:, 'c_bar'].values
-        ℓ_u_bar = dignity_u_bar.loc[:, 'ℓ_bar'].values
-        for i in ['logλ', 'C']:
-            df.loc[(df.year == year) & (df.race == race), i] = logλ_growth(Sᵢ=Sᵢ, Sⱼ=Sⱼ, cᵢ_bar=cᵢ_bar, cⱼ_bar=cⱼ_bar, ℓᵢ_bar=ℓᵢ_bar, ℓⱼ_bar=ℓⱼ_bar, T=T,
-                                                                           S_u_bar=S_u_bar, c_u_bar=c_u_bar, ℓ_u_bar=ℓ_u_bar, c_nominal=c_nominal)[i]
+        S_intercept = dignity_u_bar.loc[:, 'S'].values
+        c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+        ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+        for i in ['log_lambda', 'C']:
+            df.loc[(df.year == year) & (df.race == race), i] = log_lambda_growth(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar, T=T,
+                                                                           S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal)[i]
 
 # Cumulate the growth rates
-df.loc[:, ['logλ', 'C']] = df.groupby('race', as_index=False)[['logλ', 'C']].transform(lambda x: np.exp(np.cumsum(x * np.diff(years)))).values
+df.loc[:, ['log_lambda', 'C']] = df.groupby('race', as_index=False)[['log_lambda', 'C']].transform(lambda x: np.exp(np.cumsum(x * np.diff(years)))).values
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
-ax.plot(years, np.log(np.append(1, df.loc[df.race == 1, 'logλ'])), color=colors[0], linewidth=2.5)
-ax.annotate(str(df.loc[df.race == 1, 'logλ'].iloc[-1].astype('int')) + 'x', xy=(2019.25, np.log(df.loc[df.race == 1, 'logλ'].iloc[-1])), color='k', fontsize=10, va='center', annotation_clip=False)
-ax.plot(years, np.log(np.append(1, df.loc[df.race == 2, 'logλ'])), color=colors[1], linewidth=2.5)
-ax.annotate(str(df.loc[df.race == 2, 'logλ'].iloc[-1].astype('int')) + 'x', xy=(2019.25, np.log(df.loc[df.race == 2, 'logλ'].iloc[-1])), color='k', fontsize=10, va='center', annotation_clip=False)
+ax.plot(years, np.log(np.append(1, df.loc[df.race == 1, 'log_lambda'])), color=colors[0], linewidth=2.5)
+ax.annotate(str(df.loc[df.race == 1, 'log_lambda'].iloc[-1].astype('int')) + 'x', xy=(2019.25, np.log(df.loc[df.race == 1, 'log_lambda'].iloc[-1])), color='k', fontsize=10, va='center', annotation_clip=False)
+ax.plot(years, np.log(np.append(1, df.loc[df.race == 2, 'log_lambda'])), color=colors[1], linewidth=2.5)
+ax.annotate(str(df.loc[df.race == 2, 'log_lambda'].iloc[-1].astype('int')) + 'x', xy=(2019.25, np.log(df.loc[df.race == 2, 'log_lambda'].iloc[-1])), color='k', fontsize=10, va='center', annotation_clip=False)
 ax.plot(years, np.log(np.append(1, df.loc[df.race == -1, 'C'])), color='k', linewidth=2.5)
 ax.annotate(str(df.loc[df.race == -1, 'C'].iloc[-1].astype('int')) + 'x', xy=(2019.25, np.log(df.loc[df.race == -1, 'C'].iloc[-1])), color='k', fontsize=10, va='center', annotation_clip=False)
 
