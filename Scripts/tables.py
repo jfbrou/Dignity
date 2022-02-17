@@ -19,6 +19,76 @@ bea = beapy.BEA(key=os.getenv('bea_api_key'))
 
 ################################################################################
 #                                                                              #
+# This section of the script tabulates the consumption-equivalent welfare of   #
+# Black relative to White Americans in 1984 and 2019 for different parameter   #
+# values and assumptions.                                                      #
+#                                                                              #
+################################################################################
+
+# Define a list of years
+years = [1984, 2019]
+
+# Load the dignity data
+dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
+dignity_u_bar = dignity.loc[(dignity.historical == False) & (dignity.race == -1) & (dignity.latin == -1) & (dignity.year == 2006), :]
+dignity = dignity.loc[(dignity.historical == False) & (dignity.race != -1) & (dignity.latin == -1), :]
+
+# Retrieve nominal consumption per capita in 2006
+c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
+population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC
+c_nominal = 1e6 * c_nominal / population
+
+# Instantiate an empty data frame
+df = expand({'year': years, 'case': ['benchmark', 'beta_and_g'], 'log_lambda': [np.nan]})
+
+# Calculate the benchmark consumption-equivalent welfare of Black relative to White Americans
+for year in years:
+    S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
+    c_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
+    c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+    ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ell'].values
+    df.loc[(df.year == year) & (df.case == 'benchmark'), 'log_lambda'] = cew_level(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                                                   S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                                                   inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
+
+# Calculate the consumption-equivalent welfare of Black relative to White Americans with discounting and growth
+for year in years:
+    S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
+    c_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_u_bar.loc[:, 'S'].values
+    c_intercept = dignity_u_bar.loc[:, 'c_bar'].values
+    ell_intercept = dignity_u_bar.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ell'].values
+    df.loc[(df.year == year) & (df.case == 'beta_and_g'), 'log_lambda'] = cew_level(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar, beta=0.96, g=0.02,
+                                                                                    S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                                                    inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
+
+################################################################################
+#                                                                              #
 # This section of the script tabulates COVID-19 welfare dignity.               #
 #                                                                              #
 ################################################################################

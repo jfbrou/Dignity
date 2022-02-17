@@ -117,13 +117,13 @@ def cew_level(S_i=None, S_j=None, c_i_bar=None, c_j_bar=None, ell_i_bar=None, el
               S_intercept=None, c_intercept=None, ell_intercept=None, vsl=7.4e6, c_nominal=None, age_min_intercept=40, age_max_intercept=100, # Intercept parameters
               inequality=False, c_i_bar_nd=None, c_j_bar_nd=None, Elog_of_c_i=None, Elog_of_c_j=None, Elog_of_c_i_nd=None, Elog_of_c_j_nd=None, Ev_of_ell_i=None, Ev_of_ell_j=None): # Inequality parameters
     # Restrict on selected ages
-    S_i = S_i[age_min:age_max + 1]
-    S_j = S_j[age_min:age_max + 1]
+    S_i = S_i[age_min:age_max + 1] / S_i[age_min]
+    S_j = S_j[age_min:age_max + 1] / S_j[age_min]
     c_i_bar = c_i_bar[age_min:age_max + 1]
     c_j_bar = c_j_bar[age_min:age_max + 1]
     ell_i_bar = ell_i_bar[age_min:age_max + 1]
     ell_j_bar = ell_j_bar[age_min:age_max + 1]
-    S_intercept = S_intercept[age_min_intercept:age_max_intercept + 1]
+    S_intercept = S_intercept[age_min_intercept:age_max_intercept + 1] / S_intercept[age_min_intercept]
     c_intercept = c_intercept[age_min_intercept:age_max_intercept + 1]
     ell_intercept = ell_intercept[age_min_intercept:age_max_intercept + 1]
 

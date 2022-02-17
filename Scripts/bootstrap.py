@@ -138,7 +138,7 @@ def bootstrap_statistics(n):
     df_consumption_simple = df_consumption_simple.append(df, ignore_index=True)
 
     # Clear the CEX bootstrap sample from memory
-    del df_cex, df_cex, df_cex
+    del df_cex
 
     # Define functions to perform the CPS aggregation
     if m == 1:
