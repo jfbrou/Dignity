@@ -48,17 +48,16 @@ def bootstrap_statistics(n):
             df_cps = df_cps.append(cps.loc[cps.year == year, :].sample(n=cps.loc[cps.year == year, :].shape[0], replace=True, random_state=b), ignore_index=True)
 
     # Normalize consumption in the CEX data
-    df_cex_simple = df_cex.copy()
-    df_cex_simple_latin = df_cex.copy()
     for column in ['consumption', 'consumption_nd']:
         if m == 1:
+            df_cex.loc[:, column + '_simple'] = df_cex.loc[:, column] / np.average(df_cex.loc[(df_cex.year == 2019) & (df_cex.race == 1), column])
+            df_cex.loc[:, column + '_simple_latin'] = df_cex.loc[:, column] / np.average(df_cex.loc[(df_cex.year == 2019) & (df_cex.race == 1) & (df_cex.latin == 0), column])
             df_cex.loc[:, column] = df_cex.loc[:, column] / np.average(df_cex.loc[df_cex.year == 2019, column])
-            df_cex_simple.loc[:, column] = df_cex_simple.loc[:, column] / np.average(df_cex_simple.loc[(df_cex_simple.year == 2019) & (df_cex_simple.race == 1), column])
-            df_cex_simple_latin.loc[:, column] = df_cex_simple_latin.loc[:, column] / np.average(df_cex_simple_latin.loc[(df_cex_simple_latin.year == 2019) & (df_cex_simple_latin.race == 1) & (df_cex_simple_latin.latin == 0), column])
+            
         else:
-            df_cex.loc[:, column] = df_cex.loc[:, column] / np.average(df_cex.loc[df_cex.year == 2019, column], weights=df_cex.loc[df_cex.year == 2019, 'weight'])
-            df_cex_simple.loc[:, column] = df_cex_simple.loc[:, column] / np.average(df_cex_simple.loc[(df_cex_simple.year == 2019) & (df_cex_simple.race == 1), column], weights=df_cex_simple.loc[(df_cex_simple.year == 2019) & (df_cex_simple.race == 1), 'weight'])
-            df_cex_simple_latin.loc[:, column] = df_cex_simple_latin.loc[:, column] / np.average(df_cex_simple_latin.loc[(df_cex_simple_latin.year == 2019) & (df_cex_simple_latin.race == 1) & (df_cex_simple_latin.latin == 0), column], weights=df_cex_simple_latin.loc[(df_cex_simple_latin.year == 2019) & (df_cex_simple_latin.race == 1) & (df_cex_simple_latin.latin == 0), 'weight'])
+            df_cex.loc[:, column + '_simple'] = df_cex.loc[:, column] / np.average(df_cex.loc[df_cex.year == 2019, column], weights=df_cex.loc[df_cex.year == 2019, 'weight'])
+            df_cex.loc[:, column + '_simple_latin'] = df_cex.loc[:, column] / np.average(df_cex.loc[(df_cex.year == 2019) & (df_cex.race == 1), column], weights=df_cex.loc[(df_cex.year == 2019) & (df_cex.race == 1), 'weight'])
+            df_cex.loc[:, column] = df_cex.loc[:, column] / np.average(df_cex.loc[(df_cex.year == 2019) & (df_cex.race == 1) & (df_cex.latin == 0), column], weights=df_cex.loc[(df_cex.year == 2019) & (df_cex.race == 1) & (df_cex.latin == 0), 'weight'])
 
     # Define functions to perform the CEX aggregation
     if m == 1:
@@ -71,8 +70,13 @@ def bootstrap_statistics(n):
             return pd.Series(d, index=[key for key, value in d.items()])
         def f_cex_simple(x):
             d = {}
-            d['consumption_average'] = np.log(np.average(x.consumption))
-            d['consumption_sd'] = np.std(np.log(x.consumption_nd))
+            d['consumption_average'] = np.log(np.average(x.consumption_simple))
+            d['consumption_sd'] = np.std(np.log(x.consumption_nd_simple))
+            return pd.Series(d, index=[key for key, value in d.items()])
+        def f_cex_simple_latin(x):
+            d = {}
+            d['consumption_average'] = np.log(np.average(x.consumption_simple_latin))
+            d['consumption_sd'] = np.std(np.log(x.consumption_nd_simple_latin))
             return pd.Series(d, index=[key for key, value in d.items()])
     else:
         def f_cex(x):
@@ -84,8 +88,13 @@ def bootstrap_statistics(n):
             return pd.Series(d, index=[key for key, value in d.items()])
         def f_cex_simple(x):
             d = {}
-            d['consumption_average'] = np.log(np.average(x.consumption), weights=x.weight)
-            d['consumption_sd'] = np.sqrt(np.average((np.log(x.consumption_nd) - np.average(np.log(x.consumption_nd), weights=x.weight))**2, weights=x.weight))
+            d['consumption_average'] = np.log(np.average(x.consumption_simple, weights=x.weight))
+            d['consumption_sd'] = np.sqrt(np.average((np.log(x.consumption_nd_simple) - np.average(np.log(x.consumption_nd_simple), weights=x.weight))**2, weights=x.weight))
+            return pd.Series(d, index=[key for key, value in d.items()])
+        def f_cex_simple_latin(x):
+            d = {}
+            d['consumption_average'] = np.log(np.average(x.consumption_simple_latin, weights=x.weight))
+            d['consumption_sd'] = np.sqrt(np.average((np.log(x.consumption_nd_simple_latin) - np.average(np.log(x.consumption_nd_simple_latin), weights=x.weight))**2, weights=x.weight))
             return pd.Series(d, index=[key for key, value in d.items()])
 
     # Instantiate empty data frames
@@ -102,7 +111,7 @@ def bootstrap_statistics(n):
     df_consumption = df_consumption.append(df, ignore_index=True)
 
     # Calculate CEX consumption statistics by year and race in the current bootstrap sample
-    df = df_cex_simple.loc[df_cex_simple.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).apply(f_cex_simple)
+    df = df_cex.loc[df_cex.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).apply(f_cex_simple)
     df = pd.merge(expand({'year': df.year.unique(), 'race': [1, 2], 'latin': [-1], 'bootstrap': [b], 'method': [m]}), df, how='left')
     df_consumption_simple = df_consumption_simple.append(df, ignore_index=True)
 
@@ -113,7 +122,7 @@ def bootstrap_statistics(n):
     df_consumption = df_consumption.append(df, ignore_index=True)
 
     # Calculate CEX consumption statistics by year for Latinos in the current bootstrap sample
-    df = df_cex_simple_latin.loc[(df_cex_simple_latin.latin == 1) & (df_cex_simple_latin.year >= 2006), :].groupby('year', as_index=False).apply(f_cex_simple)
+    df = df_cex.loc[(df_cex.latin == 1) & (df_cex.year >= 2006), :].groupby('year', as_index=False).apply(f_cex_simple_latin)
     df = pd.merge(expand({'year': df.year.unique(), 'race': [-1], 'latin': [1], 'bootstrap': [b], 'method': [m]}), df, how='left')
     df_consumption_simple = df_consumption_simple.append(df, ignore_index=True)
 
@@ -124,12 +133,12 @@ def bootstrap_statistics(n):
     df_consumption = df_consumption.append(df, ignore_index=True)
 
     # Calculate CEX consumption statistics by year and race for non-Latinos in the current bootstrap sample
-    df = df_cex_simple_latin.loc[df_cex_simple_latin.race.isin([1, 2]) & (df_cex_simple_latin.latin == 0) & (df_cex_simple_latin.year >= 2006), :].groupby(['year', 'race'], as_index=False).apply(f_cex_simple)
+    df = df_cex.loc[df_cex.race.isin([1, 2]) & (df_cex.latin == 0) & (df_cex.year >= 2006), :].groupby(['year', 'race'], as_index=False).apply(f_cex_simple_latin)
     df = pd.merge(expand({'year': df.year.unique(), 'race': [1, 2], 'latin': [0], 'bootstrap': [b], 'method': [m]}), df, how='left')
     df_consumption_simple = df_consumption_simple.append(df, ignore_index=True)
 
     # Clear the CEX bootstrap sample from memory
-    del df_cex, df_cex_simple, df_cex_simple_latin
+    del df_cex, df_cex, df_cex
 
     # Define functions to perform the CPS aggregation
     if m == 1:
