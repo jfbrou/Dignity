@@ -17,7 +17,7 @@ data = '/scratch/users/jfbrou/Dignity'
 # Define a function to calculate CEX consumption statistics across bootstrap samples
 def bootstrap(n):
     # Load the CEX data
-    cex = pd.read_csv(os.path.join(data, 'cex.csv'))
+    cex = pd.read_csv(os.path.join(data, 'cex.csv'), usecols=['year', 'weight', 'consumption', 'consumption_nd', 'race', 'latin', 'age'], dtype={'year': 'uint16', 'weight': 'float32', 'consumption': 'float32', 'consumption_nd': 'float32', 'race': 'uint8', 'latin': 'uint8', 'age': 'uint8'})
     cex = cex.loc[cex.year.isin(range(1984, 2020 + 1)), :]
 
     # Define the bootstrap sample and the sampling method
