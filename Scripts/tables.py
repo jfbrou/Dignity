@@ -277,11 +277,11 @@ cex = cex.loc[cex.year.isin(years), :]
 cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[cex.year == 2019, 'consumption'], weights=cex.loc[cex.year == 2019, 'weight'])
 
 # Define the flow utility from consumption function
-def u(x, c_bar=0.2, gamma=2):
-    return (x + c_bar)**(1 - gamma) / (1 - gamma)
+def u_of_c(x, gamma=2):
+    return x**(1 - gamma) / (1 - gamma)
 
 # Calculate CEX consumption statistics by year, race and age
-df_gamma = cex.loc[cex.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(lambda x: pd.Series({'Eu_of_c': np.average(u(x.consumption), weights=x.weight)}))
+df_gamma = cex.loc[cex.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(lambda x: pd.Series({'Eu_of_c': np.average(u_of_c(x.consumption), weights=x.weight)}))
 df_gamma = pd.merge(expand({'year': df_gamma.year.unique(), 'age': range(101), 'race': [1, 2]}), df_gamma, how='left')
 df_gamma.loc[:, 'Eu_of_c'] = df_gamma.groupby(['year', 'race'], as_index=False).Eu_of_c.transform(lambda x: filter(x, 1600)).values
 

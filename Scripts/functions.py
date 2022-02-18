@@ -632,6 +632,10 @@ def cew_level_gamma(S_i=None, S_j=None, Eu_of_c_i=None, Eu_of_c_j=None, Ev_of_el
     # Calculate the intercept
     u_bar = (vsl / c_nominal**gamma - dot(S_intercept, c_intercept**(1 - gamma) / (1 - gamma) + v_of_ell(ell_intercept))) / sum(S_intercept)
 
+    # Calculate flow utility for each group
+    flow_i = u_bar + Eu_of_c_i + Ev_of_ell_i
+    flow_j = u_bar + Eu_of_c_j + Ev_of_ell_j
+
     # Calculate the EV and CV consumption-equivalent welfare, and average them
     lambda_EV = (sum(u_bar * (S_j - S_i) + S_j * Ev_of_ell_j - S_i * Ev_of_ell_i + S_j * Eu_of_c_j) / sum(S_i * Eu_of_c_i))**(1 / (1 - gamma))
     lambda_CV = (sum(u_bar * (S_i - S_j) + S_i * Ev_of_ell_i - S_j * Ev_of_ell_j + S_i * Eu_of_c_i) / sum(S_j * Eu_of_c_j))**(1 / (gamma - 1))
