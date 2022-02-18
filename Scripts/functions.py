@@ -10,8 +10,8 @@ def expand(d):
     return pd.DataFrame.from_records(rows, columns=d.keys())
 
 # Define the leisure utility function
-def v_of_ell(x, ϵ=1.0, θ=14.2):
-    return -(θ * ϵ / (1 + ϵ)) * (1 - x)**((1 + ϵ) / ϵ)
+def v_of_ell(x, epsilon=1.0, theta=14.2):
+    return -(theta * epsilon / (1 + epsilon)) * (1 - x)**((1 + epsilon) / epsilon)
 
 # Define the Beer population interpolation function
 def beer_population(x):
@@ -128,12 +128,12 @@ def cew_level(S_i=None, S_j=None, c_i_bar=None, c_j_bar=None, ell_i_bar=None, el
     ell_intercept = ell_intercept[age_min_intercept:age_max_intercept + 1]
 
     # Define the sequence of discount rates
-    beta_age = beta**linspace(age_min, age_max, age_max - age_min + 1)
-    beta_age_intercept = beta**linspace(age_min_intercept, age_max_intercept, age_max_intercept - age_min_intercept + 1)
+    beta_age = beta**linspace(0, age_max - age_min, age_max - age_min + 1)
+    beta_age_intercept = beta**linspace(0, age_max_intercept - age_min_intercept, age_max_intercept - age_min_intercept + 1)
 
     # Define the sequence of growth rates
-    g_age = g * linspace(age_min, age_max, age_max - age_min + 1)
-    g_age_intercept = g * linspace(age_min_intercept, age_max_intercept, age_max_intercept - age_min_intercept + 1)
+    g_age = g * linspace(0, age_max - age_min, age_max - age_min + 1)
+    g_age_intercept = g * linspace(0, age_max_intercept - age_min_intercept, age_max_intercept - age_min_intercept + 1)
 
     # Calculate the intercept
     u_bar = (vsl / c_nominal - dot(beta_age_intercept * S_intercept, log(c_intercept) + v_of_ell(ell_intercept) + g_age_intercept)) / sum(beta_age_intercept * S_intercept)
@@ -479,23 +479,23 @@ def cew_growth(S_i=None, S_j=None, c_i_bar=None, c_j_bar=None, ell_i_bar=None, e
                S_intercept=None, c_intercept=None, ell_intercept=None, vsl=7.4e6, c_nominal=None, age_min_intercept=40, age_max_intercept=100, # Intercept parameters
                inequality=False, c_i_bar_nd=None, c_j_bar_nd=None, Elog_of_c_i=None, Elog_of_c_j=None, Elog_of_c_i_nd=None, Elog_of_c_j_nd=None, Ev_of_ell_i=None, Ev_of_ell_j=None): # Inequality parameters
     # Restrict on selected ages
-    S_i = S_i[age_min:age_max + 1]
-    S_j = S_j[age_min:age_max + 1]
+    S_i = S_i[age_min:age_max + 1] / S_i[age_min]
+    S_j = S_j[age_min:age_max + 1] / S_j[age_min]
     c_i_bar = c_i_bar[age_min:age_max + 1]
     c_j_bar = c_j_bar[age_min:age_max + 1]
     ell_i_bar = ell_i_bar[age_min:age_max + 1]
     ell_j_bar = ell_j_bar[age_min:age_max + 1]
-    S_intercept = S_intercept[age_min_intercept:age_max_intercept + 1]
+    S_intercept = S_intercept[age_min_intercept:age_max_intercept + 1] / S_intercept[age_min_intercept]
     c_intercept = c_intercept[age_min_intercept:age_max_intercept + 1]
     ell_intercept = ell_intercept[age_min_intercept:age_max_intercept + 1]
 
     # Define the sequence of discount rates
-    beta_age = beta**linspace(age_min, age_max, age_max - age_min + 1)
-    beta_age_intercept = beta**linspace(age_min_intercept, age_max_intercept, age_max_intercept - age_min_intercept + 1)
+    beta_age = beta**linspace(0, age_max - age_min, age_max - age_min + 1)
+    beta_age_intercept = beta**linspace(0, age_max_intercept - age_min_intercept, age_max_intercept - age_min_intercept + 1)
 
     # Define the sequence of growth rates
-    g_age = g * linspace(age_min, age_max, age_max - age_min + 1)
-    g_age_intercept = g * linspace(age_min_intercept, age_max_intercept, age_max_intercept - age_min_intercept + 1)
+    g_age = g * linspace(0, age_max - age_min, age_max - age_min + 1)
+    g_age_intercept = g * linspace(0, age_max_intercept - age_min_intercept, age_max_intercept - age_min_intercept + 1)
 
     # Calculate the intercept
     u_bar = (vsl / c_nominal - dot(beta_age_intercept * S_intercept, log(c_intercept) + v_of_ell(ell_intercept) + g_age_intercept)) / sum(beta_age_intercept * S_intercept)
@@ -612,5 +612,36 @@ def cew_growth(S_i=None, S_j=None, c_i_bar=None, c_j_bar=None, ell_i_bar=None, e
              'log_lambda':    log_lambda,
              'u_bar':         u_bar}
 
+    # Return the dictionary
+    return d
+
+# Define the level consumption-equivalent welfare calculation function
+def cew_level_gamma(S_i=None, S_j=None, Eu_of_c_i=None, Eu_of_c_j=None, Ev_of_ell_i=None, Ev_of_ell_j=None, age_min=0, age_max=100, gamma=2, # Standard parameters
+                    S_intercept=None, c_intercept=None, ell_intercept=None, vsl=7.4e6, c_nominal=None, age_min_intercept=40, age_max_intercept=100): # Intercept parameters
+    # Restrict on selected ages
+    S_i = S_i[age_min:age_max + 1] / S_i[age_min]
+    S_j = S_j[age_min:age_max + 1] / S_j[age_min]
+    S_intercept = S_intercept[age_min_intercept:age_max_intercept + 1] / S_intercept[age_min_intercept]
+    c_intercept = c_intercept[age_min_intercept:age_max_intercept + 1]
+    ell_intercept = ell_intercept[age_min_intercept:age_max_intercept + 1]
+    Eu_of_c_i = Eu_of_c_i[age_min:age_max + 1]
+    Eu_of_c_j = Eu_of_c_j[age_min:age_max + 1]
+    Ev_of_ell_i = Ev_of_ell_i[age_min:age_max + 1]
+    Ev_of_ell_j = Ev_of_ell_j[age_min:age_max + 1]
+
+    # Calculate the intercept
+    u_bar = (vsl / c_nominal**gamma - dot(S_intercept, c_intercept**(1 - gamma) / (1 - gamma) + v_of_ell(ell_intercept))) / sum(S_intercept)
+
+    # Calculate the EV and CV consumption-equivalent welfare, and average them
+    lambda_EV = (sum(u_bar * (S_j - S_i) + S_j * Ev_of_ell_j - S_i * Ev_of_ell_i + S_j * Eu_of_c_j) / sum(S_i * Eu_of_c_i))**(1 / (1 - gamma))
+    lambda_CV = (sum(u_bar * (S_i - S_j) + S_i * Ev_of_ell_i - S_j * Ev_of_ell_j + S_i * Eu_of_c_i) / sum(S_j * Eu_of_c_j))**(1 / (gamma - 1))
+    lambda_average = ((lambda_EV**(1 - gamma) + lambda_CV**(1 - gamma)) / 2)**(1 / (1 - gamma))
+
+    # Store the results in a dictionary
+    d = {'lambda_EV':      lambda_EV,
+         'lambda_CV':      lambda_CV,
+         'lambda_average': lambda_average,
+         'u_bar':          u_bar}
+         
     # Return the dictionary
     return d

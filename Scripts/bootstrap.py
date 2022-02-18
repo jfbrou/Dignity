@@ -374,7 +374,7 @@ def cew(n):
     df.to_csv(os.path.join(data, 'cew_bootstrap_ ' + str(b) + '_method_' + str(m) + '.csv'), index=False)
 
 # Calculate the consumption-equivalent welfare statistics across 1000 bootstrap samples
-Parallel(n_jobs=n_cpu)(delayed(bootstrap_statistics)(n) for n in range(2000))
+Parallel(n_jobs=n_cpu)(delayed(cew)(n) for n in range(2000))
 
 # Append all bootstrap samples in a single data frame
 cew_bootstrap = pd.DataFrame()
