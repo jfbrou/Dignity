@@ -14,12 +14,12 @@ from functions import *
 # Set the Sherlock data directory
 data = '/scratch/users/jfbrou/Dignity'
 
-# Load the CEX data
-cex = pd.read_csv(os.path.join(data, 'cex.csv'))
-cex = cex.loc[cex.year.isin(range(1984, 2020 + 1)), :]
-
 # Define a function to calculate CEX consumption statistics across bootstrap samples
 def bootstrap(n):
+    # Load the CEX data
+    cex = pd.read_csv(os.path.join(data, 'cex.csv'))
+    cex = cex.loc[cex.year.isin(range(1984, 2020 + 1)), :]
+
     # Define the bootstrap sample and the sampling method
     b = np.mod(n, 1000)
     m = int(np.floor(n / 1000) + 1)
@@ -31,7 +31,8 @@ def bootstrap(n):
             df_b = df_b.append(cex.loc[cex.year == year, :].sample(n=cex.loc[cex.year == year, :].shape[0], replace=True, weights='weight', random_state=b), ignore_index=True)
         else:
             df_b = df_b.append(cex.loc[cex.year == year, :].sample(n=cex.loc[cex.year == year, :].shape[0], replace=True, random_state=b), ignore_index=True)
-
+    del cex
+    
     # Normalize consumption
     for column in ['consumption', 'consumption_nd']:
         if m == 1:

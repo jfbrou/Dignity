@@ -14,13 +14,13 @@ from functions import *
 # Set the Sherlock data directory
 data = '/scratch/users/jfbrou/Dignity'
 
-# Load the CPS data
-cps = pd.read_csv(os.path.join(data, 'cps.csv'))
-cps = cps.loc[cps.year.isin(range(1985, 2021 + 1)), :]
-cps.loc[:, 'year'] = cps.year - 1
-
 # Define a function to calculate CPS leisure statistics across bootstrap samples
 def bootstrap(n):
+    # Load the CPS data
+    cps = pd.read_csv(os.path.join(data, 'cps.csv'))
+    cps = cps.loc[cps.year.isin(range(1985, 2021 + 1)), :]
+    cps.loc[:, 'year'] = cps.year - 1
+
     # Define the bootstrap sample and the sampling method
     b = np.mod(n, 1000)
     m = int(np.floor(n / 1000) + 1)
@@ -32,7 +32,8 @@ def bootstrap(n):
             df_b = df_b.append(cps.loc[cps.year == year, :].sample(n=cps.loc[cps.year == year, :].shape[0], replace=True, weights='weight', random_state=b), ignore_index=True)
         else:
             df_b = df_b.append(cps.loc[cps.year == year, :].sample(n=cps.loc[cps.year == year, :].shape[0], replace=True, random_state=b), ignore_index=True)
-
+    del cps
+    
     # Define functions to perform the aggregation
     if m == 1:
         def f(x):
