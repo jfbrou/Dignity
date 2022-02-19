@@ -113,9 +113,14 @@ def filter(x, penalty):
     return x.interpolate(method='ffill', limit_direction='forward')
 
 # Define the level consumption-equivalent welfare calculation function
-def cew_level(S_i=None, S_j=None, c_i_bar=None, c_j_bar=None, ell_i_bar=None, ell_j_bar=None, beta=1, g=0, age_min=0, age_max=100, # Standard parameters
+def cew_level(S_i=None, S_j=None, c_i_bar=None, c_j_bar=None, ell_i_bar=None, ell_j_bar=None, beta=1, g=0, age_min=0, age_max=100, frisch=1.0, # Standard parameters
               S_intercept=None, c_intercept=None, ell_intercept=None, vsl=7.4e6, c_nominal=None, age_min_intercept=40, age_max_intercept=100, # Intercept parameters
               inequality=False, c_i_bar_nd=None, c_j_bar_nd=None, Elog_of_c_i=None, Elog_of_c_j=None, Elog_of_c_i_nd=None, Elog_of_c_j_nd=None, Ev_of_ell_i=None, Ev_of_ell_j=None): # Inequality parameters
+    # Define the leisure utility function
+    def v_of_ell(x, epsilon=frisch):
+        theta = 2.597173415765069 * (1 - 0.353) / (1 - 0.656)**(1 / epsilon + 1)
+        return -(theta * epsilon / (1 + epsilon)) * (1 - x)**((1 + epsilon) / epsilon)
+    
     # Restrict on selected ages
     S_i = S_i[age_min:age_max + 1] / S_i[age_min]
     S_j = S_j[age_min:age_max + 1] / S_j[age_min]
@@ -631,10 +636,6 @@ def cew_level_gamma(S_i=None, S_j=None, Eu_of_c_i=None, Eu_of_c_j=None, Ev_of_el
 
     # Calculate the intercept
     u_bar = (vsl / c_nominal**gamma - dot(S_intercept, c_intercept**(1 - gamma) / (1 - gamma) + v_of_ell(ell_intercept))) / sum(S_intercept)
-
-    # Calculate flow utility for each group
-    flow_i = u_bar + Eu_of_c_i + Ev_of_ell_i
-    flow_j = u_bar + Eu_of_c_j + Ev_of_ell_j
 
     # Calculate the EV and CV consumption-equivalent welfare, and average them
     lambda_EV = (sum(u_bar * (S_j - S_i) + S_j * Ev_of_ell_j - S_i * Ev_of_ell_i + S_j * Eu_of_c_j) / sum(S_i * Eu_of_c_i))**(1 / (1 - gamma))
