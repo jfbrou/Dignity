@@ -51,8 +51,8 @@ cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[(cex.year == 20
 df = cex.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption': np.log(np.average(x.consumption, weights=x.weight))}))
 
 # Load the bootstrapped CEX data and calculate the 95% confidence interval
-cex_bs = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap_simple.csv'))
-df_bs = cex_bs.loc[cex_bs.year.isin(range(1984, 2019 + 1)) & cex_bs.race.isin([1, 2]) & (cex_bs.latin == -1), :]
+df_bs = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap.csv'))
+df_bs = df_bs.loc[df_bs.year.isin(range(1984, 2019 + 1)) & df_bs.race.isin([1, 2]) & (df_bs.latin == -1) & (df_bs.simple == True) & (df_bs.method == 1), :]
 df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.025)}).rename(columns={'consumption_average': 'lb'}),
                  df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.975)}).rename(columns={'consumption_average': 'ub'}), how='left')
 
@@ -904,6 +904,12 @@ c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.
 population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC
 c_nominal = 1e6 * c_nominal / population
 
+# Load the bootstrapped consumpion-equivalent welfare data and calculate the 95% confidence interval
+df_bs = pd.read_csv(os.path.join(f_data, 'cew_bootstrap.csv'))
+df_bs = df_bs.loc[(df_bs.description == 'black') & (df_bs.method == 1), :]
+df_bs = pd.merge(df_bs.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.025)}).rename(columns={'log_lambda': 'lb'}),
+                 df_bs.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.975)}).rename(columns={'log_lambda': 'ub'}), how='left')
+
 # Calculate the consumption-equivalent welfare of Black relative to White Americans
 df = pd.DataFrame({'year': years, 'log_lambda': np.zeros(len(years))})
 for year in years:
@@ -933,6 +939,7 @@ fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
 ax.plot(years, df.log_lambda, color=colors[1], linewidth=2.5)
+ax.fill_between(years, df_bs.lb, y2=df_bs.ub, color=colors[1], alpha=0.2, linewidth=0)
 ax.annotate('{0:.2f}'.format(np.exp(df.log_lambda.iloc[-1])), xy=(2019.25, df.log_lambda.iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
 ax.annotate('{0:.2f}'.format(np.exp(df.log_lambda.iloc[0])), xy=(1981.5, df.log_lambda.iloc[0]), color='k', fontsize=12, va='center', annotation_clip=False)
 

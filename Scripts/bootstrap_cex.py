@@ -41,9 +41,9 @@ def bootstrap(n):
             df_b.loc[:, column] = df_b.loc[:, column] / np.average(df_b.loc[df_b.year == 2019, column])
             
         else:
-            df_b.loc[:, column + '_simple'] = df_b.loc[:, column] / np.average(df_b.loc[df_b.year == 2019, column], weights=df_b.loc[df_b.year == 2019, 'weight'])
-            df_b.loc[:, column + '_simple_latin'] = df_b.loc[:, column] / np.average(df_b.loc[(df_b.year == 2019) & (df_b.race == 1), column], weights=df_b.loc[(df_b.year == 2019) & (df_b.race == 1), 'weight'])
-            df_b.loc[:, column] = df_b.loc[:, column] / np.average(df_b.loc[(df_b.year == 2019) & (df_b.race == 1) & (df_b.latin == 0), column], weights=df_b.loc[(df_b.year == 2019) & (df_b.race == 1) & (df_b.latin == 0), 'weight'])
+            df_b.loc[:, column + '_simple'] = df_b.loc[:, column] / np.average(df_b.loc[(df_b.year == 2019) & (df_b.race == 1), column], weights=df_b.loc[(df_b.year == 2019) & (df_b.race == 1), 'weight'])
+            df_b.loc[:, column + '_simple_latin'] = df_b.loc[:, column] / np.average(df_b.loc[(df_b.year == 2019) & (df_b.race == 1) & (df_b.latin == 0), column], weights=df_b.loc[(df_b.year == 2019) & (df_b.race == 1) & (df_b.latin == 0), 'weight'])
+            df_b.loc[:, column] = df_b.loc[:, column] / np.average(df_b.loc[df_b.year == 2019, column], weights=df_b.loc[df_b.year == 2019, 'weight'])
 
     # Define functions to perform the aggregation
     if m == 1:
