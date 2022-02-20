@@ -123,6 +123,9 @@ limited_any_map = {10: 1,
 # Load the NHIS data
 nhis = pd.read_csv(os.path.join(nhis_r_data, 'nhis.csv.gz'), compression='gzip', header=0, usecols=columns)
 
+# Drop observations with not sampling weights
+nhis = nhis.dropna(subset=['PERWEIGHT'])
+
 # Recode the race and latin origin variables
 nhis.loc[:, 'RACEA'] = nhis.RACEA.map(race_map)
 nhis.loc[:, 'HISPETH'] = nhis.HISPETH.map(latin_map)
@@ -164,7 +167,7 @@ nhis.loc[nhis.LAIADL, 'limitation'] = 0.2
 nhis.loc[nhis.LADL, 'limitation'] = 0
 nhis = nhis.drop(['LADL', 'LAIADL', 'LANOWORK', 'LAMTWRK', 'LANY', 'LNONE'], axis=1)
 
-# Calculate the Mᵢⱼ matrix as in Erickson, Wilson and Shannon (1995)
+# Calculate the M_ij matrix as in Erickson, Wilson and Shannon (1995)
 nhis.loc[:, 'halex'] = 0.41 * (nhis.HEALTH + nhis.limitation) + 0.18 * nhis.HEALTH * nhis.limitation
 nhis = nhis.drop(['HEALTH', 'limitation'], axis=1)
 
