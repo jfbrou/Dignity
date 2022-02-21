@@ -864,10 +864,10 @@ columns = ['consumption_cex', 'earnings', 'salary'] + ['race_' + str(i) for i in
                                                     + ['education_' + str(i) for i in range(1, 4 + 1)] \
                                                     + ['family_size', 'latin', 'gender', 'age']
 for column in columns:
-     df.loc[:, column + '_Δ'] = (df.loc[:, column] - df.loc[:, column + '_average']) / df.loc[:, column + '_average']
+     df.loc[:, column + '_deviation'] = (df.loc[:, column] - df.loc[:, column + '_average']) / df.loc[:, column + '_average']
 
 # Fit the OLS models for consumption
-earnings_model = sm.WLS(df.consumption_cex_Δ.to_numpy(), df.loc[:, [column for column in df.columns if column.endswith('Δ') and not column.startswith('consumption') and not column.startswith('salary')]].to_numpy(), weights=df.weight.to_numpy()).fit()
+earnings_model = sm.WLS(df.consumption_cex_deviation.to_numpy(), df.loc[:, [column for column in df.columns if column.endswith('deviation') and not column.startswith('consumption') and not column.startswith('salary')]].to_numpy(), weights=df.weight.to_numpy()).fit()
 earnings_model.save(os.path.join(cex_f_data, 'earnings.pickle'))
-salary_model = sm.WLS(df.consumption_cex_Δ.to_numpy(), df.loc[:, [column for column in df.columns if column.endswith('Δ') and not column.startswith('consumption') and not column.startswith('earnings')]].to_numpy(), weights=df.weight.to_numpy()).fit()
+salary_model = sm.WLS(df.consumption_cex_deviation.to_numpy(), df.loc[:, [column for column in df.columns if column.endswith('deviation') and not column.startswith('consumption') and not column.startswith('earnings')]].to_numpy(), weights=df.weight.to_numpy()).fit()
 salary_model.save(os.path.join(cex_f_data, 'salary.pickle'))

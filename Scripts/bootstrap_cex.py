@@ -17,7 +17,7 @@ data = '/scratch/users/jfbrou/Dignity'
 # Define a function to calculate CEX consumption statistics across bootstrap samples
 def bootstrap(n):
     # Load the CEX data
-    cex = pd.read_csv(os.path.join(data, 'cex.csv'), usecols=['year', 'weight', 'consumption', 'consumption_nd', 'race', 'latin', 'age'], dtype={'year': 'uint16', 'weight': 'float32', 'consumption': 'float32', 'consumption_nd': 'float32', 'race': 'uint8', 'latin': 'uint8', 'age': 'uint8'})
+    cex = pd.read_csv(os.path.join(data, 'cex.csv'))
     cex = cex.loc[cex.year.isin(range(1984, 2020 + 1)), :]
 
     # Define the bootstrap sample and the sampling method
@@ -121,6 +121,59 @@ def bootstrap(n):
     df = df_b.loc[df_b.race.isin([1, 2]) & (df_b.latin == 0) & (df_b.year >= 2006), :].groupby(['year', 'race'], as_index=False).apply(f_simple_latin)
     df = pd.merge(expand({'year': df.year.unique(), 'age': [np.nan], 'race': [1, 2], 'latin': [0], 'bootstrap': [b], 'method': [m], 'simple': [True]}), df, how='left')
     df_cex = df_cex.append(df, ignore_index=True)
+
+    # Keep the imputation sample
+    df_b = df_b.loc[df_b.complete == 1, :]
+
+    # Create race binary variables
+    df_b = pd.concat([df_b, pd.get_dummies(df_b.race.astype('int'), prefix='race')], axis=1)
+
+    # Create education binary variables
+    df_b.loc[df_b.education.isna() | (df_b.age < 30), 'education'] = 4
+    df_b = pd.concat([df_b, pd.get_dummies(df_b.education.astype('int'), prefix='education')], axis=1)
+
+    # Recode the gender variable
+    df_b.loc[:, 'gender'] = df_b.gender.replace({1: 1, 2: 0})
+
+    # Define a function to calculate average consumption, income and demographics by year
+    if m == 1:
+        def f(x):
+            d = {}
+            columns = ['consumption_cex', 'earnings', 'salary'] + ['race_' + str(i) for i in range(1, 4 + 1)] \
+                                                                + ['education_' + str(i) for i in range(1, 4 + 1)] \
+                                                                + ['family_size', 'latin', 'gender', 'age']
+            for column in columns:
+                d[column + '_average'] = np.average(x.loc[:, column])
+            return pd.Series(d, index=[key for key, value in d.items()])
+    else:
+        def f(x):
+            d = {}
+            columns = ['consumption_cex', 'earnings', 'salary'] + ['race_' + str(i) for i in range(1, 4 + 1)] \
+                                                                + ['education_' + str(i) for i in range(1, 4 + 1)] \
+                                                                + ['family_size', 'latin', 'gender', 'age']
+            for column in columns:
+                d[column + '_average'] = np.average(x.loc[:, column], weights=x.weight)
+            return pd.Series(d, index=[key for key, value in d.items()])
+
+    # Calculate average consumption, income and demographics by year
+    df_b = pd.merge(df_b, df_b.groupby('year', as_index=False).apply(f), how='left')
+
+    # Calculate the percentage deviation of consumption, income and demographics from their annual average
+    columns = ['consumption_cex', 'earnings', 'salary'] + ['race_' + str(i) for i in range(1, 4 + 1)] \
+                                                        + ['education_' + str(i) for i in range(1, 4 + 1)] \
+                                                        + ['family_size', 'latin', 'gender', 'age']
+    for column in columns:
+        df_b.loc[:, column + '_deviation'] = (df_b.loc[:, column] - df_b.loc[:, column + '_average']) / df_b.loc[:, column + '_average']
+
+    # Fit and save the OLS models for consumption
+    if m == 1:
+        earnings_model = sm.WLS(df_b.consumption_cex_deviation.to_numpy(), df_b.loc[:, [column for column in df_b.columns if column.endswith('deviation') and not column.startswith('consumption') and not column.startswith('salary')]].to_numpy()).fit()
+        salary_model = sm.WLS(df_b.consumption_cex_deviation.to_numpy(), df_b.loc[:, [column for column in df_b.columns if column.endswith('deviation') and not column.startswith('consumption') and not column.startswith('earnings')]].to_numpy()).fit()
+    else:
+        earnings_model = sm.WLS(df_b.consumption_cex_deviation.to_numpy(), df_b.loc[:, [column for column in df_b.columns if column.endswith('deviation') and not column.startswith('consumption') and not column.startswith('salary')]].to_numpy(), weights=df_b.weight.to_numpy()).fit()
+        salary_model = sm.WLS(df_b.consumption_cex_deviation.to_numpy(), df_b.loc[:, [column for column in df_b.columns if column.endswith('deviation') and not column.startswith('consumption') and not column.startswith('earnings')]].to_numpy(), weights=df_b.weight.to_numpy()).fit()
+    earnings_model.save(os.path.join(data, 'earnings_bootstrap_' + str(b) + '_method_' + str(m) + '.pickle'))
+    salary_model.save(os.path.join(data, 'salary_bootstrap_' + str(b) + '_method_' + str(m) + '.pickle'))
 
     # Save the data frame
     df_cex.to_csv(os.path.join(data, 'dignity_cex_bootstrap_' + str(b) + '_method_' + str(m) + '.csv'), index=False)
