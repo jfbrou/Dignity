@@ -315,6 +315,31 @@ for chunk in chunks:
 	chunk.loc[:, 'EDUC'] = chunk.EDUC.map(education_map)
 	chunk.loc[chunk.EDUC.isna() | (chunk.AGE < 30), 'EDUC'] = 4
 
+	# Create a family identifier
+	chunk.loc[:, 'SERIAL'] = chunk.SERIAL.astype('str') + chunk.FAMUNIT.astype('str')
+	chunk = chunk.drop('FAMUNIT', axis=1)
+
+	# Create the different definitions of hours worked per year variable
+	chunk.loc[:, 'hours_1'] = chunk.UHRSWORK * chunk.WKSWORK1
+	chunk.loc[:, 'hours_2'] = chunk.UHRSWORK * chunk.WKSWORK2.map(weeks_map)
+	chunk.loc[:, 'hours_3'] = chunk.HRSWORK1 * chunk.WKSWORK1
+	chunk.loc[:, 'hours_4'] = chunk.HRSWORK2.map(hours_map) * chunk.WKSWORK2.map(weeks_map)
+	chunk = chunk.drop(['HRSWORK1', 'HRSWORK2', 'WKSWORK1', 'WKSWORK2', 'UHRSWORK'], axis=1)
+
+	# Split hours worked per year evenly among family members between 25 and 64
+	chunk = pd.merge(chunk, chunk.loc[(chunk.AGE >= 25) & (chunk.AGE <= 64), :].groupby('SERIAL', as_index=False).agg(dict(zip(['hours_' + str(i + 1) for i in range(4)], ['mean'] * 4))).rename(columns=dict(zip(['hours_' + str(i + 1) for i in range(4)], ['split_' + str(i + 1) for i in range(4)]))), how='left')
+	for i in range(4):
+		chunk.loc[(chunk.AGE >= 25) & (chunk.AGE < 65), 'hours_' + str(i + 1)] = chunk.loc[:, 'split_' + str(i + 1)]
+	chunk = chunk.drop(['split_1', 'split_2', 'split_3', 'split_4'], axis=1)
+
+	# Create the leisure variables
+	for i in range(4):
+		if bool(calendar.isleap(chunk.YEAR.unique())):
+			chunk.loc[:, 'leisure_' + str(i + 1)] = (16 * 366 - chunk.loc[:, 'hours_' + str(i + 1)]) / (16 * 366)
+		else:
+			chunk.loc[:, 'leisure_' + str(i + 1)] = (16 * 365 - chunk.loc[:, 'hours_' + str(i + 1)]) / (16 * 365)
+	chunk = chunk.drop(['hours_1', 'hours_2', 'hours_3', 'hours_4'], axis=1)
+
 	# Recode the earnings variables
 	chunk.loc[:, 'missing_earnings'] = ((chunk.INCWAGE.isna() | (chunk.INCWAGE == 999998)) &
                                     	(chunk.INCBUSFM.isna() | (chunk.INCBUSFM == 99999)) &
@@ -326,12 +351,8 @@ for chunk in chunks:
 	chunk.loc[chunk.INCBUS.isna() | (chunk.INCBUS == 999999), 'INCBUS'] = 0
 	chunk.loc[chunk.INCBUS00.isna() | (chunk.INCBUS00 == 999999), 'INCBUS00'] = 0
 	chunk.loc[chunk.INCFARM.isna() | (chunk.INCFARM == 999999), 'INCFARM'] = 0
-	chunk.loc[:, 'earnings'] = chunk.loc[:, [col for col in chunk.columns if col.startswith('INC')]].sum(axis=1).values
-	chunk = chunk.drop([col for col in chunk.columns if col.startswith('INC')], axis=1)
-
-	# Create a family identifier
-	chunk.loc[:, 'SERIAL'] = chunk.SERIAL.astype('str') + chunk.FAMUNIT.astype('str')
-	chunk = chunk.drop('FAMUNIT', axis=1)
+	chunk.loc[:, 'earnings'] = chunk.loc[:, [column for column in chunk.columns if column.startswith('INC')]].sum(axis=1).values
+	chunk = chunk.drop([column for column in chunk.columns if column.startswith('INC')], axis=1)
 
 	# Calculate family earnings as the sum of the family members' personal earnings
 	chunk = pd.merge(chunk, chunk.groupby('SERIAL', as_index=False).agg({'earnings': 'sum'}).rename(columns={'earnings': 'family_earnings'}), how='left')
@@ -347,56 +368,42 @@ for chunk in chunks:
 	chunk = pd.concat([chunk, pd.get_dummies(chunk.EDUC.astype('int'), prefix='education')], axis=1)
 
 	# Calculate the percentage deviation of each imputation variable from their average
-	chunk.loc[:, 'earnings_Δ'] = (chunk.earnings - np.average(chunk.earnings, weights=chunk.PERWT)) / np.average(chunk.earnings, weights=chunk.PERWT)
-	chunk.loc[:, 'race_1_Δ'] = (chunk.race_1 - np.average(chunk.race_1, weights=chunk.PERWT)) / np.average(chunk.race_1, weights=chunk.PERWT)
-	chunk.loc[:, 'race_2_Δ'] = (chunk.race_2 - np.average(chunk.race_2, weights=chunk.PERWT)) / np.average(chunk.race_2, weights=chunk.PERWT)
-	chunk.loc[:, 'race_3_Δ'] = (chunk.race_3 - np.average(chunk.race_3, weights=chunk.PERWT)) / np.average(chunk.race_3, weights=chunk.PERWT)
-	chunk.loc[:, 'race_4_Δ'] = (chunk.race_4 - np.average(chunk.race_4, weights=chunk.PERWT)) / np.average(chunk.race_4, weights=chunk.PERWT)
-	chunk.loc[:, 'education_1_Δ'] = (chunk.education_1 - np.average(chunk.education_1, weights=chunk.PERWT)) / np.average(chunk.education_1, weights=chunk.PERWT)
-	chunk.loc[:, 'education_2_Δ'] = (chunk.education_2 - np.average(chunk.education_2, weights=chunk.PERWT)) / np.average(chunk.education_2, weights=chunk.PERWT)
-	chunk.loc[:, 'education_3_Δ'] = (chunk.education_3 - np.average(chunk.education_3, weights=chunk.PERWT)) / np.average(chunk.education_3, weights=chunk.PERWT)
-	chunk.loc[:, 'education_4_Δ'] = (chunk.education_4 - np.average(chunk.education_4, weights=chunk.PERWT)) / np.average(chunk.education_4, weights=chunk.PERWT)
-	chunk.loc[:, 'family_size_Δ'] = (chunk.FAMSIZE - np.average(chunk.FAMSIZE, weights=chunk.PERWT)) / np.average(chunk.FAMSIZE, weights=chunk.PERWT)
-	chunk.loc[:, 'latin_Δ'] = (chunk.HISPAN - np.average(chunk.HISPAN, weights=chunk.PERWT)) / np.average(chunk.HISPAN, weights=chunk.PERWT)
-	chunk.loc[:, 'gender_Δ'] = (chunk.SEX.map({1: 1, 2: 0}) - np.average(chunk.SEX.map({1: 1, 2: 0}), weights=chunk.PERWT)) / np.average(chunk.SEX.map({1: 1, 2: 0}), weights=chunk.PERWT)
-	chunk.loc[:, 'age_Δ'] = (chunk.AGE - np.average(chunk.AGE, weights=chunk.PERWT)) / np.average(chunk.AGE, weights=chunk.PERWT)
-
-	# Impute consumption
-	if int(chunk.YEAR.unique()) == 1940:
-		chunk.loc[:, 'consumption'] = salary_model.predict(chunk.loc[:, [col for col in chunk.columns if col.endswith('Δ')]])
-	else:
-		chunk.loc[:, 'consumption'] = earnings_model.predict(chunk.loc[:, [col for col in chunk.columns if col.endswith('Δ')]])
-	chunk = chunk.drop([col for col in chunk.columns if col.endswith('Δ')], axis=1)
+	chunk.loc[:, 'earnings_deviation'] = (chunk.earnings - np.average(chunk.earnings, weights=chunk.PERWT)) / np.average(chunk.earnings, weights=chunk.PERWT)
+	chunk.loc[:, 'race_1_deviation'] = (chunk.race_1 - np.average(chunk.race_1, weights=chunk.PERWT)) / np.average(chunk.race_1, weights=chunk.PERWT)
+	chunk.loc[:, 'race_2_deviation'] = (chunk.race_2 - np.average(chunk.race_2, weights=chunk.PERWT)) / np.average(chunk.race_2, weights=chunk.PERWT)
+	chunk.loc[:, 'race_3_deviation'] = (chunk.race_3 - np.average(chunk.race_3, weights=chunk.PERWT)) / np.average(chunk.race_3, weights=chunk.PERWT)
+	chunk.loc[:, 'race_4_deviation'] = (chunk.race_4 - np.average(chunk.race_4, weights=chunk.PERWT)) / np.average(chunk.race_4, weights=chunk.PERWT)
+	chunk.loc[:, 'education_1_deviation'] = (chunk.education_1 - np.average(chunk.education_1, weights=chunk.PERWT)) / np.average(chunk.education_1, weights=chunk.PERWT)
+	chunk.loc[:, 'education_2_deviation'] = (chunk.education_2 - np.average(chunk.education_2, weights=chunk.PERWT)) / np.average(chunk.education_2, weights=chunk.PERWT)
+	chunk.loc[:, 'education_3_deviation'] = (chunk.education_3 - np.average(chunk.education_3, weights=chunk.PERWT)) / np.average(chunk.education_3, weights=chunk.PERWT)
+	chunk.loc[:, 'education_4_deviation'] = (chunk.education_4 - np.average(chunk.education_4, weights=chunk.PERWT)) / np.average(chunk.education_4, weights=chunk.PERWT)
+	chunk.loc[:, 'family_size_deviation'] = (chunk.FAMSIZE - np.average(chunk.FAMSIZE, weights=chunk.PERWT)) / np.average(chunk.FAMSIZE, weights=chunk.PERWT)
+	chunk.loc[:, 'latin_deviation'] = (chunk.HISPAN - np.average(chunk.HISPAN, weights=chunk.PERWT)) / np.average(chunk.HISPAN, weights=chunk.PERWT)
+	chunk.loc[:, 'gender_deviation'] = (chunk.SEX.map({1: 1, 2: 0}) - np.average(chunk.SEX.map({1: 1, 2: 0}), weights=chunk.PERWT)) / np.average(chunk.SEX.map({1: 1, 2: 0}), weights=chunk.PERWT)
+	chunk.loc[:, 'age_deviation'] = (chunk.AGE - np.average(chunk.AGE, weights=chunk.PERWT)) / np.average(chunk.AGE, weights=chunk.PERWT)
 
 	# Merge with the BEA data
 	chunk = pd.merge(chunk, BEA, how='left')
+
+	# Append the current chunk to the bootstrap data frame
+	chunk_bootstrap = chunk.loc[:, ['YEAR', 'PERWT', 'SLWT', 'AGE', 'RACE', 'missing_earnings', 'consumption_nipa'] + [column for column in chunk.columns if column.endswith('deviation') or column.startswith('leisure')]]
+	chunk_bootstrap = chunk_bootstrap.rename(columns={'YEAR': 'year', 'RACE': 'race', 'AGE': 'age', 'PERWT': 'weight'})
+	if not os.path.isfile(os.path.join(acs_f_data, 'bootstrap_acs.csv')):
+		pd.DataFrame(columns=chunk_bootstrap.columns).to_csv(os.path.join(acs_f_data, 'bootstrap_acs.csv'), index=False)
+	chunk_bootstrap.to_csv(os.path.join(acs_f_data, 'bootstrap_acs.csv'), mode='a', index=False, header=False)
+
+	# Impute consumption
+	if int(chunk.YEAR.unique()) == 1940:
+		chunk.loc[:, 'consumption'] = salary_model.predict(chunk.loc[:, [column for column in chunk.columns if column.endswith('deviation')]])
+	else:
+		chunk.loc[:, 'consumption'] = earnings_model.predict(chunk.loc[:, [column for column in chunk.columns if column.endswith('deviation')]])
+	chunk = chunk.drop([column for column in chunk.columns if column.endswith('deviation')], axis=1)
 
 	# Re-scale personal earnings and consumption expenditures such that it aggregates to the NIPA values
 	chunk.loc[:, 'earnings'] = chunk.earnings_nipa + chunk.earnings_nipa * (chunk.earnings - np.average(chunk.earnings, weights=chunk.PERWT)) / np.average(chunk.earnings, weights=chunk.PERWT)
 	chunk.loc[chunk.missing_earnings == True, 'earnings'] = np.nan
 	chunk.loc[:, 'consumption'] = chunk.consumption_nipa + chunk.consumption_nipa * chunk.consumption
 	chunk = chunk.drop(['earnings_nipa', 'consumption_nipa'], axis=1)
-
-	# Create the different definitions of hours worked per year variable
-	chunk.loc[:, 'hours_1'] = chunk.UHRSWORK * chunk.WKSWORK1
-	chunk.loc[:, 'hours_2'] = chunk.UHRSWORK * chunk.WKSWORK2.map(weeks_map)
-	chunk.loc[:, 'hours_3'] = chunk.HRSWORK1 * chunk.WKSWORK1
-	chunk.loc[:, 'hours_4'] = chunk.HRSWORK2.map(hours_map) * chunk.WKSWORK2.map(weeks_map)
-	chunk = chunk.drop(['HRSWORK1', 'HRSWORK2', 'WKSWORK1', 'WKSWORK2', 'UHRSWORK'], axis=1)
-
-	# Split hours worked per year evenly among family members between 25 and 64 for years 1940 and 1950
-	chunk = pd.merge(chunk, chunk.loc[(chunk.AGE >= 25) & (chunk.AGE <= 64), :].groupby('SERIAL', as_index=False).agg(dict(zip(['hours_' + str(i + 1) for i in range(4)], ['mean'] * 4))).rename(columns=dict(zip(['hours_' + str(i + 1) for i in range(4)], ['split_' + str(i + 1) for i in range(4)]))), how='left')
-	for i in range(4):
-		chunk.loc[(chunk.AGE >= 25) & (chunk.AGE < 65), 'hours_' + str(i + 1)] = chunk.loc[:, 'split_' + str(i + 1)]
-	chunk = chunk.drop(['split_1', 'split_2', 'split_3', 'split_4', 'SERIAL'], axis=1)
-
-	# Create the leisure variables
-	for i in range(4):
-		if bool(calendar.isleap(chunk.YEAR.unique())):
-			chunk.loc[:, 'leisure_' + str(i + 1)] = (16 * 366 - chunk.loc[:, 'hours_' + str(i + 1)]) / (16 * 366)
-		else:
-			chunk.loc[:, 'leisure_' + str(i + 1)] = (16 * 365 - chunk.loc[:, 'hours_' + str(i + 1)]) / (16 * 365)
-	chunk = chunk.drop(['hours_1', 'hours_2', 'hours_3', 'hours_4'], axis=1)
 
 	# Calculate food stamps, medicaid and medicare usage by race in 2019
 	if chunk.YEAR.unique() == 2019:
