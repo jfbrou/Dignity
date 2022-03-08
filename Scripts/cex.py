@@ -7,6 +7,7 @@ import statsmodels.api as sm
 from dotenv import load_dotenv
 load_dotenv()
 import os
+import calendar
 
 # Import functions and directories
 from functions import *
@@ -31,6 +32,8 @@ for year in years:
         columns[years.index(year)] = [(0, 8),     # NEWID
                                       (8, 11),    # AGE
                                       (82, 84),   # EDUCA
+                                      (122, 125), # INC_HRSQ
+                                      (136, 138), # INCWEEKQ
                                       (159, 161), # MEMBNO
                                       (177, 178), # ORIGINR
                                       (194, 195), # RACE
@@ -40,6 +43,8 @@ for year in years:
         columns[years.index(year)] = [(0, 8),     # NEWID
                                       (8, 11),    # AGE
                                       (84, 86),   # EDUCA
+                                      (124, 127), # INC_HRSQ
+                                      (140, 142), # INCWEEKQ
                                       (165, 167), # MEMBNO
                                       (185, 186), # ORIGINR
                                       (202, 203), # RACE
@@ -49,6 +54,8 @@ for year in years:
         columns[years.index(year)] = [(0, 8),     # NEWID
                                       (8, 11),    # AGE
                                       (82, 84),   # EDUCA
+                                      (122, 125), # INC_HRSQ
+                                      (136, 138), # INCWEEKQ
                                       (161, 163), # MEMBNO
                                       (179, 180), # ORIGINR
                                       (196, 197), # RACE
@@ -58,6 +65,8 @@ for year in years:
         columns[years.index(year)] = ['NEWID',
                                       'AGE',
                                       'EDUCA',
+                                      'INCWEEKQ',
+                                      'INC_HRSQ',
                                       'MEMBNO',
                                       'ORIGINR',
                                       'RACE',
@@ -67,6 +76,8 @@ for year in years:
         columns[years.index(year)] = ['NEWID',
                                       'AGE',
                                       'EDUCA',
+                                      'INCWEEKQ',
+                                      'INC_HRSQ',
                                       'MEMBNO',
                                       'HORIGIN',
                                       'MEMBRACE',
@@ -82,6 +93,8 @@ for year in years:
 names = ['NEWID',
          'AGE',
          'EDUCA',
+         'INC_HRSQ',
+         'INCWEEKQ',
          'MEMBNO',
          'ORIGINR',
          'RACE',
@@ -92,18 +105,22 @@ names = ['NEWID',
 types = [None] * len(years)
 for year in years:
     if year <= 2002:
-        types[years.index(year)] = {'NEWID':   'str',
-                                    'AGE':     'int',
-                                    'EDUCA':   'float',
-                                    'MEMBNO':  'int',
-                                    'ORIGINR': 'int',
-                                    'RACE':    'int',
-                                    'SEX':     'int',
-                                    'CU_CODE': 'int'}
+        types[years.index(year)] = {'NEWID':    'str',
+                                    'AGE':      'int',
+                                    'EDUCA':    'float',
+                                    'INC_HRSQ': 'str',
+                                    'INCWEEKQ': 'str',
+                                    'MEMBNO':   'int',
+                                    'ORIGINR':  'int',
+                                    'RACE':     'int',
+                                    'SEX':      'int',
+                                    'CU_CODE':  'int'}
     elif year == 2015:
         types[years.index(year)] = {'NEWID':    'str',
                                     'AGE':      'str',
                                     'EDUCA':    'float',
+                                    'INC_HRSQ': 'str',
+                                    'INCWEEKQ': 'str',
                                     'MEMBNO':   'int',
                                     'HORIGIN':  'int',
                                     'MEMBRACE': 'int',
@@ -118,6 +135,8 @@ for year in years:
         types[years.index(year)] = {'NEWID':    'str',
                                     'AGE':      'int',
                                     'EDUCA':    'float',
+                                    'INC_HRSQ': 'str',
+                                    'INCWEEKQ': 'str',
                                     'MEMBNO':   'int',
                                     'HORIGIN':  'int',
                                     'MEMBRACE': 'int',
@@ -393,10 +412,29 @@ for year in years:
         df.loc[df.interview != 1, 'HORIGIN'] = df.HORIGIN.map(latin_map[years.index(year)])
     else:
         df.loc[:, 'HORIGIN'] = df.HORIGIN.map(latin_map[years.index(year)])
-    df = df.drop('interview', axis=1)
 
     # Recode the education variable
     df.loc[:, 'EDUCA'] = df.EDUCA.map(education_map[years.index(year)])
+
+    # Recode the hours worked per week and weeks worked per year variables
+    df.loc[:, 'INC_HRSQ'] = pd.to_numeric(df.INC_HRSQ, errors='coerce').fillna(0)
+    df.loc[:, 'INCWEEKQ'] = pd.to_numeric(df.INCWEEKQ, errors='coerce').fillna(0)
+
+    # Create the hours worked per year variable
+    df.loc[:, 'hours'] = df.INC_HRSQ * df.INCWEEKQ
+    df = df.drop(['INC_HRSQ', 'INCWEEKQ'], axis=1)
+
+    # Split hours worked per year evenly among family members between 25 and 64
+    df = pd.merge(df, df.loc[(df.AGE >= 25) & (df.AGE <= 64), :].groupby(['interview', 'family_id'], as_index=False).agg({'hours': 'mean'}).rename(columns={'hours': 'split'}), how='left')
+    df.loc[(df.AGE >= 25) & (df.AGE < 65), 'hours'] = df.split
+    df = df.drop(['split', 'interview'], axis=1)
+
+    # Create the leisure variable
+    if calendar.isleap(year):
+        df.loc[:, 'leisure'] = (16 * 366 - df.hours) / (16 * 366)
+    else:
+        df.loc[:, 'leisure'] = (16 * 365 - df.hours) / (16 * 365)
+    df = df.drop('hours', axis=1)
 
     # Create the year variable and append the data frames for all years
     df.loc[:, 'year'] = year
@@ -508,7 +546,8 @@ cex_fmli = cex_fmli.drop('race_weight', axis=1)
 cex_memi = cex_memi.drop('race_weight', axis=1)
 
 # Aggregate variables over interviews in the MEMI data frame
-cex_memi = cex_memi.groupby(['year', 'member_id'], as_index=False).agg({'FINLWT21': 'mean',
+cex_memi = cex_memi.groupby(['year', 'member_id'], as_index=False).agg({'FINLWT21':  'mean',
+                                                                        'leisure':   'mean',
                                                                         'family_id': lambda x: x.iloc[0],
                                                                         'SEX':       lambda x: x.iloc[0],
                                                                         'RACE':      lambda x: x.iloc[0],
@@ -825,6 +864,7 @@ cex = cex.astype({'year':                     'int',
                   'rooms':                    'float',
                   'earnings':                 'float',
                   'salary':                   'float',
+                  'leisure':                  'float',
                   'complete':                 'float',
                   'respondent':               'int',
                   'weight':                   'float'})

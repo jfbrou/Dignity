@@ -273,18 +273,20 @@ for year in years:
 
 # Load the CEX data
 cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
+ell_bar = np.average(cex.loc[(cex.year == 2006) & cex.age.isin(range(25, 55)), 'leisure'], weights=cex.loc[(cex.year == 2006) & cex.age.isin(range(25, 55)), 'weight'])
 cex = cex.loc[cex.year.isin(years), :]
-c_nominal_gamma = c_nominal * np.average(cex.loc[cex.year == 2019, 'consumption'], weights=cex.loc[cex.year == 2019, 'weight'])**((1 - 2) / 2)
+gamma = 2.0
+c_nominal_gamma = c_nominal * np.average(cex.loc[cex.year == 2019, 'consumption'], weights=cex.loc[cex.year == 2019, 'weight'])**((1 - gamma) / gamma)
 cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[cex.year == 2019, 'consumption'], weights=cex.loc[cex.year == 2019, 'weight'])
 
-# Define the flow utility from consumption function
-def u_of_c(x, gamma=2):
-    return x**(1 - gamma) / (1 - gamma)
+# Define the flow utility function from consumption and leisure
+def u(c, ell, gamma=2, epsilon=1, theta=14.2):
+    return c**(1 - gamma) * (1 + (gamma - 1) * theta * epsilon * (1 - ell)**((1 + epsilon) / epsilon) / (1 + epsilon))**gamma / (1 - gamma)
 
 # Calculate CEX consumption statistics by year, race and age
-df_gamma = cex.loc[cex.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(lambda x: pd.Series({'Eu_of_c': np.average(u_of_c(x.consumption), weights=x.weight)}))
+df_gamma = cex.loc[cex.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(lambda x: pd.Series({'Eu_of_c_and_ell': np.average(u(x.consumption, x.leisure), weights=x.weight)}))
 df_gamma = pd.merge(expand({'year': df_gamma.year.unique(), 'age': range(101), 'race': [1, 2]}), df_gamma, how='left')
-df_gamma.loc[:, 'Eu_of_c'] = df_gamma.groupby(['year', 'race'], as_index=False).Eu_of_c.transform(lambda x: filter(x, 1600)).values
+df_gamma.loc[:, 'Eu_of_c_and_ell'] = df_gamma.groupby(['year', 'race'], as_index=False).Eu_of_c_and_ell.transform(lambda x: filter(x, 1600)).values
 
 # Calculate the consumption-equivalent welfare of Black relative to White Americans for gamma equal to two
 for year in years:
@@ -293,12 +295,10 @@ for year in years:
     S_intercept = dignity_intercept.loc[:, 'S'].values
     c_intercept = dignity_intercept.loc[:, 'c_bar'].values
     ell_intercept = dignity_intercept.loc[:, 'ell_bar'].values
-    Eu_of_c_i = df_gamma.loc[(df_gamma.year == year) & (df_gamma.race == 1), 'Eu_of_c'].values
-    Eu_of_c_j = df_gamma.loc[(df_gamma.year == year) & (df_gamma.race == 2), 'Eu_of_c'].values
-    Ev_of_ell_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ell'].values
-    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ell'].values
-    df.loc[(df.year == year) & (df.case == 'gamma'), 'lambda'] = cew_level_gamma(S_i=S_i, S_j=S_j, Eu_of_c_i=Eu_of_c_i, Eu_of_c_j=Eu_of_c_j, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j,
-                                                                                 S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal_gamma)['lambda_average']
+    Eu_of_c_and_ell_i = df_gamma.loc[(df_gamma.year == year) & (df_gamma.race == 1), 'Eu_of_c_and_ell'].values
+    Eu_of_c_and_ell_j = df_gamma.loc[(df_gamma.year == year) & (df_gamma.race == 2), 'Eu_of_c_and_ell'].values
+    df.loc[(df.year == year) & (df.case == 'gamma'), 'lambda'] = cew_level_gamma(S_i=S_i, S_j=S_j, Eu_of_c_and_ell_i=Eu_of_c_and_ell_i, Eu_of_c_and_ell_j=Eu_of_c_and_ell_j,
+                                                                                 S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal_gamma, ell_bar=ell_bar)['lambda_average']
 
 # Load the CPS data
 cps = pd.read_csv(os.path.join(cps_f_data, 'cps.csv'))
@@ -419,39 +419,66 @@ years = [2019, 2020]
 # Load the dignity data
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
 dignity_intercept = dignity.loc[(dignity.historical == False) & (dignity.race == -1) & (dignity.latin == -1) & (dignity.year == 2006), :]
-dignity = dignity.loc[(dignity.historical == False) & (dignity.race != -1) & (dignity.latin == -1), :]
+dignity = dignity.loc[dignity.historical == False, :]
 
 # Retrieve nominal consumption per capita in 2006
 c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
 population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC
 c_nominal = 1e6 * c_nominal / population
 
-# Calculate consumption-equivalent welfare growth
-df = expand({'year': years[1:], 'race': [1, 2], 'log_lambda': [np.nan], 'LE': [np.nan], 'C': [np.nan], 'L': [np.nan], 'CI': [np.nan], 'LI': [np.nan]})
+# Instantiate an empty data frame
+df = expand({'year': years[1:], 'race': [1, 2, -1], 'latin': [0, 1, -1], 'log_lambda': [np.nan], 'LE': [np.nan], 'C': [np.nan], 'L': [np.nan], 'CI': [np.nan], 'LI': [np.nan]})
+
+# Calculate consumption-equivalent welfare growth for all and non-Latinx Black and White Americans
 for race in [1, 2]:
-    for year in years[1:]:
-        S_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'S'].values
-        S_j = dignity.loc[(dignity.year == year) & (dignity.race == race), 'S'].values
-        c_i_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'c_bar'].values
-        c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == race), 'c_bar'].values
-        ell_i_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'ell_bar'].values
-        ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == race), 'ell_bar'].values
+    for latin in [0, -1]:
+        S_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race) & (dignity.latin == latin), 'S'].values
+        S_j = dignity.loc[(dignity.year == year) & (dignity.race == race) & (dignity.latin == latin), 'S'].values
+        c_i_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race) & (dignity.latin == latin), 'c_bar'].values
+        c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == race) & (dignity.latin == latin), 'c_bar'].values
+        ell_i_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race) & (dignity.latin == latin), 'ell_bar'].values
+        ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == race) & (dignity.latin == latin), 'ell_bar'].values
         T = year - years[years.index(year) - 1]
         S_intercept = dignity_intercept.loc[:, 'S'].values
         c_intercept = dignity_intercept.loc[:, 'c_bar'].values
         ell_intercept = dignity_intercept.loc[:, 'ell_bar'].values
-        c_i_bar_nd = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'c_bar_nd'].values
-        c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == race), 'c_bar_nd'].values
-        Elog_of_c_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'Elog_of_c'].values
-        Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == race), 'Elog_of_c'].values
-        Elog_of_c_i_nd = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'Elog_of_c_nd'].values
-        Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == race), 'Elog_of_c_nd'].values
-        Ev_of_ell_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race), 'Ev_of_ell'].values
-        Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == race), 'Ev_of_ell'].values
+        c_i_bar_nd = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race) & (dignity.latin == latin), 'c_bar_nd'].values
+        c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == race) & (dignity.latin == latin), 'c_bar_nd'].values
+        Elog_of_c_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race) & (dignity.latin == latin), 'Elog_of_c'].values
+        Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == race) & (dignity.latin == latin), 'Elog_of_c'].values
+        Elog_of_c_i_nd = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race) & (dignity.latin == latin), 'Elog_of_c_nd'].values
+        Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == race) & (dignity.latin == latin), 'Elog_of_c_nd'].values
+        Ev_of_ell_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race) & (dignity.latin == latin), 'Ev_of_ell'].values
+        Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == race) & (dignity.latin == latin), 'Ev_of_ell'].values
         for i in ['log_lambda', 'LE', 'C', 'L', 'CI', 'LI']:
-            df.loc[(df.year == year) & (df.race == race), i] = cew_growth(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar, T=T,
-                                                                          S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
-                                                                          inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)[i]
+            df.loc[(df.year == year) & (df.race == race) & (df.latin == latin), i] = cew_growth(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar, T=T,
+                                                                                                S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                                                                inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)[i]
+
+# Calculate consumption-equivalent welfare growth for all and Latinx Americans
+for latin in [1, -1]:
+    S_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == -1) & (dignity.latin == latin), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == latin), 'S'].values
+    c_i_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == -1) & (dignity.latin == latin), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == latin), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == -1) & (dignity.latin == latin), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == latin), 'ell_bar'].values
+    T = year - years[years.index(year) - 1]
+    S_intercept = dignity_intercept.loc[:, 'S'].values
+    c_intercept = dignity_intercept.loc[:, 'c_bar'].values
+    ell_intercept = dignity_intercept.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == -1) & (dignity.latin == latin), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == latin), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == -1) & (dignity.latin == latin), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == latin), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == -1) & (dignity.latin == latin), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == latin), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == -1) & (dignity.latin == latin), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == latin), 'Ev_of_ell'].values
+    for i in ['log_lambda', 'LE', 'C', 'L', 'CI', 'LI']:
+        df.loc[(df.year == year) & (df.race == -1) & (df.latin == latin), i] = cew_growth(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar, T=T,
+                                                                                          S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                                                          inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)[i]
 
 # Write a table with the consumption-equivalent welfare growth decomposition
 table = open(os.path.join(tables, 'Welfare loss 2020 with caption.tex'), 'w')
@@ -462,28 +489,45 @@ lines = [r'\begin{table}[H]',
          r'\begin{tabular}{lccccccc}',
          r'\hline',
          r'\hline',
-         r'& & \multicolumn{5}{c}{\textcolor{ChadBlue}{\it ------ Decomposition ------}} \\',
-         r'& Welfare & $LE$ & $c$ & $\sigma\left(c\right)$ & $\ell$ & $\sigma\left(\ell\right)$ \\',
+         r'& & & \multicolumn{5}{c}{\textcolor{ChadBlue}{\it ------ Decomposition ------}} \\',
+         r'& $\lambda$ & $\log\left(\lambda\right)$ & $LE$ & $c$ & $\sigma\left(c\right)$ & $\ell$ & $\sigma\left(\ell\right)$ \\',
          r'\hline',
-         r'Black & ' + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'log_lambda'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'LE'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'C'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'CI'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'L'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'LI'])) + r' \\',
-         r'White & ' + '{:.2f}'.format(100 * float(df.loc[df.race == 1, 'log_lambda'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 1, 'LE'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 1, 'C'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 1, 'CI'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 1, 'L'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 1, 'LI'])) + r' \\',
+         r'Black & ' + '{:.2f}'.format(float(np.exp(df.loc[(df.race == 2) & (df.latin == -1), 'log_lambda']))) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == -1), 'log_lambda'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == -1), 'LE'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == -1), 'C'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == -1), 'CI'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == -1), 'L'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == -1), 'LI'])) + r' \\',
+         r'White & ' + '{:.2f}'.format(float(np.exp(df.loc[(df.race == 1) & (df.latin == -1), 'log_lambda']))) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == -1), 'log_lambda'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == -1), 'LE'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == -1), 'C'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == -1), 'CI'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == -1), 'L'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == -1), 'LI'])) + r' \\',
          r'\hline',
-         r'Gap & ' + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'log_lambda']) - 100 * float(df.loc[df.race == 1, 'log_lambda'])) + ' & ' \
-                   + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'LE']) - 100 * float(df.loc[df.race == 1, 'LE'])) + ' & ' \
-                   + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'C']) - 100 * float(df.loc[df.race == 1, 'C'])) + ' & ' \
-                   + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'CI']) - 100 * float(df.loc[df.race == 1, 'CI'])) + ' & ' \
-                   + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'L']) - 100 * float(df.loc[df.race == 1, 'L'])) + ' & ' \
-                   + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'LI']) - 100 * float(df.loc[df.race == 1, 'LI'])) + r' \\',
+         r'Black non-Latinx & ' + '{:.2f}'.format(float(np.exp(df.loc[(df.race == 2) & (df.latin == 0), 'log_lambda']))) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == 0), 'log_lambda'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == 0), 'LE'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == 0), 'C'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == 0), 'CI'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == 0), 'L'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == 0), 'LI'])) + r' \\',
+         r'White non-Latinx & ' + '{:.2f}'.format(float(np.exp(df.loc[(df.race == 1) & (df.latin == 0), 'log_lambda']))) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == 0), 'log_lambda'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == 0), 'LE'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == 0), 'C'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == 0), 'CI'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == 0), 'L'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == 0), 'LI'])) + r' \\',
+         r'Latinx & ' + '{:.2f}'.format(float(np.exp(df.loc[(df.race == -1) & (df.latin == 1), 'log_lambda']))) + ' & ' \
+                      + '{:.2f}'.format(float(df.loc[(df.race == -1) & (df.latin == 1), 'log_lambda'])) + ' & ' \
+                      + '{:.2f}'.format(float(df.loc[(df.race == -1) & (df.latin == 1), 'LE'])) + ' & ' \
+                      + '{:.2f}'.format(float(df.loc[(df.race == -1) & (df.latin == 1), 'C'])) + ' & ' \
+                      + '{:.2f}'.format(float(df.loc[(df.race == -1) & (df.latin == 1), 'CI'])) + ' & ' \
+                      + '{:.2f}'.format(float(df.loc[(df.race == -1) & (df.latin == 1), 'L'])) + ' & ' \
+                      + '{:.2f}'.format(float(df.loc[(df.race == -1) & (df.latin == 1), 'LI'])) + r' \\',
          r'\hline',
          r'\hline',
          r'\end{tabular}',
@@ -505,28 +549,45 @@ lines = [r'\begin{table}[H]',
          r'\begin{tabular}{lccccccc}',
          r'\hline',
          r'\hline',
-         r'& & \multicolumn{5}{c}{\textcolor{ChadBlue}{\it ------ Decomposition ------}} \\',
-         r'& Welfare & $LE$ & $c$ & $\sigma\left(c\right)$ & $\ell$ & $\sigma\left(\ell\right)$ \\',
+         r'& & & \multicolumn{5}{c}{\textcolor{ChadBlue}{\it ------ Decomposition ------}} \\',
+         r'& $\lambda$ & $\log\left(\lambda\right)$ & $LE$ & $c$ & $\sigma\left(c\right)$ & $\ell$ & $\sigma\left(\ell\right)$ \\',
          r'\hline',
-         r'Black & ' + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'log_lambda'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'LE'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'C'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'CI'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'L'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'LI'])) + r' \\',
-         r'White & ' + '{:.2f}'.format(100 * float(df.loc[df.race == 1, 'log_lambda'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 1, 'LE'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 1, 'C'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 1, 'CI'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 1, 'L'])) + ' & ' \
-                     + '{:.2f}'.format(100 * float(df.loc[df.race == 1, 'LI'])) + r' \\',
+         r'Black & ' + '{:.2f}'.format(float(np.exp(df.loc[(df.race == 2) & (df.latin == -1), 'log_lambda']))) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == -1), 'log_lambda'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == -1), 'LE'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == -1), 'C'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == -1), 'CI'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == -1), 'L'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == -1), 'LI'])) + r' \\',
+         r'White & ' + '{:.2f}'.format(float(np.exp(df.loc[(df.race == 1) & (df.latin == -1), 'log_lambda']))) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == -1), 'log_lambda'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == -1), 'LE'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == -1), 'C'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == -1), 'CI'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == -1), 'L'])) + ' & ' \
+                     + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == -1), 'LI'])) + r' \\',
          r'\hline',
-         r'Gap & ' + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'log_lambda']) - 100 * float(df.loc[df.race == 1, 'log_lambda'])) + ' & ' \
-                   + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'LE']) - 100 * float(df.loc[df.race == 1, 'LE'])) + ' & ' \
-                   + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'C']) - 100 * float(df.loc[df.race == 1, 'C'])) + ' & ' \
-                   + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'CI']) - 100 * float(df.loc[df.race == 1, 'CI'])) + ' & ' \
-                   + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'L']) - 100 * float(df.loc[df.race == 1, 'L'])) + ' & ' \
-                   + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'LI']) - 100 * float(df.loc[df.race == 1, 'LI'])) + r' \\',
+         r'Black non-Latinx & ' + '{:.2f}'.format(float(np.exp(df.loc[(df.race == 2) & (df.latin == 0), 'log_lambda']))) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == 0), 'log_lambda'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == 0), 'LE'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == 0), 'C'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == 0), 'CI'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == 0), 'L'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 2) & (df.latin == 0), 'LI'])) + r' \\',
+         r'White non-Latinx & ' + '{:.2f}'.format(float(np.exp(df.loc[(df.race == 1) & (df.latin == 0), 'log_lambda']))) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == 0), 'log_lambda'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == 0), 'LE'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == 0), 'C'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == 0), 'CI'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == 0), 'L'])) + ' & ' \
+                                + '{:.2f}'.format(float(df.loc[(df.race == 1) & (df.latin == 0), 'LI'])) + r' \\',
+         r'Latinx & ' + '{:.2f}'.format(float(np.exp(df.loc[(df.race == -1) & (df.latin == 1), 'log_lambda']))) + ' & ' \
+                      + '{:.2f}'.format(float(df.loc[(df.race == -1) & (df.latin == 1), 'log_lambda'])) + ' & ' \
+                      + '{:.2f}'.format(float(df.loc[(df.race == -1) & (df.latin == 1), 'LE'])) + ' & ' \
+                      + '{:.2f}'.format(float(df.loc[(df.race == -1) & (df.latin == 1), 'C'])) + ' & ' \
+                      + '{:.2f}'.format(float(df.loc[(df.race == -1) & (df.latin == 1), 'CI'])) + ' & ' \
+                      + '{:.2f}'.format(float(df.loc[(df.race == -1) & (df.latin == 1), 'L'])) + ' & ' \
+                      + '{:.2f}'.format(float(df.loc[(df.race == -1) & (df.latin == 1), 'LI'])) + r' \\',
          r'\hline',
          r'\hline',
          r'\end{tabular}',

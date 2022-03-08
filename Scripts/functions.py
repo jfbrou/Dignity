@@ -3,6 +3,7 @@ from numpy import *
 import pandas as pd
 import itertools as it
 import statsmodels.api as sm
+from scipy import optimize
 
 # Define a function to create a data frame of the right form
 def expand(d):
@@ -621,31 +622,42 @@ def cew_growth(S_i=None, S_j=None, c_i_bar=None, c_j_bar=None, ell_i_bar=None, e
     return d
 
 # Define the level consumption-equivalent welfare calculation function
-def cew_level_gamma(S_i=None, S_j=None, Eu_of_c_i=None, Eu_of_c_j=None, Ev_of_ell_i=None, Ev_of_ell_j=None, age_min=0, age_max=100, gamma=2, # Standard parameters
-                    S_intercept=None, c_intercept=None, ell_intercept=None, vsl=7.4e6, c_nominal=None, age_min_intercept=40, age_max_intercept=100): # Intercept parameters
+def cew_level_gamma(S_i=None, S_j=None, Eu_of_c_and_ell_i=None, Eu_of_c_and_ell_j=None, age_min=0, age_max=100, gamma=2, epsilon = 1, theta = 14.2, # Standard parameters
+                    S_intercept=None, c_intercept=None, ell_intercept=None, vsl=7.4e6, c_nominal=None, ell_bar=None, age_min_intercept=40, age_max_intercept=100): # Intercept parameters
     # Restrict on selected ages
     S_i = S_i[age_min:age_max + 1] / S_i[age_min]
     S_j = S_j[age_min:age_max + 1] / S_j[age_min]
     S_intercept = S_intercept[age_min_intercept:age_max_intercept + 1] / S_intercept[age_min_intercept]
     c_intercept = c_intercept[age_min_intercept:age_max_intercept + 1]
     ell_intercept = ell_intercept[age_min_intercept:age_max_intercept + 1]
-    Eu_of_c_i = Eu_of_c_i[age_min:age_max + 1]
-    Eu_of_c_j = Eu_of_c_j[age_min:age_max + 1]
-    Ev_of_ell_i = Ev_of_ell_i[age_min:age_max + 1]
-    Ev_of_ell_j = Ev_of_ell_j[age_min:age_max + 1]
+    Eu_of_c_and_ell_i = Eu_of_c_and_ell_i[age_min:age_max + 1]
+    Eu_of_c_and_ell_j = Eu_of_c_and_ell_j[age_min:age_max + 1]
+
+    # Define the flow utility function from consumption and leisure
+    def u(c, ell, gamma=2, epsilon=1, theta=14.2):
+        return c**(1 - gamma) * (1 + (gamma - 1) * theta * epsilon * (1 - ell)**((1 + epsilon) / epsilon) / (1 + epsilon))**gamma / (1 - gamma)
+
+    # Define the marginal utility function from consumption
+    def du_dc(c, ell, gamma=2, epsilon=1, theta=14.2):
+        return (1 + (gamma - 1) * theta * epsilon * (1 - ell)**((1 + epsilon) / epsilon) / (1 + epsilon))**gamma / c**gamma
 
     # Calculate the intercept
-    u_bar = (vsl / c_nominal**gamma - dot(S_intercept, c_intercept**(1 - gamma) / (1 - gamma) + v_of_ell(ell_intercept))) / sum(S_intercept)
+    u_bar = (vsl * du_dc(c_nominal, ell_bar) - dot(S_intercept, u(c_intercept, ell_intercept) - 1 / (1 - gamma))) / sum(S_intercept)
+
+    # Define the EV and CV consumption-equivalent welfare functions
+    def EV(x):
+        return sum(S_i * (u_bar + x**(1 - gamma) * Eu_of_c_and_ell_i - 1 / (1 - gamma))) - sum(S_j * (u_bar + Eu_of_c_and_ell_j - 1 / (1 - gamma)))
+    def CV(x):
+        return sum(S_i * (u_bar + Eu_of_c_and_ell_i - 1 / (1 - gamma))) - sum(S_j * (u_bar + x**(gamma - 1) * Eu_of_c_and_ell_j - 1 / (1 - gamma)))
 
     # Calculate the EV and CV consumption-equivalent welfare, and average them
-    lambda_EV = (sum(u_bar * (S_j - S_i) + S_j * Ev_of_ell_j - S_i * Ev_of_ell_i + S_j * Eu_of_c_j) / sum(S_i * Eu_of_c_i))**(1 / (1 - gamma))
-    lambda_CV = (sum(u_bar * (S_i - S_j) + S_i * Ev_of_ell_i - S_j * Ev_of_ell_j + S_i * Eu_of_c_i) / sum(S_j * Eu_of_c_j))**(1 / (gamma - 1))
-    lambda_average = ((lambda_EV**(1 - gamma) + lambda_CV**(1 - gamma)) / 2)**(1 / (1 - gamma))
+    solution_EV = optimize.root(EV, [1.0])
+    solution_CV = optimize.root(CV, [1.0])
 
     # Store the results in a dictionary
-    d = {'lambda_EV':      lambda_EV,
-         'lambda_CV':      lambda_CV,
-         'lambda_average': lambda_average,
+    d = {'lambda_EV':      solution_EV.x,
+         'lambda_CV':      solution_CV.x,
+         'lambda_average': (solution_EV.x + solution_CV.x) / 2,
          'u_bar':          u_bar}
          
     # Return the dictionary
