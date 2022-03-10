@@ -485,7 +485,7 @@ table = open(os.path.join(tables, 'Welfare loss 2020 with caption.tex'), 'w')
 lines = [r'\begin{table}[H]',
          r'\centering',
          r'\begin{threeparttable}',
-         r'\caption{Welfare loss in 2020 (\%)}',
+         r'\caption{Welfare loss in 2020 relative to 2019 (\%)}',
          r'\begin{tabular}{lccccccc}',
          r'\hline',
          r'\hline',

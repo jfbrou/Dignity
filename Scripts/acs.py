@@ -134,24 +134,14 @@ hours_map = {0: 0,
 			 7: 54,
 			 8: 79.5}
 
-# Load the imputation models
-earnings_model = sm.load(os.path.join(cex_f_data, 'earnings.pickle'))
-salary_model = sm.load(os.path.join(cex_f_data, 'salary.pickle'))
-
 # Load the NIPA personal earnings and PCE data from the BEA
-meta = bea.data('nipa', tablename='t20100', frequency='a', year=years).metadata
-income_series = list(meta.loc[meta.LineDescription.isin(['Wages and salaries', "Proprietors' income with inventory valuation and capital consumption adjustments"]), 'SeriesCode'])
-earnings = 1e6 * bea.data('nipa', tablename='t20100', frequency='a', year=years).data.loc[:, income_series].sum(axis=1).values.squeeze()
 pce = 1e6 * (bea.data('nipa', tablename='t20405', frequency='a', year=years).data.DPCERC.values.squeeze() - bea.data('nipa', tablename='t20405', frequency='a', year=years).data.DINSRC.values.squeeze())
 population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=years).data.B230RC.values.squeeze()
 deflator = 1e2 / bea.data('nipa', tablename='t10104', frequency='a', year=years).data.DPCERG.values.squeeze()
-earnings = deflator * earnings / population
 pce = deflator * pce / population
 
 # Store the above four series in a data frame
-BEA = pd.DataFrame(data={'YEAR':             years,
-						 'earnings_nipa':    earnings,
-						 'consumption_nipa': pce})
+BEA = pd.DataFrame(data={'YEAR': years, 'consumption_nipa': pce})
 
 # Define a function to read the data by year
 def year_chunk(file, chunksize=1e6):
@@ -385,46 +375,48 @@ for chunk in chunks:
 	# Merge with the BEA data
 	chunk = pd.merge(chunk, BEA, how='left')
 
+	# Rename variables
+	chunk = chunk.rename(columns={'YEAR': 'year', 'RACE': 'race', 'HISPAN': 'latin', 'SEX': 'gender', 'AGE': 'age', 'EDUC': 'education', 'PERWT': 'weight'})
+
 	# Append the current chunk to the bootstrap data frame
-	chunk_bootstrap = chunk.loc[:, ['YEAR', 'PERWT', 'SLWT', 'AGE', 'RACE', 'missing_earnings', 'consumption_nipa'] + [column for column in chunk.columns if column.endswith('deviation') or column.startswith('leisure')]]
-	chunk_bootstrap = chunk_bootstrap.rename(columns={'YEAR': 'year', 'RACE': 'race', 'AGE': 'age', 'PERWT': 'weight'})
+	chunk_bootstrap = chunk.loc[:, ['year', 'weight', 'SLWT', 'age', 'race', 'missing_earnings', 'consumption_nipa'] + [column for column in chunk.columns if column.endswith('deviation') or column.startswith('leisure')]]
 	if not os.path.isfile(os.path.join(acs_f_data, 'bootstrap_acs.csv')):
 		pd.DataFrame(columns=chunk_bootstrap.columns).to_csv(os.path.join(acs_f_data, 'bootstrap_acs.csv'), index=False)
 	chunk_bootstrap.to_csv(os.path.join(acs_f_data, 'bootstrap_acs.csv'), mode='a', index=False, header=False)
 
 	# Impute consumption
-	if int(chunk.YEAR.unique()) == 1940:
-		chunk.loc[:, 'consumption'] = salary_model.predict(chunk.loc[:, [column for column in chunk.columns if column.endswith('deviation')]])
+	if int(chunk.year.unique()) == 1940:
+		model = sm.load(os.path.join(cex_f_data, 'salary.pickle'))
+		chunk = chunk.rename(columns={'earnings_deviation': 'salary_deviation'})
 	else:
-		chunk.loc[:, 'consumption'] = earnings_model.predict(chunk.loc[:, [column for column in chunk.columns if column.endswith('deviation')]])
+		model = sm.load(os.path.join(cex_f_data, 'earnings.pickle'))
+	chunk.loc[:, 'consumption'] = model.predict(chunk)
 	chunk = chunk.drop([column for column in chunk.columns if column.endswith('deviation')], axis=1)
 
-	# Re-scale personal earnings and consumption expenditures such that it aggregates to the NIPA values
-	chunk.loc[:, 'earnings'] = chunk.earnings_nipa + chunk.earnings_nipa * (chunk.earnings - np.average(chunk.earnings, weights=chunk.PERWT)) / np.average(chunk.earnings, weights=chunk.PERWT)
-	chunk.loc[chunk.missing_earnings == True, 'earnings'] = np.nan
+	# Re-scale consumption such that it aggregates to the NIPA values
 	chunk.loc[:, 'consumption'] = chunk.consumption_nipa + chunk.consumption_nipa * chunk.consumption
-	chunk = chunk.drop(['earnings_nipa', 'consumption_nipa'], axis=1)
+	chunk = chunk.drop('consumption_nipa', axis=1)
 
 	# Calculate food stamps, medicaid and medicare usage by race in 2019
-	if chunk.YEAR.unique() == 2019:
+	if chunk.year.unique() == 2019:
 		d_bea = dict(zip(['foodstamps', 'medicaid', 'medicare'], ['TRP600', 'W729RC', 'W824RC']))
 		deflator = 1e2 / bea.data('nipa', tablename='t10104', frequency='a', year=2019).data.DPCERG
-		welfare = pd.DataFrame({'race': chunk.RACE.unique()})
+		welfare = pd.DataFrame({'race': chunk.race.unique()})
 		for i in ['foodstamps', 'medicaid', 'medicare']:
-			df = chunk.loc[chunk.loc[:, i] == 1, :].groupby('RACE', as_index=False).agg({'PERWT': 'sum'})
-			df.loc[:, 'PERWT'] = df.PERWT / df.PERWT.sum()
+			df = chunk.loc[chunk.loc[:, i] == 1, :].groupby('race', as_index=False).agg({'weight': 'sum'})
+			df.loc[:, 'weight'] = df.weight / df.weight.sum()
 			df.loc[:, 'expenditures'] = 1e6 * deflator * bea.data('nipa', tablename='t31200', frequency='a', year=2019).data[d_bea[i]]
-			df.loc[:, i] = df.loc[:, 'PERWT'] * df.loc[:, 'expenditures']
-			df = df.drop(['PERWT', 'expenditures'], axis=1).rename(columns={'RACE': 'race'})
+			df.loc[:, i] = df.loc[:, 'weight'] * df.loc[:, 'expenditures']
+			df = df.drop(['weight', 'expenditures'], axis=1)
 			welfare = pd.merge(welfare, df)
 		welfare.to_csv(os.path.join(acs_f_data, 'welfare.csv'), index=False)
 
 	# Calculate weighted averages of each variable
-	if chunk.YEAR.unique() == 1950:
+	if chunk.year.unique() == 1950:
 		def f(x):
 			d = {}
-			d['consumption'] = np.average(x.consumption, weights=x.PERWT)
-			d['PERWT'] = np.sum(x.PERWT)
+			d['consumption'] = np.average(x.consumption, weights=x.weight)
+			d['weight'] = np.sum(x.weight)
 			return pd.Series(d, index=[key for key, value in d.items()])
 		def f_leisure(x):
 			d = {}
@@ -434,27 +426,27 @@ for chunk in chunks:
 			d['leisure_4'] = np.average(x.leisure_4, weights=x.SLWT)
 			d['leisure_weight'] = np.sum(x.SLWT)
 			return pd.Series(d, index=[key for key, value in d.items()])
-		chunk_leisure = chunk.loc[chunk.SLWT != 0, :].groupby(['YEAR', 'RACE', 'HISPAN', 'SEX', 'EDUC', 'AGE'], as_index=False).apply(f_leisure)
-		chunk = chunk.groupby(['YEAR', 'RACE', 'HISPAN', 'SEX', 'EDUC', 'AGE'], as_index=False).apply(f)
+		chunk_leisure = chunk.loc[chunk.SLWT != 0, :].groupby(['year', 'race', 'latin', 'gender', 'education', 'age'], as_index=False).apply(f_leisure)
+		chunk = chunk.groupby(['year', 'race', 'latin', 'gender', 'education', 'age'], as_index=False).apply(f)
 		chunk = pd.merge(chunk, chunk_leisure, how='left')
 	else:
 		def f(x):
 			d = {}
-			d['leisure_1'] = np.average(x.leisure_1, weights=x.PERWT)
-			d['leisure_2'] = np.average(x.leisure_2, weights=x.PERWT)
-			d['leisure_3'] = np.average(x.leisure_3, weights=x.PERWT)
-			d['leisure_4'] = np.average(x.leisure_4, weights=x.PERWT)
-			d['consumption'] = np.average(x.consumption, weights=x.PERWT)
-			d['leisure_weight'] = np.sum(x.PERWT)
-			d['PERWT'] = np.sum(x.PERWT)
+			d['leisure_1'] = np.average(x.leisure_1, weights=x.weight)
+			d['leisure_2'] = np.average(x.leisure_2, weights=x.weight)
+			d['leisure_3'] = np.average(x.leisure_3, weights=x.weight)
+			d['leisure_4'] = np.average(x.leisure_4, weights=x.weight)
+			d['consumption'] = np.average(x.consumption, weights=x.weight)
+			d['leisure_weight'] = np.sum(x.weight)
+			d['weight'] = np.sum(x.weight)
 			return pd.Series(d, index=[key for key, value in d.items()])
-		chunk = chunk.groupby(['YEAR', 'RACE', 'HISPAN', 'SEX', 'EDUC', 'AGE'], as_index=False).apply(f)
+		chunk = chunk.groupby(['year', 'race', 'latin', 'gender', 'education', 'age'], as_index=False).apply(f)
 
 	# Append the data frames for all chunks
 	acs = acs.append(chunk, ignore_index=True)
 
 # Calculate the ratio of the average of the first leisure variable to the average of the other leisure variables in 1980 and 1990
-sample = ((acs.YEAR == 1980) | (acs.YEAR == 1990))
+sample = ((acs.year == 1980) | (acs.year == 1990))
 scale_2 = np.average(acs.loc[sample, 'leisure_1'], weights=acs.loc[sample, 'leisure_weight']) / np.average(acs.loc[sample, 'leisure_2'], weights=acs.loc[sample, 'leisure_weight'])
 scale_3 = np.average(acs.loc[sample, 'leisure_1'], weights=acs.loc[sample, 'leisure_weight']) / np.average(acs.loc[sample, 'leisure_3'], weights=acs.loc[sample, 'leisure_weight'])
 scale_4 = np.average(acs.loc[sample, 'leisure_1'], weights=acs.loc[sample, 'leisure_weight']) / np.average(acs.loc[sample, 'leisure_4'], weights=acs.loc[sample, 'leisure_weight'])
@@ -470,15 +462,6 @@ acs.loc[acs.leisure_1.isna() & acs.leisure_2.notna(), 'leisure'] = acs.leisure_2
 acs.loc[acs.leisure_1.isna() & acs.leisure_2.isna() & acs.leisure_3.notna(), 'leisure'] = acs.leisure_3
 acs.loc[acs.leisure_1.isna() & acs.leisure_2.isna() & acs.leisure_3.isna() & acs.leisure_4.notna(), 'leisure'] = acs.leisure_4
 acs = acs.drop(['leisure_1', 'leisure_2', 'leisure_3', 'leisure_4'], axis=1)
-
-# Rename variables
-acs = acs.rename(columns={'YEAR':   'year',
-						  'RACE':   'race',
-						  'HISPAN': 'latin',
-						  'SEX':    'gender',
-						  'EDUC':   'education',
-						  'AGE':    'age',
-						  'PERWT':  'weight'})
 
 # Define the variable types
 acs = acs.astype({'year':           'int',

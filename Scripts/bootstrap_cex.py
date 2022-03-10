@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
 from joblib import Parallel, delayed
+import statsmodels.formula.api as smf
 import os
 
 # Find the number of available CPUs
@@ -103,29 +104,24 @@ def bootstrap(b):
     # Recode the gender variable
     df_b.loc[:, 'gender'] = df_b.gender.replace({1: 1, 2: 0})
 
-    # Define a function to calculate average consumption, income and demographics by year
+    # Define a function to calculate the percentage deviation of consumption, income and demographics from their annual average
     def f(x):
         d = {}
         columns = ['consumption_cex', 'earnings', 'salary'] + ['race_' + str(i) for i in range(1, 4 + 1)] \
                                                             + ['education_' + str(i) for i in range(1, 4 + 1)] \
                                                             + ['family_size', 'latin', 'gender', 'age']
         for column in columns:
-            d[column + '_average'] = np.average(x.loc[:, column], weights=x.weight)
+            d[column + '_deviation'] = x.loc[:, column] / np.average(x.loc[:, column], weights=x.weight) - 1
         return pd.Series(d, index=[key for key, value in d.items()])
 
-    # Calculate average consumption, income and demographics by year
+    # Calculate the percentage deviation of consumption, income and demographics from their annual average
     df_b = pd.merge(df_b, df_b.groupby('year', as_index=False).apply(f), how='left')
 
-    # Calculate the percentage deviation of consumption, income and demographics from their annual average
-    columns = ['consumption_cex', 'earnings', 'salary'] + ['race_' + str(i) for i in range(1, 4 + 1)] \
-                                                        + ['education_' + str(i) for i in range(1, 4 + 1)] \
-                                                        + ['family_size', 'latin', 'gender', 'age']
-    for column in columns:
-        df_b.loc[:, column + '_deviation'] = (df_b.loc[:, column] - df_b.loc[:, column + '_average']) / df_b.loc[:, column + '_average']
-
     # Fit and save the OLS models for consumption
-    earnings_model = sm.WLS(df_b.consumption_cex_deviation.to_numpy(), df_b.loc[:, [column for column in df_b.columns if column.endswith('deviation') and not column.startswith('consumption') and not column.startswith('salary')]].to_numpy(), weights=df_b.weight.to_numpy()).fit()
-    salary_model = sm.WLS(df_b.consumption_cex_deviation.to_numpy(), df_b.loc[:, [column for column in df_b.columns if column.endswith('deviation') and not column.startswith('consumption') and not column.startswith('earnings')]].to_numpy(), weights=df_b.weight.to_numpy()).fit()
+    earnings_formula = 'consumption_deviation ~ ' + ' + '.join([column for column in df_b.columns if column.endswith('deviation') and not column.startswith('consumption') and not column.startswith('salary')])
+    salary_formula = 'consumption_deviation ~ ' + ' + '.join([column for column in df_b.columns if column.endswith('deviation') and not column.startswith('consumption') and not column.startswith('earnings')])
+    earnings_model = smf.wls(formula=earnings_formula, data=df_b, weights=df_b.weight.to_numpy()).fit()
+    salary_model = smf.wls(formula=salary_formula, data=df_b, weights=df_b.weight.to_numpy()).fit()
     earnings_model.save(os.path.join(data, 'earnings_bootstrap_' + str(b) + '.pickle'))
     salary_model.save(os.path.join(data, 'salary_bootstrap_' + str(b) + '.pickle'))
 

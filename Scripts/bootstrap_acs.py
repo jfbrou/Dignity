@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
 from joblib import Parallel, delayed
+import statsmodels.api as sm
 import os
 
 # Find the number of available CPUs
@@ -41,13 +42,13 @@ def bootstrap(b):
         # Impute consumption
         if int(chunk.year.unique()) == 1940:
             model = sm.load(os.path.join(data, 'salary_bootstrap_' + str(b) + '.pickle'))
+            chunk = chunk.rename(columns={'earnings_deviation': 'salary_deviation'})
         else:
             model = sm.load(os.path.join(data, 'earnings_bootstrap_' + str(b) + '.pickle'))
-        chunk.loc[:, 'consumption'] = model.predict(chunk.loc[:, [column for column in chunk.columns if column.endswith('deviation')]])
+        chunk.loc[:, 'consumption'] = model.predict(chunk)
 
         # Re-scale consumption expenditures such that it aggregates to the NIPA values
         chunk.loc[:, 'consumption'] = chunk.consumption_nipa + chunk.consumption_nipa * chunk.consumption
-        chunk = chunk.drop('consumption_nipa', axis=1)
 
         # Calculate weighted averages of each variable
         if chunk.year.unique() == 1950:

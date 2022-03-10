@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
 import beapy
-import statsmodels.api as sm
+import statsmodels.formula.api as smf
 from dotenv import load_dotenv
 load_dotenv()
 import os
@@ -463,7 +463,23 @@ for year in years:
                                       (423, 434), # FINLWT21
                                       (489, 497), # FSALARYX
                                       (839, 840)] # RESPSTAT
-    elif year >= 2004:
+    elif (year >= 2004) & (year <= 2005):
+        columns[years.index(year)] = ['NEWID',
+                                      'FAM_SIZE',
+                                      'FINLWT21',
+                                      'FSALARYM',
+                                      'FNONFRMM',
+                                      'FFRMINCM',
+                                      'RESPSTAT']
+    elif (year >= 2006) & (year <= 2012):
+        columns[years.index(year)] = ['NEWID',
+                                      'FAM_SIZE',
+                                      'FINLWT21',
+                                      'FSALARYX',
+                                      'FNONFRMX',
+                                      'FFRMINCX',
+                                      'RESPSTAT']
+    elif year >= 2013:
         columns[years.index(year)] = ['NEWID',
                                       'FAM_SIZE',
                                       'FINLWT21',
@@ -490,7 +506,12 @@ types = {'NEWID':    'str',
          'FAM_SIZE': 'int',
          'FINLWT21': 'float',
          'FSALARYX': 'float',
-         'RESPSTAT': 'int'}
+         'FSALARYM': 'float',
+         'RESPSTAT': 'int',
+         'FNONFRMX': 'float',
+         'FFRMINCX': 'float',
+         'FNONFRMM': 'float',
+         'FFRMINCM': 'float'}
 
 # Initialize a data frame
 cex_fmli = pd.DataFrame()
@@ -513,6 +534,14 @@ for year in years:
     # Create a unique identifier for each family since the last digit of NEWID encodes the interview number
     df.loc[:, 'NEWID'] = df.NEWID.apply(lambda x: x.zfill(8))
     df.loc[:, 'family_id'] = df.NEWID.str[:-1]
+
+    # Create the earnings variable for the years between 2004 and 2012
+    if (year >= 2004) & (year <= 2005):
+        df.loc[:, 'EARNINCX'] = df.FSALARYM + df.FNONFRMM + df.FFRMINCM
+        df = df.rename(columns={'FSALARYM': 'FSALARYX'}).drop(['FNONFRMM', 'FFRMINCM'], axis=1)
+    elif (year >= 2006) & (year <= 2012):
+        df.loc[:, 'EARNINCX'] = df.FSALARYX + df.FNONFRMX + df.FFRMINCX
+        df = df.drop(['FNONFRMX', 'FFRMINCX'], axis=1)
 
     # Only keep the number of rooms variable in 2019
     if year != 2019:
@@ -780,21 +809,17 @@ cex = pd.merge(cex, pd.DataFrame(data={'year':      years,
                                        'pce_nh_nd': pce_nh_nd,
                                        'poverty':   poverty}), how='left')
 
-# Define consumption measures that will not be re-scaled
-cex.loc[:, 'consumption_cex'] = cex.consumption
-cex.loc[:, 'consumption_nipa_cex'] = cex.consumption_nipa
-
 # Define a function to calculate the average consumption by year
 def f(x):
     d = {}
-    columns = [column for column in x.columns if column.startswith('consumption') and not column.endswith('cex')]
+    columns = [column for column in x.columns if column.startswith('consumption')]
     for column in columns:
         d[column + '_average'] = np.average(x.loc[:, column], weights=x.FINLWT21)
     return pd.Series(d, index=[key for key, value in d.items()])
 
 # Re-scale consumption such that it aggregates to the NIPA personal consumption expenditures
 cex = pd.merge(cex, cex.groupby('year', as_index=False).apply(f), how='left')
-for column in [column for column in cex.columns if column.startswith('consumption') and not column.endswith('cex') and not column.endswith('average')]:
+for column in [column for column in cex.columns if column.startswith('consumption') and not column.endswith('average')]:
     if column.find('_nd') == -1:
         if column.find('_nh') == -1:
             cex.loc[:, column] = cex.pce + cex.pce * (cex.loc[:, column] - cex.loc[:, column + '_average']) / cex.loc[:, column + '_average']
@@ -814,7 +839,7 @@ cex = cex.loc[(cex.consumption > 0) & \
               (cex.consumption_nh_nd > 0), :]
 
 # Enforce the consumption floor on total consumption
-for column in [column for column in cex.columns if column.startswith('consumption') and not column.endswith('cex') and column.find('_nd') == -1]:
+for column in [column for column in cex.columns if column.startswith('consumption') and column.find('_nd') == -1]:
     cex.loc[cex.loc[:, column] <= cex.poverty, column] = cex.poverty
 cex = cex.drop([column for column in cex.columns if column.startswith('pce')] + ['poverty'], axis=1)
 
@@ -848,12 +873,10 @@ cex = cex.astype({'year':                     'int',
                   'family_size':              'int',
                   'consumption':              'float',
                   'consumption_sqrt':         'float',
-                  'consumption_cex':          'float',
                   'consumption_nd':           'float',
                   'consumption_nd_sqrt':      'float',
                   'consumption_nipa':         'float',
                   'consumption_nipa_sqrt':    'float',
-                  'consumption_nipa_cex':     'float',
                   'consumption_nipa_nd':      'float',
                   'consumption_nipa_nd_sqrt': 'float',
                   'consumption_nh':           'float',
@@ -886,28 +909,30 @@ df = pd.concat([df, pd.get_dummies(df.education.astype('int'), prefix='education
 # Recode the gender variable
 df.loc[:, 'gender'] = df.gender.replace({1: 1, 2: 0})
 
-# Define a function to calculate average consumption, income and demographics by year
+# Define a function to calculate the average of consumption, income and demographics by year
 def f(x):
     d = {}
-    columns = ['consumption_cex', 'earnings', 'salary'] + ['race_' + str(i) for i in range(1, 4 + 1)] \
-                                                        + ['education_' + str(i) for i in range(1, 4 + 1)] \
-                                                        + ['family_size', 'latin', 'gender', 'age']
+    columns = ['consumption', 'earnings', 'salary'] + ['race_' + str(i) for i in range(1, 4 + 1)] \
+                                                    + ['education_' + str(i) for i in range(1, 4 + 1)] \
+                                                    + ['family_size', 'latin', 'gender', 'age']
     for column in columns:
         d[column + '_average'] = np.average(x.loc[:, column], weights=x.weight)
     return pd.Series(d, index=[key for key, value in d.items()])
 
-# Calculate average consumption, income and demographics by year
+# Calculate the average of consumption, income and demographics by year
 df = pd.merge(df, df.groupby('year', as_index=False).apply(f), how='left')
 
 # Calculate the percentage deviation of consumption, income and demographics from their annual average
-columns = ['consumption_cex', 'earnings', 'salary'] + ['race_' + str(i) for i in range(1, 4 + 1)] \
-                                                    + ['education_' + str(i) for i in range(1, 4 + 1)] \
-                                                    + ['family_size', 'latin', 'gender', 'age']
+columns = ['consumption', 'earnings', 'salary'] + ['race_' + str(i) for i in range(1, 4 + 1)] \
+                                                + ['education_' + str(i) for i in range(1, 4 + 1)] \
+                                                + ['family_size', 'latin', 'gender', 'age']
 for column in columns:
-     df.loc[:, column + '_deviation'] = (df.loc[:, column] - df.loc[:, column + '_average']) / df.loc[:, column + '_average']
+    df.loc[:, column + '_deviation'] = df.loc[:, column] / df.loc[:, column + '_average'] - 1
 
-# Fit the OLS models for consumption
-earnings_model = sm.WLS(df.consumption_cex_deviation.to_numpy(), df.loc[:, [column for column in df.columns if column.endswith('deviation') and not column.startswith('consumption') and not column.startswith('salary')]].to_numpy(), weights=df.weight.to_numpy()).fit()
+# Fit and save the OLS models for consumption
+earnings_formula = 'consumption_deviation ~ ' + ' + '.join([column for column in df.columns if column.endswith('deviation') and not column.startswith('consumption') and not column.startswith('salary')])
+salary_formula = 'consumption_deviation ~ ' + ' + '.join([column for column in df.columns if column.endswith('deviation') and not column.startswith('consumption') and not column.startswith('earnings')])
+earnings_model = smf.wls(formula=earnings_formula, data=df, weights=df.weight.to_numpy()).fit()
+salary_model = smf.wls(formula=salary_formula, data=df, weights=df.weight.to_numpy()).fit()
 earnings_model.save(os.path.join(cex_f_data, 'earnings.pickle'))
-salary_model = sm.WLS(df.consumption_cex_deviation.to_numpy(), df.loc[:, [column for column in df.columns if column.endswith('deviation') and not column.startswith('consumption') and not column.startswith('earnings')]].to_numpy(), weights=df.weight.to_numpy()).fit()
 salary_model.save(os.path.join(cex_f_data, 'salary.pickle'))
