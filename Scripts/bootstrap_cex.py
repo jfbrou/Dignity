@@ -24,7 +24,7 @@ def bootstrap(b):
     # Sample from the data
     df_b = pd.DataFrame()
     for year in range(1984, 2020 + 1):
-        df_b = df_b.append(cex.loc[cex.year == year, :].sample(n=cex.loc[cex.year == year, :].shape[0], replace=True, random_state=b), ignore_index=True)
+        df_b = df_b.append(cex.loc[cex.year == year, :].sample(frac=1, replace=True, random_state=b), ignore_index=True)
     del cex
     
     # Normalize consumption
@@ -107,9 +107,9 @@ def bootstrap(b):
     # Define a function to calculate the percentage deviation of consumption, income and demographics from their annual average
     def f(x):
         d = {}
-        columns = ['consumption_cex', 'earnings', 'salary'] + ['race_' + str(i) for i in range(1, 4 + 1)] \
-                                                            + ['education_' + str(i) for i in range(1, 4 + 1)] \
-                                                            + ['family_size', 'latin', 'gender', 'age']
+        columns = ['consumption', 'earnings', 'salary'] + ['race_' + str(i) for i in range(1, 4 + 1)] \
+                                                        + ['education_' + str(i) for i in range(1, 4 + 1)] \
+                                                        + ['family_size', 'latin', 'gender', 'age']
         for column in columns:
             d[column + '_deviation'] = x.loc[:, column] / np.average(x.loc[:, column], weights=x.weight) - 1
         return pd.Series(d, index=[key for key, value in d.items()])

@@ -24,7 +24,7 @@ def bootstrap(b):
     # Sample from the data
     df_b = pd.DataFrame()
     for year in range(1984, 2020 + 1):
-        df_b = df_b.append(cps.loc[cps.year == year, :].sample(n=cps.loc[cps.year == year, :].shape[0], replace=True, random_state=b), ignore_index=True)
+        df_b = df_b.append(cps.loc[cps.year == year, :].sample(frac=1, replace=True, random_state=b), ignore_index=True)
     del cps
     
     # Define functions to perform the aggregation

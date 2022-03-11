@@ -37,7 +37,7 @@ def bootstrap(b):
     df_b = pd.DataFrame()
     for chunk in chunks:
         # Sample from the data
-        chunk = chunk.sample(n=chunk.shape[0], replace=True, random_state=b)
+        chunk = chunk.sample(frac=1, replace=True, random_state=b)
 
         # Impute consumption
         if int(chunk.year.unique()) == 1940:
