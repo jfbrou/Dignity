@@ -634,11 +634,11 @@ def cew_level_gamma(S_i=None, S_j=None, Eu_of_c_and_ell_i=None, Eu_of_c_and_ell_
     Eu_of_c_and_ell_j = Eu_of_c_and_ell_j[age_min:age_max + 1]
 
     # Define the flow utility function from consumption and leisure
-    def u(c, ell, gamma=2, epsilon=1, theta=14.2):
+    def u(c, ell, gamma=gamma, epsilon=1, theta=14.2):
         return c**(1 - gamma) * (1 + (gamma - 1) * theta * epsilon * (1 - ell)**((1 + epsilon) / epsilon) / (1 + epsilon))**gamma / (1 - gamma)
 
     # Define the marginal utility function from consumption
-    def du_dc(c, ell, gamma=2, epsilon=1, theta=14.2):
+    def du_dc(c, ell, gamma=gamma, epsilon=1, theta=14.2):
         return (1 + (gamma - 1) * theta * epsilon * (1 - ell)**((1 + epsilon) / epsilon) / (1 + epsilon))**gamma / c**gamma
 
     # Calculate the intercept
@@ -657,7 +657,7 @@ def cew_level_gamma(S_i=None, S_j=None, Eu_of_c_and_ell_i=None, Eu_of_c_and_ell_
     # Store the results in a dictionary
     d = {'lambda_EV':      solution_EV.x,
          'lambda_CV':      solution_CV.x,
-         'lambda_average': (solution_EV.x + solution_CV.x) / 2,
+         'lambda_average': exp((log(solution_EV.x) + log(solution_CV.x)) / 2),
          'u_bar':          u_bar}
          
     # Return the dictionary
