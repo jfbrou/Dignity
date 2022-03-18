@@ -15,6 +15,10 @@ from functions import *
 # Set the Sherlock data directory
 data = '/scratch/users/jfbrou/Dignity'
 
+# Load the models
+salary_model = sm.load(os.path.join(data, 'salary_bootstrap_0.pickle'))
+earnings_model = sm.load(os.path.join(data, 'earnings_bootstrap_0.pickle'))
+
 # Define a function to read the data by year
 def year_chunk(file, chunksize=1e6):
     iterator = pd.read_csv(file, iterator=True, chunksize=chunksize)
@@ -41,11 +45,12 @@ def bootstrap(b):
 
         # Impute consumption
         if int(chunk.year.unique()) == 1940:
-            model = sm.load(os.path.join(data, 'salary_bootstrap_' + str(b) + '.pickle'))
+            #model = sm.load(os.path.join(data, 'salary_bootstrap_' + str(b) + '.pickle'))
             chunk = chunk.rename(columns={'earnings_deviation': 'salary_deviation'})
+            chunk.loc[:, 'consumption'] = salary_model.predict(chunk)
         else:
-            model = sm.load(os.path.join(data, 'earnings_bootstrap_' + str(b) + '.pickle'))
-        chunk.loc[:, 'consumption'] = model.predict(chunk)
+            #model = sm.load(os.path.join(data, 'earnings_bootstrap_' + str(b) + '.pickle'))
+            chunk.loc[:, 'consumption'] = earnings_model.predict(chunk)
 
         # Re-scale consumption expenditures such that it aggregates to the NIPA values
         chunk.loc[:, 'consumption'] = chunk.consumption_nipa + chunk.consumption_nipa * chunk.consumption
@@ -152,4 +157,4 @@ def bootstrap(b):
     del df_b, df_acs, df_acs_consumption, df_acs_leisure, df
 
 # Calculate ACS consumption and leisure statistics across 1000 bootstrap samples
-Parallel(n_jobs=n_cpu)(delayed(bootstrap)(b) for b in range(1000))
+Parallel(n_jobs=n_cpu)(delayed(bootstrap)(b) for b in range(5))
