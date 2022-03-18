@@ -129,8 +129,8 @@ def bootstrap(b):
     salary_formula = 'consumption_deviation ~ ' + ' + '.join([column for column in df_b.columns if column.endswith('deviation') and not column.startswith('consumption') and not column.startswith('earnings')])
     earnings_model = smf.wls(formula=earnings_formula, data=df_b, weights=df_b.weight.to_numpy()).fit()
     salary_model = smf.wls(formula=salary_formula, data=df_b, weights=df_b.weight.to_numpy()).fit()
-    earnings_model.save(os.path.join(data, 'earnings_bootstrap_' + str(b) + '.pickle'))
-    salary_model.save(os.path.join(data, 'salary_bootstrap_' + str(b) + '.pickle'))
+    earnings_model.params.reset_index(drop=False).rename(columns={'index': 'variable', 0: 'coefficient'}).to_csv(os.path.join(data, 'earnings_bootstrap_' + str(b) + '.csv'), index=False)
+    salary_model.params.reset_index(drop=False).rename(columns={'index': 'variable', 0: 'coefficient'}).to_csv(os.path.join(data, 'salary_bootstrap_' + str(b) + '.csv'), index=False)
 
     # Save the data frame
     df_cex.to_csv(os.path.join(data, 'dignity_cex_bootstrap_' + str(b) + '.csv'), index=False)
