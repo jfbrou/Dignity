@@ -164,4 +164,4 @@ def bootstrap(b):
     del df_b, df_acs, df_acs_consumption, df_acs_leisure, df
 
 # Calculate ACS consumption and leisure statistics across 1000 bootstrap samples
-Parallel(n_jobs=n_cpu)(delayed(bootstrap)(b) for b in range(5))
+Parallel(n_jobs=n_cpu)(delayed(bootstrap)(b) for b in range(1000))
