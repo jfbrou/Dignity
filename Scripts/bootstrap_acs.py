@@ -15,10 +15,6 @@ from functions import *
 # Set the Sherlock data directory
 data = '/scratch/users/jfbrou/Dignity'
 
-# Load the models
-salary_model = sm.load(os.path.join(data, 'salary_bootstrap_0.pickle'))
-earnings_model = sm.load(os.path.join(data, 'earnings_bootstrap_0.pickle'))
-
 # Define a function to read the data by year
 def year_chunk(file, chunksize=1e6):
     iterator = pd.read_csv(file, iterator=True, chunksize=chunksize)
@@ -45,12 +41,23 @@ def bootstrap(b):
 
         # Impute consumption
         if int(chunk.year.unique()) == 1940:
-            #model = sm.load(os.path.join(data, 'salary_bootstrap_' + str(b) + '.pickle'))
-            chunk = chunk.rename(columns={'earnings_deviation': 'salary_deviation'})
-            chunk.loc[:, 'consumption'] = salary_model.predict(chunk)
+            model = pd.read_csv(os.path.join(data, 'salary_bootstrap_' + str(b) + '.csv'))
+            model.loc[model.variable == 'salary_deviation', 'variable'] = 'earnings_deviation'
         else:
-            #model = sm.load(os.path.join(data, 'earnings_bootstrap_' + str(b) + '.pickle'))
-            chunk.loc[:, 'consumption'] = earnings_model.predict(chunk)
+            model = pd.read_csv(os.path.join(data, 'earnings_bootstrap_' + str(b) + '.csv'))
+        chunk.loc[:, 'consumption'] = float(model.loc[model.variable == 'Intercept', 'coefficient'].values) + chunk.earnings_deviation * float(model.loc[model.variable == 'earnings_deviation', 'coefficient'].values) \
+                                                                                                            + chunk.race_1_deviation * float(model.loc[model.variable == 'race_1_deviation', 'coefficient'].values) \
+                                                                                                            + chunk.race_2_deviation * float(model.loc[model.variable == 'race_2_deviation', 'coefficient'].values) \
+                                                                                                            + chunk.race_3_deviation * float(model.loc[model.variable == 'race_3_deviation', 'coefficient'].values) \
+                                                                                                            + chunk.race_4_deviation * float(model.loc[model.variable == 'race_4_deviation', 'coefficient'].values) \
+                                                                                                            + chunk.education_1_deviation * float(model.loc[model.variable == 'education_1_deviation', 'coefficient'].values) \
+                                                                                                            + chunk.education_2_deviation * float(model.loc[model.variable == 'education_2_deviation', 'coefficient'].values) \
+                                                                                                            + chunk.education_3_deviation * float(model.loc[model.variable == 'education_3_deviation', 'coefficient'].values) \
+                                                                                                            + chunk.education_4_deviation * float(model.loc[model.variable == 'education_4_deviation', 'coefficient'].values) \
+                                                                                                            + chunk.family_size_deviation * float(model.loc[model.variable == 'family_size_deviation', 'coefficient'].values) \
+                                                                                                            + chunk.latin_deviation * float(model.loc[model.variable == 'latin_deviation', 'coefficient'].values) \
+                                                                                                            + chunk.gender_deviation * float(model.loc[model.variable == 'gender_deviation', 'coefficient'].values) \
+                                                                                                            + chunk.age_deviation * float(model.loc[model.variable == 'age_deviation', 'coefficient'].values)
 
         # Re-scale consumption expenditures such that it aggregates to the NIPA values
         chunk.loc[:, 'consumption'] = chunk.consumption_nipa + chunk.consumption_nipa * chunk.consumption
