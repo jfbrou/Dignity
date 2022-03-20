@@ -15,7 +15,7 @@ survival = survival.loc[survival.gender == -1, :].drop('gender', axis=1)
 # Load the CEX data
 cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
 cex = cex.loc[cex.year.isin(range(1984, 2020 + 1)), :]
-for column in [column for column in cex.columns if column.startswith('consumption') and not column.endswith('cex')]:
+for column in [column for column in cex.columns if column.startswith('consumption')]:
     cex.loc[:, column] = cex.loc[:, column] / np.average(cex.loc[cex.year == 2019, column], weights=cex.loc[cex.year == 2019, 'weight'])
 
 # Load the CPS data
@@ -54,15 +54,15 @@ df_consumption = pd.DataFrame()
 # Define a function to perform the CEX aggregation
 def f_cex(x):
     d = {}
-    columns = [column for column in x.columns if column.startswith('consumption') and not column.endswith('cex')]
+    columns = [column for column in x.columns if column.startswith('consumption')]
     for column in columns:
         d[column.replace('consumption', 'Elog_of_c')] = np.average(np.log(x.loc[:, column]), weights=x.weight)
         d[column.replace('consumption', 'c_bar')] = np.average(x.loc[:, column], weights=x.weight)
     return pd.Series(d, index=[key for key, value in d.items()])
 
 # Define a list of column names
-columns = [column.replace('consumption', 'Elog_of_c') for column in cex.columns if column.startswith('consumption') and not column.endswith('cex')] + \
-          [column.replace('consumption', 'c_bar') for column in cex.columns if column.startswith('consumption') and not column.endswith('cex')]
+columns = [column.replace('consumption', 'Elog_of_c') for column in cex.columns if column.startswith('consumption')] + \
+          [column.replace('consumption', 'c_bar') for column in cex.columns if column.startswith('consumption')]
 
 # Calculate CEX consumption statistics by year and age
 df = cex.groupby(['year', 'age'], as_index=False).apply(f_cex)

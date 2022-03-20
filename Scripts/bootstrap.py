@@ -205,7 +205,7 @@ def cew(b):
     df_bootstrap = dignity_bootstrap_historical.loc[dignity_bootstrap_historical.year.isin(years) & (dignity_bootstrap_historical.bootstrap == b) & (dignity_bootstrap_historical.simple == False) & (dignity_bootstrap_historical.race == -1), :]
     df_survival = dignity.loc[dignity.year.isin(years) & (dignity.historical == True) & (dignity.race == -1) & (dignity.latin == -1), :]
 
-    # Calculate the historical consumption-equivalent welfare of Black relative to White Americans
+    # Calculate the historical consumption-equivalent welfare growth and consumption by decade calculation
     df_7 = expand({'year': years[1:], 'log_lambda': [np.nan], 'C': [np.nan], 'bootstrap': [b], 'description': ['Welfare and consumption growth historical']})
     for year in years[1:]:
         S_i = df_survival.loc[df_survival.year == years[years.index(year) - 1], 'S'].values

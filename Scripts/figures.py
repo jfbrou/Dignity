@@ -33,8 +33,9 @@ newnewcolors = sns.color_palette('viridis', 5)
 # Start the BEA client
 bea = beapy.BEA(key=os.getenv('bea_api_key'))
 
-# Load the bootstrap data from the CEX and CPS
+# Load the bootstrap data from the CEX, CPS and ACS
 dignity_bs = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap.csv'))
+dignity_bs_historical = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap_historical.csv'))
 
 ################################################################################
 #                                                                              #
@@ -54,7 +55,7 @@ cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[(cex.year == 20
 df = cex.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption': np.log(np.average(x.consumption, weights=x.weight))}))
 
 # Calculate the 95% confidence interval
-df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2019 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == -1) & (dignity_bs.simple == True) & (dignity_bs.method == 1), :]
+df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2019 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == -1) & (dignity_bs.simple == True), :]
 df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.025)}).rename(columns={'consumption_average': 'lb'}),
                  df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.975)}).rename(columns={'consumption_average': 'ub'}), how='left')
 
@@ -157,7 +158,7 @@ cex.loc[:, 'consumption_nd'] = cex.consumption_nd / np.average(cex.loc[(cex.year
 df = cex.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption_nd': np.sqrt(np.average((np.log(x.consumption_nd) - np.average(np.log(x.consumption_nd), weights=x.weight))**2, weights=x.weight))}))
 
 # Calculate the 95% confidence interval
-df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2019 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == -1) & (dignity_bs.simple == True) & (dignity_bs.method == 1), :]
+df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2019 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == -1) & (dignity_bs.simple == True), :]
 df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_sd': lambda x: x.quantile(0.025)}).rename(columns={'consumption_sd': 'lb'}),
                  df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_sd': lambda x: x.quantile(0.975)}).rename(columns={'consumption_sd': 'ub'}), how='left')
 
@@ -206,13 +207,20 @@ acs.loc[:, 'consumption'] = acs.consumption / np.average(acs.loc[(acs.year == 20
 # Calculate the logarithm of average consumption by year and race
 df = acs.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption': np.log(np.average(x.consumption, weights=x.weight))}))
 
+# Calculate the 95% confidence interval
+df_bs = dignity_bs_historical.loc[dignity_bs_historical.year.isin(df.year.unique()) & dignity_bs_historical.race.isin([1, 2]) & (dignity_bs_historical.simple == True), :]
+df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.025)}).rename(columns={'consumption_average': 'lb'}),
+                 df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.975)}).rename(columns={'consumption_average': 'ub'}), how='left')
+
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
 ax.plot(df.year.unique(), df.loc[df.race == 1, 'consumption'], color=colors[0], linewidth=2.5)
+ax.fill_between(df_bs.year.unique(), df_bs.loc[df_bs.race == 1, 'lb'], y2=df_bs.loc[df_bs.race == 1, 'ub'], color=colors[0], alpha=0.2, linewidth=0)
 ax.annotate('White', xy=(2019.5, df.loc[df.race == 1, 'consumption'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
 ax.plot(df.year.unique(), df.loc[df.race == 2, 'consumption'], color=colors[1], linewidth=2.5)
+ax.fill_between(df_bs.year.unique(), df_bs.loc[df_bs.race == 2, 'lb'], y2=df_bs.loc[df_bs.race == 2, 'ub'], color=colors[1], alpha=0.2, linewidth=0)
 ax.annotate('Black', xy=(2019.5, df.loc[df.race == 2, 'consumption'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
 
 # Set the horizontal axis
@@ -254,10 +262,10 @@ df = cex.groupby(['year', 'race', 'latin'], as_index=False).apply(lambda x: pd.S
 df_latin = cex.groupby(['year', 'latin'], as_index=False).apply(lambda x: pd.Series({'consumption': np.log(np.average(x.consumption, weights=x.weight))}))
 
 # Calculate the 95% confidence interval
-df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2019 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == 0) & (dignity_bs.simple == True) & (dignity_bs.method == 1), :]
+df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2019 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == 0) & (dignity_bs.simple == True), :]
 df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.025)}).rename(columns={'consumption_average': 'lb'}),
                  df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.975)}).rename(columns={'consumption_average': 'ub'}), how='left')
-df_bs_latin = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2019 + 1)) & (dignity_bs.race == -1) & (dignity_bs.latin == 1) & (dignity_bs.simple == True) & (dignity_bs.method == 1), :]
+df_bs_latin = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2019 + 1)) & (dignity_bs.race == -1) & (dignity_bs.latin == 1) & (dignity_bs.simple == True), :]
 df_bs_latin = pd.merge(df_bs_latin.groupby('year', as_index=False).agg({'consumption_average': lambda x: x.quantile(0.025)}).rename(columns={'consumption_average': 'lb'}),
                        df_bs_latin.groupby('year', as_index=False).agg({'consumption_average': lambda x: x.quantile(0.975)}).rename(columns={'consumption_average': 'ub'}), how='left')
 
@@ -409,7 +417,7 @@ cps.loc[:, 'year'] = cps.year - 1
 df = cps.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'leisure': np.average(x.leisure, weights=x.weight)}))
 
 # Calculate the 95% confidence interval
-df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2019 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == -1) & (dignity_bs.simple == True) & (dignity_bs.method == 1), :]
+df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2019 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == -1) & (dignity_bs.simple == True), :]
 df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'leisure_average': lambda x: x.quantile(0.025)}).rename(columns={'leisure_average': 'lb'}),
                  df_bs.groupby(['year', 'race'], as_index=False).agg({'leisure_average': lambda x: x.quantile(0.975)}).rename(columns={'leisure_average': 'ub'}), how='left')
 
@@ -460,10 +468,10 @@ df = cps.groupby(['year', 'race', 'latin'], as_index=False).apply(lambda x: pd.S
 df_latin = cps.groupby(['year', 'latin'], as_index=False).apply(lambda x: pd.Series({'leisure': np.average(x.leisure, weights=x.weight)}))
 
 # Calculate the 95% confidence interval
-df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2019 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == 0) & (dignity_bs.simple == True) & (dignity_bs.method == 1), :]
+df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2019 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == 0) & (dignity_bs.simple == True), :]
 df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'leisure_average': lambda x: x.quantile(0.025)}).rename(columns={'leisure_average': 'lb'}),
                  df_bs.groupby(['year', 'race'], as_index=False).agg({'leisure_average': lambda x: x.quantile(0.975)}).rename(columns={'leisure_average': 'ub'}), how='left')
-df_bs_latin = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2019 + 1)) & (dignity_bs.race == -1) & (dignity_bs.latin == 1) & (dignity_bs.simple == True) & (dignity_bs.method == 1), :]
+df_bs_latin = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2019 + 1)) & (dignity_bs.race == -1) & (dignity_bs.latin == 1) & (dignity_bs.simple == True), :]
 df_bs_latin = pd.merge(df_bs_latin.groupby('year', as_index=False).agg({'leisure_average': lambda x: x.quantile(0.025)}).rename(columns={'leisure_average': 'lb'}),
                        df_bs_latin.groupby('year', as_index=False).agg({'leisure_average': lambda x: x.quantile(0.975)}).rename(columns={'leisure_average': 'ub'}), how='left')
 
@@ -516,7 +524,7 @@ cps.loc[:, 'year'] = cps.year - 1
 df = cps.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'leisure': np.sqrt(np.average((x.leisure - np.average(x.leisure, weights=x.weight))**2, weights=x.weight))}))
 
 # Calculate the 95% confidence interval
-df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2019 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == -1) & (dignity_bs.simple == True) & (dignity_bs.method == 1), :]
+df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2019 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == -1) & (dignity_bs.simple == True), :]
 df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'leisure_sd': lambda x: x.quantile(0.025)}).rename(columns={'leisure_sd': 'lb'}),
                  df_bs.groupby(['year', 'race'], as_index=False).agg({'leisure_sd': lambda x: x.quantile(0.975)}).rename(columns={'leisure_sd': 'ub'}), how='left')
 
@@ -900,7 +908,7 @@ c_nominal = 1e6 * c_nominal / population
 
 # Calculate the 95% confidence interval
 df_bs = pd.read_csv(os.path.join(f_data, 'cew_bootstrap.csv'))
-df_bs = df_bs.loc[(df_bs.description == 'black') & (df_bs.method == 1), :]
+df_bs = df_bs.loc[(df_bs.description == 'Welfare'), :]
 df_bs = pd.merge(df_bs.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.025)}).rename(columns={'log_lambda': 'lb'}),
                  df_bs.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.975)}).rename(columns={'log_lambda': 'ub'}), how='left')
 
@@ -1174,6 +1182,12 @@ c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.
 population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC
 c_nominal = 1e6 * c_nominal / population
 
+# Calculate the 95% confidence interval
+df_bs = pd.read_csv(os.path.join(f_data, 'cew_bootstrap.csv'))
+df_bs = df_bs.loc[(df_bs.description == 'Welfare historical'), :]
+df_bs = pd.merge(df_bs.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.025)}).rename(columns={'log_lambda': 'lb'}),
+                 df_bs.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.975)}).rename(columns={'log_lambda': 'ub'}), how='left')
+
 # Calculate the consumption-equivalent welfare of Black relative to White Americans from the U.S. censuses and ACS
 historical_years = list(range(1940, 1990 + 1, 10)) + list(range(2000, 2019 + 1))
 historical_df = pd.DataFrame({'year': historical_years, 'log_lambda': np.zeros(len(historical_years))})
@@ -1220,9 +1234,10 @@ fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
 ax.scatter(years, df.log_lambda, color=colors[1], s=15, clip_on=False)
-ax.annotate('CEX', xy=(2014, np.log(0.65)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
+ax.annotate('CEX/CPS', xy=(2014, np.log(0.65)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
 ax.plot(historical_years, historical_df.log_lambda, color=colors[1], linewidth=2.5)
-ax.annotate('Census/ACS', xy=(1963, np.log(0.41)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
+ax.fill_between(historical_years, df_bs.lb, y2=df_bs.ub, color=colors[1], alpha=0.2, linewidth=0)
+ax.annotate('Census/ACS', xy=(1980, np.log(0.49)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
 
 # Set the horizontal axis
 ax.set_xlim(1940, 2019)
@@ -1265,14 +1280,10 @@ c_nominal = 1e6 * c_nominal / population
 
 # Calculate the 95% confidence interval
 df_bs = pd.read_csv(os.path.join(f_data, 'cew_bootstrap.csv'))
-df_bs = df_bs.loc[(df_bs.description == 'black non-latino') & (df_bs.method == 1), :]
-df_bs = pd.merge(df_bs.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.025)}).rename(columns={'log_lambda': 'lb'}),
-                 df_bs.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.975)}).rename(columns={'log_lambda': 'ub'}), how='left')
-df_bs_latin = pd.read_csv(os.path.join(f_data, 'cew_bootstrap.csv'))
-df_bs_latin = df_bs_latin.loc[(df_bs_latin.description == 'latino') & (df_bs_latin.method == 1), :]
-df_bs_latin = pd.merge(df_bs_latin.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.025)}).rename(columns={'log_lambda': 'lb'}),
-                       df_bs_latin.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.975)}).rename(columns={'log_lambda': 'ub'}), how='left')
-
+df_bs = df_bs.loc[(df_bs.description == 'Welfare ethnicity'), :]
+df_bs = pd.merge(df_bs.groupby(['year', 'latin'], as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.025)}).rename(columns={'log_lambda': 'lb'}),
+                 df_bs.groupby(['year', 'latin'], as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.975)}).rename(columns={'log_lambda': 'ub'}), how='left')
+                 
 # Create a data frame and a list of years
 df = expand({'year': years, 'latin': [0, 1]})
 df.loc[:, 'log_lambda'] = np.nan
@@ -1304,10 +1315,10 @@ for year in years:
 for year in years:
     S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'S'].values
     S_j = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == 1), 'S'].values
-    c_bar_i = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'c_bar'].values
-    c_bar_j = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == 1), 'c_bar'].values
-    ell_bar_i = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'ell_bar'].values
-    ell_bar_j = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == 1), 'ell_bar'].values
+    c_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == 1), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1) & (dignity.latin == 0), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == 1), 'ell_bar'].values
     S_intercept = dignity_intercept.loc[:, 'S'].values
     c_intercept = dignity_intercept.loc[:, 'c_bar'].values
     ell_intercept = dignity_intercept.loc[:, 'ell_bar'].values
@@ -1328,11 +1339,11 @@ fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
 ax.plot(years, df.loc[df.latin == 0, 'log_lambda'], color=colors[1], linewidth=2.5)
-ax.fill_between(years, df_bs.lb, y2=df_bs.ub, color=colors[1], alpha=0.2, linewidth=0)
+ax.fill_between(years, df_bs.loc[df_bs.latin == 0, 'lb'], y2=df_bs.loc[df_bs.latin == 0, 'ub'], color=colors[1], alpha=0.2, linewidth=0)
 ax.annotate('Black non-Latinx', xy=(2010, np.log(0.62)), color='k', fontsize=12, va='center', annotation_clip=False)
 ax.plot(years, df.loc[df.latin == 1, 'log_lambda'], color=colors[2], linewidth=2.5)
-ax.fill_between(years, df_bs_latin.lb, y2=df_bs_latin.ub, color=colors[2], alpha=0.2, linewidth=0)
-ax.annotate('Latinx', xy=(2016, np.log(0.86)), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.fill_between(years, df_bs.loc[df_bs.latin == 1, 'lb'], y2=df_bs.loc[df_bs.latin == 1, 'ub'], color=colors[2], alpha=0.2, linewidth=0)
+ax.annotate('Latinx', xy=(2016, np.log(0.83)), color='k', fontsize=12, va='center', annotation_clip=False)
 
 # Set the horizontal axis
 ax.set_xlim(2006, 2019)
@@ -2377,6 +2388,12 @@ c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.
 population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC
 c_nominal = 1e6 * c_nominal / population
 
+# Calculate the 95% confidence interval
+df_bs = pd.read_csv(os.path.join(f_data, 'cew_bootstrap.csv'))
+df_bs = df_bs.loc[(df_bs.description == 'Welfare growth historical'), :]
+df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.025)}).rename(columns={'log_lambda': 'lb'}),
+                 df_bs.groupby(['year', 'race'], as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.975)}).rename(columns={'log_lambda': 'ub'}), how='left')
+
 # Calculate consumption-equivalent welfare growth
 df = expand({'year': years[1:], 'race': [1, 2]})
 df.loc[:, 'log_lambda'] = np.nan
@@ -2400,7 +2417,9 @@ fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
 ax.plot(np.linspace(1950, 2020, 8), 100 * df.loc[df.race == 1, 'log_lambda'], color=colors[0], linewidth=2.5, marker='o', clip_on=False)
+ax.fill_between(np.linspace(1950, 2020, 8), 100 * df_bs.loc[df_bs.race == 1, 'lb'], y2=100 * df_bs.loc[df_bs.race == 1, 'ub'], color=colors[0], alpha=0.2, linewidth=0)
 ax.plot(np.linspace(1950, 2020, 8), 100 * df.loc[df.race == 2, 'log_lambda'], color=colors[1], linewidth=2.5, marker='o', clip_on=False)
+ax.fill_between(np.linspace(1950, 2020, 8), 100 * df_bs.loc[df_bs.race == 2, 'lb'], y2=100 * df_bs.loc[df_bs.race == 2, 'ub'], color=colors[1], alpha=0.2, linewidth=0)
 
 # Set the horizontal axis
 ax.set_xlim(1950, 2020)
@@ -2446,6 +2465,12 @@ c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.
 population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC
 c_nominal = 1e6 * c_nominal / population
 
+# Calculate the 95% confidence interval
+df_bs = pd.read_csv(os.path.join(f_data, 'cew_bootstrap.csv'))
+df_bs = df_bs.loc[(df_bs.description == 'Welfare and consumption growth historical'), :]
+df_bs = pd.merge(df_bs.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.025), 'C': lambda x: x.quantile(q=0.025)}).rename(columns={'log_lambda': 'log_lambda_lb', 'C': 'C_lb'}),
+                 df_bs.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.975), 'C': lambda x: x.quantile(q=0.975)}).rename(columns={'log_lambda': 'log_lambda_ub', 'C': 'C_ub'}), how='left')
+
 # Calculate consumption-equivalent welfare growth
 df = pd.DataFrame({'year': years[1:], 'log_lambda': np.zeros(len(years[1:])), 'C': np.zeros(len(years[1:]))})
 for year in years[1:]:
@@ -2468,7 +2493,9 @@ fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
 ax.plot(np.linspace(1950, 2020, 8), 100 * df.log_lambda, color=colors[1], linewidth=2.5, marker='o', clip_on=False)
+ax.fill_between(np.linspace(1950, 2020, 8), 100 * df_bs.log_lambda_lb, y2=100 * df_bs.log_lambda_ub, color=colors[1], alpha=0.2, linewidth=0)
 ax.plot(np.linspace(1950, 2020, 8), 100 * df.C, color=colors[0], linewidth=2.5, marker='o', clip_on=False)
+ax.fill_between(np.linspace(1950, 2020, 8), 100 * df_bs.C_lb, y2=100 * df_bs.C_ub, color=colors[0], alpha=0.2, linewidth=0)
 
 # Set the horizontal axis
 ax.set_xlim(1950, 2020)
@@ -2516,7 +2543,7 @@ c_nominal = 1e6 * c_nominal / population
 
 # Calculate the 95% confidence interval
 df_bs = pd.read_csv(os.path.join(f_data, 'cew_bootstrap.csv'))
-df_bs = df_bs.loc[(df_bs.description == 'growth') & (df_bs.method == 1), :]
+df_bs = df_bs.loc[(df_bs.description == 'Cumulative welfare growth'), :]
 df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.025)}).rename(columns={'log_lambda': 'lb'}),
                  df_bs.groupby(['year', 'race'], as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.975)}).rename(columns={'log_lambda': 'ub'}), how='left')
 
@@ -2603,6 +2630,12 @@ c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.
 population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC
 c_nominal = 1e6 * c_nominal / population
 
+# Calculate the 95% confidence interval
+df_bs = pd.read_csv(os.path.join(f_data, 'cew_bootstrap.csv'))
+df_bs = df_bs.loc[(df_bs.description == 'Cumulative welfare growth historical'), :]
+df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.025), 'C': lambda x: x.quantile(q=0.025)}).rename(columns={'log_lambda': 'log_lambda_lb', 'C': 'C_lb'}),
+                 df_bs.groupby(['year', 'race'], as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.975), 'C': lambda x: x.quantile(q=0.975)}).rename(columns={'log_lambda': 'log_lambda_ub', 'C': 'C_ub'}), how='left')
+
 # Calculate consumption-equivalent welfare growth
 df = expand({'year': years[1:], 'race': [-1, 1, 2]})
 df.loc[:, 'log_lambda'] = np.nan
@@ -2631,10 +2664,13 @@ fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
 ax.plot(years, np.log(np.append(1, df.loc[df.race == 1, 'log_lambda'])), color=colors[0], linewidth=2.5)
+ax.fill_between(years, np.log(np.append(1, df_bs.loc[df_bs.race == 1, 'log_lambda_lb'])), y2=np.log(np.append(1, df_bs.loc[df_bs.race == 1, 'log_lambda_ub'])), color=colors[0], alpha=0.2, linewidth=0)
 ax.annotate(str(df.loc[df.race == 1, 'log_lambda'].iloc[-1].astype('int')) + 'x', xy=(2019.25, np.log(df.loc[df.race == 1, 'log_lambda'].iloc[-1])), color='k', fontsize=10, va='center', annotation_clip=False)
 ax.plot(years, np.log(np.append(1, df.loc[df.race == 2, 'log_lambda'])), color=colors[1], linewidth=2.5)
+ax.fill_between(years, np.log(np.append(1, df_bs.loc[df_bs.race == 2, 'log_lambda_lb'])), y2=np.log(np.append(1, df_bs.loc[df_bs.race == 2, 'log_lambda_ub'])), color=colors[1], alpha=0.2, linewidth=0)
 ax.annotate(str(df.loc[df.race == 2, 'log_lambda'].iloc[-1].astype('int')) + 'x', xy=(2019.25, np.log(df.loc[df.race == 2, 'log_lambda'].iloc[-1])), color='k', fontsize=10, va='center', annotation_clip=False)
 ax.plot(years, np.log(np.append(1, df.loc[df.race == -1, 'C'])), color='k', linewidth=2.5)
+ax.fill_between(years, np.log(np.append(1, df_bs.loc[df_bs.race == -1, 'C_lb'])), y2=np.log(np.append(1, df_bs.loc[df_bs.race == -1, 'C_ub'])), color='k', alpha=0.2, linewidth=0)
 ax.annotate(str(df.loc[df.race == -1, 'C'].iloc[-1].astype('int')) + 'x', xy=(2019.25, np.log(df.loc[df.race == -1, 'C'].iloc[-1])), color='k', fontsize=10, va='center', annotation_clip=False)
 
 # Set the horizontal axis
