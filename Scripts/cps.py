@@ -313,7 +313,7 @@ cps.loc[cps.AHRSWORKT == 999, 'AHRSWORKT'] = 0
 
 # Create the hours worked per year variable
 cps.loc[:, 'hours'] = cps.UHRSWORKLY * cps.WKSWORK1
-cps = cps.drop(['UHRSWORKLY', 'WKSWORK1'], axis=1)
+cps = cps.drop('UHRSWORKLY', axis=1)
 
 # Split hours worked per year evenly among family members between 25 and 64
 cps = pd.merge(cps, cps.loc[(cps.AGE >= 25) & (cps.AGE <= 64), :].groupby(['YEAR', 'SERIAL'], as_index=False).agg({'hours': 'mean', 'AHRSWORKT': 'mean'}).rename(columns={'hours': 'split', 'AHRSWORKT': 'AHRSWORKT_split'}), how='left')
@@ -352,6 +352,7 @@ cps = cps.rename(columns={'YEAR':     'year',
 						  'EDUC':     'education',
 						  'AGE':      'age',
 						  'LABFORCE': 'laborforce',
+						  'WKSWORK1': 'weeks_worked',
 						  'ASECWT':   'weight'})
 
 # Define the variable types
@@ -362,6 +363,7 @@ cps = cps.astype({'year':           'int',
 				  'education':      'float32',
 				  'age':            'int',
 				  'leisure':        'float',
+				  'weeks_worked':   'float',
 				  'weekly_leisure': 'float',
 				  'Δ_leisure':      'float',
 				  'earnings':       'float',
