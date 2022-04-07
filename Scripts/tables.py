@@ -280,7 +280,7 @@ c_nominal_gamma = c_nominal * np.average(cex.loc[cex.year == 2019, 'consumption'
 cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[cex.year == 2019, 'consumption'], weights=cex.loc[cex.year == 2019, 'weight'])
 
 # Define the flow utility function from consumption and leisure
-def u(c, ell, gamma=2, epsilon=1, theta=14.2):
+def u(c, ell, gamma=2, epsilon=1, theta=9.947619573644234):
     return c**(1 - gamma) * (1 + (gamma - 1) * theta * epsilon * (1 - ell)**((1 + epsilon) / epsilon) / (1 + epsilon))**gamma / (1 - gamma)
 
 # Calculate CEX consumption statistics by year, race and age
@@ -307,7 +307,7 @@ cps.loc[:, 'year'] = cps.year - 1
 
 # Define the leisure utility function
 def v_of_ell(x, epsilon=1.0):
-    theta = 2.597173415765069 * (1 - 0.353) / (1 - 0.656)**(1 / epsilon + 1)
+    theta = 1.281109625211432 * (1 - 0.353) / (1 - 0.7113406008484311)**(1 / epsilon + 1)
     return -(theta * epsilon / (1 + epsilon)) * (1 - x)**((1 + epsilon) / epsilon)
 
 # Calculate CPS leisure statistics by year, race and age for the high Frisch elasticity of labor supply

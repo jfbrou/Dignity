@@ -2,11 +2,17 @@
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
+import beapy
+from dotenv import load_dotenv
+load_dotenv()
 import os
 
 # Import functions and directories
 from functions import *
 from directories import *
+
+# Start the BEA client
+bea = beapy.BEA(key=os.getenv('bea_api_key'))
 
 # Load the survival rates data
 survival = pd.read_csv(os.path.join(cdc_f_data, 'survival.csv'))
@@ -26,6 +32,11 @@ cps.loc[:, 'year'] = cps.year - 1
 # Load the census and ACS data
 acs = pd.read_csv(os.path.join(acs_f_data, 'acs.csv'))
 acs.loc[:, 'consumption'] = acs.consumption / np.average(acs.loc[acs.year == 2019, 'consumption'], weights=acs.loc[acs.year == 2019, 'weight'])
+
+# Calibrate the value of theta
+consumption = 1e3 * (bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC - bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DINSRC) / bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC
+cps_theta = cps.loc[(cps.year == 2007) & cps.age.isin(range(25, 55)), :]
+theta = (1 - 0.353) * np.average(cps_theta.earnings, weights=cps_theta.weight) / (consumption * (1 - np.average(cps_theta.leisure, weights=cps_theta.weight))**2)
 
 ################################################################################
 #                                                                              #
