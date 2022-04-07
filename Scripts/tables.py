@@ -280,7 +280,7 @@ c_nominal_gamma = c_nominal * np.average(cex.loc[cex.year == 2019, 'consumption'
 cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[cex.year == 2019, 'consumption'], weights=cex.loc[cex.year == 2019, 'weight'])
 
 # Define the flow utility function from consumption and leisure
-def u(c, ell, gamma=2, epsilon=1, theta=9.947619573644234):
+def u(c, ell, gamma=2, epsilon=1, theta=8.795358530547285):
     return c**(1 - gamma) * (1 + (gamma - 1) * theta * epsilon * (1 - ell)**((1 + epsilon) / epsilon) / (1 + epsilon))**gamma / (1 - gamma)
 
 # Calculate CEX consumption statistics by year, race and age
@@ -307,7 +307,7 @@ cps.loc[:, 'year'] = cps.year - 1
 
 # Define the leisure utility function
 def v_of_ell(x, epsilon=1.0):
-    theta = 1.281109625211432 * (1 - 0.353) / (1 - 0.7113406008484311)**(1 / epsilon + 1)
+    theta = 1.1443127394313553 * (1 - 0.353) / (1 - 0.7113406008484311)**(1 / epsilon + 1)
     return -(theta * epsilon / (1 + epsilon)) * (1 - x)**((1 + epsilon) / epsilon)
 
 # Calculate CPS leisure statistics by year, race and age for the high Frisch elasticity of labor supply
@@ -401,6 +401,7 @@ lines = [r'\begin{table}[H]',
          r'\footnotesize',
          r'\item Note: See main text for discussion of the various robustness cases.',
          r'\end{tablenotes}',
+         r'\label{tab:Robustness}',
          r'\end{threeparttable}',
          r'\end{table}']
 table.write('\n'.join(lines))
@@ -427,58 +428,58 @@ population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006
 c_nominal = 1e6 * c_nominal / population
 
 # Instantiate an empty data frame
-df = expand({'year': years[1:], 'race': [1, 2, -1], 'latin': [0, 1, -1], 'log_lambda': [np.nan], 'LE': [np.nan], 'C': [np.nan], 'L': [np.nan], 'CI': [np.nan], 'LI': [np.nan]})
+df = expand({'race': [1, 2, -1], 'latin': [0, 1, -1], 'log_lambda': [np.nan], 'LE': [np.nan], 'C': [np.nan], 'L': [np.nan], 'CI': [np.nan], 'LI': [np.nan]})
 
 # Calculate consumption-equivalent welfare growth for all and non-Latinx Black and White Americans
 for race in [1, 2]:
     for latin in [0, -1]:
-        S_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race) & (dignity.latin == latin), 'S'].values
-        S_j = dignity.loc[(dignity.year == year) & (dignity.race == race) & (dignity.latin == latin), 'S'].values
-        c_i_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race) & (dignity.latin == latin), 'c_bar'].values
-        c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == race) & (dignity.latin == latin), 'c_bar'].values
-        ell_i_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race) & (dignity.latin == latin), 'ell_bar'].values
-        ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == race) & (dignity.latin == latin), 'ell_bar'].values
-        T = year - years[years.index(year) - 1]
+        S_i = dignity.loc[(dignity.year == 2019) & (dignity.race == race) & (dignity.latin == latin), 'S'].values
+        S_j = dignity.loc[(dignity.year == 2020) & (dignity.race == race) & (dignity.latin == latin), 'S'].values
+        c_i_bar = dignity.loc[(dignity.year == 2019) & (dignity.race == race) & (dignity.latin == latin), 'c_bar'].values
+        c_j_bar = dignity.loc[(dignity.year == 2020) & (dignity.race == race) & (dignity.latin == latin), 'c_bar'].values
+        ell_i_bar = dignity.loc[(dignity.year == 2019) & (dignity.race == race) & (dignity.latin == latin), 'ell_bar'].values
+        ell_j_bar = dignity.loc[(dignity.year == 2020) & (dignity.race == race) & (dignity.latin == latin), 'ell_bar'].values
+        T = 1
         S_intercept = dignity_intercept.loc[:, 'S'].values
         c_intercept = dignity_intercept.loc[:, 'c_bar'].values
         ell_intercept = dignity_intercept.loc[:, 'ell_bar'].values
-        c_i_bar_nd = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race) & (dignity.latin == latin), 'c_bar_nd'].values
-        c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == race) & (dignity.latin == latin), 'c_bar_nd'].values
-        Elog_of_c_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race) & (dignity.latin == latin), 'Elog_of_c'].values
-        Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == race) & (dignity.latin == latin), 'Elog_of_c'].values
-        Elog_of_c_i_nd = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race) & (dignity.latin == latin), 'Elog_of_c_nd'].values
-        Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == race) & (dignity.latin == latin), 'Elog_of_c_nd'].values
-        Ev_of_ell_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == race) & (dignity.latin == latin), 'Ev_of_ell'].values
-        Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == race) & (dignity.latin == latin), 'Ev_of_ell'].values
+        c_i_bar_nd = dignity.loc[(dignity.year == 2019) & (dignity.race == race) & (dignity.latin == latin), 'c_bar_nd'].values
+        c_j_bar_nd = dignity.loc[(dignity.year == 2020) & (dignity.race == race) & (dignity.latin == latin), 'c_bar_nd'].values
+        Elog_of_c_i = dignity.loc[(dignity.year == 2019) & (dignity.race == race) & (dignity.latin == latin), 'Elog_of_c'].values
+        Elog_of_c_j = dignity.loc[(dignity.year == 2020) & (dignity.race == race) & (dignity.latin == latin), 'Elog_of_c'].values
+        Elog_of_c_i_nd = dignity.loc[(dignity.year == 2019) & (dignity.race == race) & (dignity.latin == latin), 'Elog_of_c_nd'].values
+        Elog_of_c_j_nd = dignity.loc[(dignity.year == 2020) & (dignity.race == race) & (dignity.latin == latin), 'Elog_of_c_nd'].values
+        Ev_of_ell_i = dignity.loc[(dignity.year == 2019) & (dignity.race == race) & (dignity.latin == latin), 'Ev_of_ell'].values
+        Ev_of_ell_j = dignity.loc[(dignity.year == 2020) & (dignity.race == race) & (dignity.latin == latin), 'Ev_of_ell'].values
         for i in ['log_lambda', 'LE', 'C', 'L', 'CI', 'LI']:
-            df.loc[(df.year == year) & (df.race == race) & (df.latin == latin), i] = cew_growth(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar, T=T,
-                                                                                                S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
-                                                                                                inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)[i]
+            df.loc[(df.race == race) & (df.latin == latin), i] = cew_growth(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar, T=T,
+                                                                            S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                                            inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)[i]
 
 # Calculate consumption-equivalent welfare growth for all and Latinx Americans
 for latin in [1, -1]:
-    S_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == -1) & (dignity.latin == latin), 'S'].values
-    S_j = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == latin), 'S'].values
-    c_i_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == -1) & (dignity.latin == latin), 'c_bar'].values
-    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == latin), 'c_bar'].values
-    ell_i_bar = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == -1) & (dignity.latin == latin), 'ell_bar'].values
-    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == latin), 'ell_bar'].values
-    T = year - years[years.index(year) - 1]
+    S_i = dignity.loc[(dignity.year == 2019) & (dignity.race == -1) & (dignity.latin == latin), 'S'].values
+    S_j = dignity.loc[(dignity.year == 2020) & (dignity.race == -1) & (dignity.latin == latin), 'S'].values
+    c_i_bar = dignity.loc[(dignity.year == 2019) & (dignity.race == -1) & (dignity.latin == latin), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.year == 2020) & (dignity.race == -1) & (dignity.latin == latin), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.year == 2019) & (dignity.race == -1) & (dignity.latin == latin), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == 2020) & (dignity.race == -1) & (dignity.latin == latin), 'ell_bar'].values
+    T = 1
     S_intercept = dignity_intercept.loc[:, 'S'].values
     c_intercept = dignity_intercept.loc[:, 'c_bar'].values
     ell_intercept = dignity_intercept.loc[:, 'ell_bar'].values
-    c_i_bar_nd = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == -1) & (dignity.latin == latin), 'c_bar_nd'].values
-    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == latin), 'c_bar_nd'].values
-    Elog_of_c_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == -1) & (dignity.latin == latin), 'Elog_of_c'].values
-    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == latin), 'Elog_of_c'].values
-    Elog_of_c_i_nd = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == -1) & (dignity.latin == latin), 'Elog_of_c_nd'].values
-    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == latin), 'Elog_of_c_nd'].values
-    Ev_of_ell_i = dignity.loc[(dignity.year == years[years.index(year) - 1]) & (dignity.race == -1) & (dignity.latin == latin), 'Ev_of_ell'].values
-    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == -1) & (dignity.latin == latin), 'Ev_of_ell'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == 2019) & (dignity.race == -1) & (dignity.latin == latin), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == 2020) & (dignity.race == -1) & (dignity.latin == latin), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == 2019) & (dignity.race == -1) & (dignity.latin == latin), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == 2020) & (dignity.race == -1) & (dignity.latin == latin), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == 2019) & (dignity.race == -1) & (dignity.latin == latin), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == 2020) & (dignity.race == -1) & (dignity.latin == latin), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.year == 2019) & (dignity.race == -1) & (dignity.latin == latin), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.year == 2020) & (dignity.race == -1) & (dignity.latin == latin), 'Ev_of_ell'].values
     for i in ['log_lambda', 'LE', 'C', 'L', 'CI', 'LI']:
-        df.loc[(df.year == year) & (df.race == -1) & (df.latin == latin), i] = cew_growth(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar, T=T,
-                                                                                          S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
-                                                                                          inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)[i]
+        df.loc[(df.race == -1) & (df.latin == latin), i] = cew_growth(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar, T=T,
+                                                                      S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                                      inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)[i]
 
 # Write a table with the consumption-equivalent welfare growth decomposition
 table = open(os.path.join(tables, 'Welfare loss 2020 with caption.tex'), 'w')
