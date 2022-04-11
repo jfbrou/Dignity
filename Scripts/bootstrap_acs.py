@@ -18,7 +18,7 @@ data = '/scratch/users/jfbrou/Dignity'
 # Define a function to calculate ACS consumption and leisure statistics across bootstrap samples
 def bootstrap(b):
     # Define a function to read the data by year
-    def year_chunk(file, chunksize=1e6):
+    def year_chunk(file, chunksize=1e6 / 2):
         iterator = pd.read_csv(file, iterator=True, chunksize=chunksize)
         chunk = pd.DataFrame()
         for df in iterator:
@@ -31,7 +31,7 @@ def bootstrap(b):
                 chunk = pd.DataFrame()
                 chunk = chunk.append(df.loc[df.year == unique_years[1], :], ignore_index=True)
         yield chunk
-    chunks = year_chunk(os.path.join(data, 'bootstrap_acs.csv'), chunksize=1e6)
+    chunks = year_chunk(os.path.join(data, 'bootstrap_acs.csv'), chunksize=1e6 / 2)
     
     # Load and process the ACS data year by year
     df_b = pd.DataFrame()
@@ -83,6 +83,8 @@ def bootstrap(b):
 
         # Append the data frames for all chunks
         df_b = df_b.append(chunk, ignore_index=True)
+        del chunk
+    del chunks
 
     # Calculate the ratio of the average of the first leisure variable to the average of the other leisure variables in 1980 and 1990
     sample = ((df_b.year == 1980) | (df_b.year == 1990))
