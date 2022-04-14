@@ -34,9 +34,9 @@ acs = pd.read_csv(os.path.join(acs_f_data, 'acs.csv'))
 acs.loc[:, 'consumption'] = acs.consumption / np.average(acs.loc[acs.year == 2019, 'consumption'], weights=acs.loc[acs.year == 2019, 'weight'])
 
 # Calibrate the value of theta
-consumption = 1e5 * (bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC - bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DINSRC) / (bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC * bea.data('nipa', tablename='t20404', frequency='a', year=2006).data.DPCERG)
-cps_theta = cps.loc[(cps.year == 2006) & cps.age.isin(range(25, 55)), :]
-theta = (1 - 0.353) * np.average(cps_theta.earnings, weights=cps_theta.weight) / (consumption * (1 - np.average(cps_theta.leisure, weights=cps_theta.weight))**2)
+#consumption = 1e5 * (bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC - bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DINSRC) / (bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC * bea.data('nipa', tablename='t20404', frequency='a', year=2006).data.DPCERG)
+#cps_theta = cps.loc[(cps.year == 2006) & cps.age.isin(range(25, 55)), :]
+#theta = (1 - 0.353) * np.average(cps_theta.earnings, weights=cps_theta.weight) / (consumption * (1 - np.average(cps_theta.leisure, weights=cps_theta.weight))**2)
 
 ################################################################################
 #                                                                              #

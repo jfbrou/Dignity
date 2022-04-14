@@ -953,7 +953,7 @@ ax.set_xlim(1984, 2019)
 ax.set_xticks(np.append(np.linspace(1985, 2015, 7), 2019))
 
 # Set the vertical axis
-ax.set_ylim(np.log(0.4), np.log(0.7))
+ax.set_ylim(np.log(0.39), np.log(0.7))
 ax.set_yticks(np.log(np.linspace(0.4, 0.7, 4)))
 ax.set_yticklabels(np.round_(np.linspace(0.4, 0.7, 4), 1))
 
@@ -1049,7 +1049,7 @@ ax.set_xlim(1984, 2019)
 ax.set_xticks(np.append(np.linspace(1985, 2015, 7), 2019))
 
 # Set the vertical axis
-ax.set_ylim(np.log(0.37), np.log(0.7))
+ax.set_ylim(np.log(0.36), np.log(0.7))
 ax.set_yticks(np.log(np.linspace(0.4, 0.7, 4)))
 ax.set_yticklabels(np.round_(np.linspace(0.4, 0.7, 4), 1))
 
@@ -1142,7 +1142,7 @@ ax2 = ax1.twinx()
 ax1.plot(years, df.log_lambda, color=colors[1], linewidth=2.5)
 ax1.annotate('{0:.2f}'.format(np.exp(df.log_lambda.iloc[-1])), xy=(2019.25, df.log_lambda.iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
 ax1.annotate('{0:.2f}'.format(np.exp(df.log_lambda.iloc[0])), xy=(1981.5, df.log_lambda.iloc[0]), color='k', fontsize=12, va='center', annotation_clip=False)
-ax1.annotate('Welfare', xy=(2012, np.log(0.575)), color='k', fontsize=12, va='center', annotation_clip=False)
+ax1.annotate('Welfare', xy=(2012, np.log(0.565)), color='k', fontsize=12, va='center', annotation_clip=False)
 ax1.plot(years, np.log(cex.consumption), color=colors[1], linewidth=2, linestyle='dashed')
 ax1.annotate('{0:.2f}'.format(cex.consumption.iloc[-1]), xy=(2019.25, np.log(cex.consumption.iloc[-1])), color='k', fontsize=12, va='center', annotation_clip=False)
 ax1.annotate('Consumption', xy=(1999, np.log(0.625)), color='k', fontsize=12, va='center', annotation_clip=False)
@@ -1273,9 +1273,9 @@ plt.close()
 
 ################################################################################
 #                                                                              #
-# This section of the script plots the consumption-equivalent welfare and      #
-# income of Black non-Latino and Latino Americans relative to White non-Latino #
-# Americans from 2006 to 2019.                                                 #
+# This section of the script plots the consumption-equivalent welfare of Black #
+# non-Latino and Latino Americans relative to White non-Latino Americans from  #
+# 2006 to 2019.                                                                #
 #                                                                              #
 ################################################################################
 
@@ -1354,10 +1354,10 @@ fig, ax = plt.subplots(figsize=(6, 4))
 # Plot the lines
 ax.plot(years, df.loc[df.latin == 0, 'log_lambda'], color=colors[1], linewidth=2.5)
 ax.fill_between(years, df_bs.loc[df_bs.latin == 0, 'lb'], y2=df_bs.loc[df_bs.latin == 0, 'ub'], color=colors[1], alpha=0.2, linewidth=0)
-ax.annotate('Black non-Latinx', xy=(2010, np.log(0.62)), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('Black non-Latinx', xy=(2010, np.log(0.6)), color='k', fontsize=12, va='center', annotation_clip=False)
 ax.plot(years, df.loc[df.latin == 1, 'log_lambda'], color=colors[2], linewidth=2.5)
 ax.fill_between(years, df_bs.loc[df_bs.latin == 1, 'lb'], y2=df_bs.loc[df_bs.latin == 1, 'ub'], color=colors[2], alpha=0.2, linewidth=0)
-ax.annotate('Latinx', xy=(2016, np.log(0.83)), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('Latinx', xy=(2016, np.log(0.82)), color='k', fontsize=12, va='center', annotation_clip=False)
 
 # Set the horizontal axis
 ax.set_xlim(2006, 2019)
@@ -1432,14 +1432,14 @@ fig, ax = plt.subplots(figsize=(6, 4))
 # Plot the lines
 ax.stackplot(years, [df.LE, df.C], colors=newcolors[2:], edgecolor='Black', linewidth=0.75)
 ax.stackplot(years, [df.L, df.CI + df.LI], colors=[newcolors[1], newcolors[0]], edgecolor='Black', linewidth=0.75)
-ax.arrow(1990, np.log(1.02), 0, 0.09, linewidth=1, color='Black')
+ax.arrow(1989, np.log(1.01), 0, 0.07, linewidth=1, color='Black')
 
 # Set the horizontal axis
 ax.set_xlim(1984, 2019)
 ax.set_xticks(np.append(np.linspace(1985, 2015, 7), 2019))
 
 # Set the vertical axis
-ax.set_ylim(np.log(0.37), np.log(1.12))
+ax.set_ylim(np.log(0.37), np.log(1.1))
 ax.set_yticks(np.log(np.linspace(0.4, 1, 4)))
 ax.set_yticklabels(np.linspace(0.4, 1, 4))
 
@@ -1448,8 +1448,8 @@ ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 
 # Set the figure's text
-ax.text(1990, np.log(1.14), 'Leisure', fontsize=12, ha='center')
-ax.text(2002, np.log(1.11), 'Inequality', fontsize=12, ha='center')
+ax.text(1989, np.log(1.11), 'Leisure', fontsize=12, ha='center')
+ax.text(2011, np.log(1.1), 'Inequality', fontsize=12, ha='center')
 ax.text(1990, np.log(0.78), 'Life expectancy', fontsize=12, ha='center')
 ax.text(1990, np.log(0.49), 'Consumption', fontsize=12, ha='center')
 
@@ -1516,7 +1516,7 @@ ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 
 # Set the figure's text
-ax.text(1990, np.log(1.1), 'Leisure', fontsize=12, ha='center')
+ax.text(1990, np.log(1.08), 'Leisure', fontsize=12, ha='center')
 ax.text(1961, np.log(0.72), 'Life expectancy', fontsize=12, ha='center')
 ax.text(1961, np.log(0.44), 'Consumption', fontsize=12, ha='center')
 
@@ -1740,7 +1740,7 @@ fig, ax = plt.subplots(figsize=(6, 4))
 # Plot the lines
 ax.stackplot(years, [df.LE, df.C, df.M], colors=newnewcolors[2:], edgecolor='Black', linewidth=0.75)
 ax.stackplot(years, [df.L, df.CI + df.LI], colors=[newnewcolors[1], newnewcolors[0]], edgecolor='Black', linewidth=0.75)
-ax.arrow(1999, np.log(1.02), 0, 0.09, linewidth=1, color='Black')
+ax.arrow(1999, np.log(1.01), 0, 0.09, linewidth=1, color='Black')
 
 # Set the horizontal axis
 ax.set_xlim(1997, 2018)
@@ -1757,7 +1757,7 @@ ax.spines['top'].set_visible(False)
 
 # Set the figure's text
 ax.text(1999, np.log(1.14), 'Leisure', fontsize=12, ha='center')
-ax.text(2007, np.log(1.11), 'Inequality', fontsize=12, ha='center')
+ax.text(2011, np.log(1.11), 'Inequality', fontsize=12, ha='center')
 ax.text(2001, np.log(0.76), 'Life expectancy', fontsize=12, ha='center')
 ax.text(2001, np.log(0.5), 'Consumption', fontsize=12, ha='center')
 ax.text(2001, np.log(0.34), 'Morbidity', fontsize=12, ha='center')
@@ -2007,9 +2007,9 @@ ax.set_xticklabels(np.linspace(0, 100, 11).astype('int'))
 ax.set_xlabel(r'Flow utility in prison relative to not in prison (\%)', fontsize=12, rotation=0, ha='center')
 
 # Set the vertical axis
-ax.set_ylim(np.log(0.515), np.log(0.55))
-ax.set_yticks(np.log(np.linspace(0.52, 0.55, 4)))
-ax.set_yticklabels(list(map('{0:.2f}'.format, np.linspace(0.52, 0.55, 4))))
+ax.set_ylim(np.log(0.5), np.log(0.54))
+ax.set_yticks(np.log(np.linspace(0.5, 0.54, 5)))
+ax.set_yticklabels(list(map('{0:.2f}'.format, np.linspace(0.5, 0.54, 5))))
 
 # Remove the top and right axes
 ax.spines['right'].set_visible(False)
@@ -2148,7 +2148,7 @@ fig, ax = plt.subplots(figsize=(6, 4))
 # Plot the lines
 ax.stackplot(years, [df.LE, df.C, df.I], colors=newnewcolors[2:], edgecolor='Black', linewidth=0.75)
 ax.stackplot(years, [df.L, df.CI + df.LI], colors=[newnewcolors[1], newnewcolors[0]], edgecolor='Black', linewidth=0.75)
-ax.arrow(2007, np.log(1.02), 0, 0.06, linewidth=1, color='Black')
+ax.arrow(2007, np.log(1.01), 0, 0.06, linewidth=1, color='Black')
 ax.arrow(2011, np.log(0.485), 0, -0.07, linewidth=1, color='Black')
 
 # Set the horizontal axis
@@ -2165,7 +2165,7 @@ ax.spines['top'].set_visible(False)
 
 # Set the figure's text
 ax.text(2007, np.log(1.1), 'Leisure', fontsize=12, ha='center')
-ax.text(2011.5, np.log(1.13), 'Inequality', fontsize=12, ha='center')
+ax.text(2011.5, np.log(1.1), 'Inequality', fontsize=12, ha='center')
 ax.text(2008, np.log(0.80), 'Life expectancy', fontsize=12, ha='center')
 ax.text(2008, np.log(0.53), 'Consumption', fontsize=12, ha='center')
 ax.text(2011, np.log(0.43), 'Incarceration', fontsize=12, ha='center')
@@ -2251,7 +2251,7 @@ ax.set_xticks(np.append(np.linspace(1985, 2015, 7), 2019))
 
 # Set the vertical axis
 ax.set_ylim(0, 5)
-ax.set_ylabel('$\%$ (p.p.)', fontsize=12, rotation=0, ha='center', va='center')
+ax.set_ylabel(r'\%', fontsize=12, rotation=0, ha='center', va='center')
 ax.yaxis.set_label_coords(0, 1.1)
 
 # Remove the top and right axes
@@ -2369,7 +2369,7 @@ ax.set_xticklabels(np.linspace(0, 100, 11).astype('int'))
 ax.set_xlabel(r'Fraction of extra time treated as leisure (\%)', fontsize=12, rotation=0, ha='center')
 
 # Set the vertical axis
-ax.set_ylim(-1.2, 0)
+ax.set_ylim(-0.7, 0)
 ax.set_ylabel('$\%$', fontsize=12, rotation=0, ha='center', va='center')
 ax.yaxis.set_label_coords(0, 1.1)
 
@@ -2403,10 +2403,10 @@ population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006
 c_nominal = 1e6 * c_nominal / population
 
 # Calculate the 95% confidence interval
-#df_bs = pd.read_csv(os.path.join(f_data, 'cew_bootstrap.csv'))
-#df_bs = df_bs.loc[(df_bs.description == 'Welfare growth historical'), :]
-#df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.025)}).rename(columns={'log_lambda': 'lb'}),
-#                 df_bs.groupby(['year', 'race'], as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.975)}).rename(columns={'log_lambda': 'ub'}), how='left')
+df_bs = pd.read_csv(os.path.join(f_data, 'cew_bootstrap.csv'))
+df_bs = df_bs.loc[(df_bs.description == 'Welfare growth historical'), :]
+df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.025)}).rename(columns={'log_lambda': 'lb'}),
+                 df_bs.groupby(['year', 'race'], as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.975)}).rename(columns={'log_lambda': 'ub'}), how='left')
 
 # Calculate consumption-equivalent welfare growth
 df = expand({'year': years[1:], 'race': [1, 2]})
@@ -2431,9 +2431,9 @@ fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
 ax.plot(np.linspace(1950, 2020, 8), 100 * df.loc[df.race == 1, 'log_lambda'], color=colors[0], linewidth=2.5, marker='o', clip_on=False)
-#ax.fill_between(np.linspace(1950, 2020, 8), 100 * df_bs.loc[df_bs.race == 1, 'lb'], y2=100 * df_bs.loc[df_bs.race == 1, 'ub'], color=colors[0], alpha=0.2, linewidth=0)
+ax.fill_between(np.linspace(1950, 2020, 8), 100 * df_bs.loc[df_bs.race == 1, 'lb'], y2=100 * df_bs.loc[df_bs.race == 1, 'ub'], color=colors[0], alpha=0.2, linewidth=0)
 ax.plot(np.linspace(1950, 2020, 8), 100 * df.loc[df.race == 2, 'log_lambda'], color=colors[1], linewidth=2.5, marker='o', clip_on=False)
-#ax.fill_between(np.linspace(1950, 2020, 8), 100 * df_bs.loc[df_bs.race == 2, 'lb'], y2=100 * df_bs.loc[df_bs.race == 2, 'ub'], color=colors[1], alpha=0.2, linewidth=0)
+ax.fill_between(np.linspace(1950, 2020, 8), 100 * df_bs.loc[df_bs.race == 2, 'lb'], y2=100 * df_bs.loc[df_bs.race == 2, 'ub'], color=colors[1], alpha=0.2, linewidth=0)
 
 # Set the horizontal axis
 ax.set_xlim(1950, 2020)
@@ -2451,7 +2451,7 @@ ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 
 # Set the figure's text
-ax.text(1960, 1.3, 'White', fontsize=12, ha='center', color='k')
+ax.text(1960, 1.5, 'White', fontsize=12, ha='center', color='k')
 ax.text(2000, 4.9, 'Black', fontsize=12, ha='center', color='k')
 
 # Save and close the figure
@@ -2480,10 +2480,10 @@ population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006
 c_nominal = 1e6 * c_nominal / population
 
 # Calculate the 95% confidence interval
-#df_bs = pd.read_csv(os.path.join(f_data, 'cew_bootstrap.csv'))
-#df_bs = df_bs.loc[(df_bs.description == 'Welfare and consumption growth historical'), :]
-#df_bs = pd.merge(df_bs.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.025), 'C': lambda x: x.quantile(q=0.025)}).rename(columns={'log_lambda': 'log_lambda_lb', 'C': 'C_lb'}),
-#                 df_bs.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.975), 'C': lambda x: x.quantile(q=0.975)}).rename(columns={'log_lambda': 'log_lambda_ub', 'C': 'C_ub'}), how='left')
+df_bs = pd.read_csv(os.path.join(f_data, 'cew_bootstrap.csv'))
+df_bs = df_bs.loc[(df_bs.description == 'Welfare and consumption growth historical'), :]
+df_bs = pd.merge(df_bs.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.025), 'C': lambda x: x.quantile(q=0.025)}).rename(columns={'log_lambda': 'log_lambda_lb', 'C': 'C_lb'}),
+                 df_bs.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.975), 'C': lambda x: x.quantile(q=0.975)}).rename(columns={'log_lambda': 'log_lambda_ub', 'C': 'C_ub'}), how='left')
 
 # Calculate consumption-equivalent welfare growth
 df = pd.DataFrame({'year': years[1:], 'log_lambda': np.zeros(len(years[1:])), 'C': np.zeros(len(years[1:]))})
@@ -2645,10 +2645,10 @@ population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006
 c_nominal = 1e6 * c_nominal / population
 
 # Calculate the 95% confidence interval
-#df_bs = pd.read_csv(os.path.join(f_data, 'cew_bootstrap.csv'))
-#df_bs = df_bs.loc[(df_bs.description == 'Cumulative welfare growth historical'), :]
-#df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.025), 'C': lambda x: x.quantile(q=0.025)}).rename(columns={'log_lambda': 'log_lambda_lb', 'C': 'C_lb'}),
-#                 df_bs.groupby(['year', 'race'], as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.975), 'C': lambda x: x.quantile(q=0.975)}).rename(columns={'log_lambda': 'log_lambda_ub', 'C': 'C_ub'}), how='left')
+df_bs = pd.read_csv(os.path.join(f_data, 'cew_bootstrap.csv'))
+df_bs = df_bs.loc[(df_bs.description == 'Cumulative welfare growth historical'), :]
+df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.025), 'C': lambda x: x.quantile(q=0.025)}).rename(columns={'log_lambda': 'log_lambda_lb', 'C': 'C_lb'}),
+                 df_bs.groupby(['year', 'race'], as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.975), 'C': lambda x: x.quantile(q=0.975)}).rename(columns={'log_lambda': 'log_lambda_ub', 'C': 'C_ub'}), how='left')
 
 # Calculate consumption-equivalent welfare growth
 df = expand({'year': years[1:], 'race': [-1, 1, 2]})
@@ -2678,13 +2678,13 @@ fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
 ax.plot(years, np.log(np.append(1, df.loc[df.race == 1, 'log_lambda'])), color=colors[0], linewidth=2.5)
-#ax.fill_between(years, np.log(np.append(1, df_bs.loc[df_bs.race == 1, 'log_lambda_lb'])), y2=np.log(np.append(1, df_bs.loc[df_bs.race == 1, 'log_lambda_ub'])), color=colors[0], alpha=0.2, linewidth=0)
+ax.fill_between(years, np.log(np.append(1, df_bs.loc[df_bs.race == 1, 'log_lambda_lb'])), y2=np.log(np.append(1, df_bs.loc[df_bs.race == 1, 'log_lambda_ub'])), color=colors[0], alpha=0.2, linewidth=0)
 ax.annotate(str(df.loc[df.race == 1, 'log_lambda'].iloc[-1].astype('int')) + 'x', xy=(2019.25, np.log(df.loc[df.race == 1, 'log_lambda'].iloc[-1])), color='k', fontsize=10, va='center', annotation_clip=False)
 ax.plot(years, np.log(np.append(1, df.loc[df.race == 2, 'log_lambda'])), color=colors[1], linewidth=2.5)
-#ax.fill_between(years, np.log(np.append(1, df_bs.loc[df_bs.race == 2, 'log_lambda_lb'])), y2=np.log(np.append(1, df_bs.loc[df_bs.race == 2, 'log_lambda_ub'])), color=colors[1], alpha=0.2, linewidth=0)
+ax.fill_between(years, np.log(np.append(1, df_bs.loc[df_bs.race == 2, 'log_lambda_lb'])), y2=np.log(np.append(1, df_bs.loc[df_bs.race == 2, 'log_lambda_ub'])), color=colors[1], alpha=0.2, linewidth=0)
 ax.annotate(str(df.loc[df.race == 2, 'log_lambda'].iloc[-1].astype('int')) + 'x', xy=(2019.25, np.log(df.loc[df.race == 2, 'log_lambda'].iloc[-1])), color='k', fontsize=10, va='center', annotation_clip=False)
 ax.plot(years, np.log(np.append(1, df.loc[df.race == -1, 'C'])), color='k', linewidth=2.5)
-#ax.fill_between(years, np.log(np.append(1, df_bs.loc[df_bs.race == -1, 'C_lb'])), y2=np.log(np.append(1, df_bs.loc[df_bs.race == -1, 'C_ub'])), color='k', alpha=0.2, linewidth=0)
+ax.fill_between(years, np.log(np.append(1, df_bs.loc[df_bs.race == -1, 'C_lb'])), y2=np.log(np.append(1, df_bs.loc[df_bs.race == -1, 'C_ub'])), color='k', alpha=0.2, linewidth=0)
 ax.annotate(str(df.loc[df.race == -1, 'C'].iloc[-1].astype('int')) + 'x', xy=(2019.25, np.log(df.loc[df.race == -1, 'C'].iloc[-1])), color='k', fontsize=10, va='center', annotation_clip=False)
 
 # Set the horizontal axis
