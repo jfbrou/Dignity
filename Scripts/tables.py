@@ -370,7 +370,7 @@ for year in years:
 
 # Write a table with the robustness results
 table = open(os.path.join(tables, 'Robustness.tex'), 'w')
-lines = [r'\begin{table}[H]',
+lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\caption{Robustness results}',
          r'\begin{threeparttable}',
@@ -399,10 +399,10 @@ lines = [r'\begin{table}[H]',
          r'\end{tabular}',
          r'\begin{tablenotes}[flushleft]',
          r'\footnotesize',
-         r'\item Note: See main text for discussion of the various robustness cases.',
+         r'\item Note: See the main text for a discussion of the various robustness cases.',
          r'\end{tablenotes}',
-         r'\label{tab:Robustness}',
          r'\end{threeparttable}',
+         r'\label{tab:robust}',
          r'\end{table}']
 table.write('\n'.join(lines))
 table.close()
@@ -483,7 +483,7 @@ for latin in [1, -1]:
 
 # Write a table with the consumption-equivalent welfare growth decomposition
 table = open(os.path.join(tables, 'Welfare loss 2020 with caption.tex'), 'w')
-lines = [r'\begin{table}[H]',
+lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\begin{threeparttable}',
          r'\caption{Welfare loss in 2020 relative to 2019 (\%)}',
@@ -544,7 +544,7 @@ table.close()
 
 # Write a table with the consumption-equivalent welfare growth decomposition
 table = open(os.path.join(tables, 'Welfare loss 2020.tex'), 'w')
-lines = [r'\begin{table}[H]',
+lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\begin{threeparttable}',
          r'\begin{tabular}{lccccccc}',
@@ -738,7 +738,7 @@ deaths = covid.loc[(covid.raceethnicity == 'All Race/Ethnicity Groups') & (covid
 
 # Write a table with the COVID-19 welfare statistics
 table = open(os.path.join(tables, 'Welfare and COVID-19.tex'), 'w')
-lines = [r'\begin{table}[H]',
+lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\begin{threeparttable}',
          r'\begin{tabular}{lccccc}',
@@ -781,7 +781,7 @@ table.close()
 
 # Write a table with the COVID-19 welfare statistics
 table = open(os.path.join(tables, 'Welfare and COVID-19 with caption.tex'), 'w')
-lines = [r'\begin{table}[H]',
+lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\caption{Welfare and COVID-19}',
          r'\begin{threeparttable}',
@@ -876,7 +876,7 @@ for year in years:
 
 # Write a table with the consumption-equivalent welfare level decomposition
 table = open(os.path.join(tables, 'Welfare decompositon with caption.tex'), 'w')
-lines = [r'\begin{table}[H]',
+lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\begin{threeparttable}',
          r'\caption{Welfare decomposition}',
@@ -922,7 +922,7 @@ table.close()
 
 # Write a table with the consumption-equivalent welfare level decomposition
 table = open(os.path.join(tables, 'Welfare decompositon.tex'), 'w')
-lines = [r'\begin{table}[H]',
+lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\begin{threeparttable}',
          r'\begin{tabular}{lccccccc}',
@@ -1017,7 +1017,7 @@ cps = cps.loc[cps.year.isin([1984, 2019]) & cps.race.isin([1, 2]), :].groupby(['
 
 # Write a table with the consumption-equivalent welfare growth decomposition
 table = open(os.path.join(tables, 'Welfare growth with caption.tex'), 'w')
-lines = [r'\begin{table}[H]',
+lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\begin{threeparttable}',
          r'\caption{Welfare growth between 1984 and 2019 (\%)}',
@@ -1064,7 +1064,7 @@ table.close()
 
 # Write a table with the consumption-equivalent welfare growth decomposition
 table = open(os.path.join(tables, 'Welfare growth.tex'), 'w')
-lines = [r'\begin{table}[H]',
+lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\begin{threeparttable}',
          r'\begin{tabular}{lcccccccc}',
@@ -1164,7 +1164,7 @@ for race in [1, 2]:
 
 # Write a table with the consumption-equivalent welfare growth decomposition
 table = open(os.path.join(tables, 'Welfare growth historical with caption.tex'), 'w')
-lines = [r'\begin{table}[H]',
+lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\begin{threeparttable}',
          r'\caption{Welfare growth between 1940 and 2019 (\%)}',
@@ -1215,7 +1215,7 @@ table.close()
 
 # Write a table with the consumption-equivalent welfare growth decomposition
 table = open(os.path.join(tables, 'Welfare growth historical.tex'), 'w')
-lines = [r'\begin{table}[H]',
+lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\begin{threeparttable}',
          r'\begin{tabular}{lcccccccccc}',
