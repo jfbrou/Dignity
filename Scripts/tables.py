@@ -482,7 +482,7 @@ for latin in [1, -1]:
                                                                       inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)[i]
 
 # Write a table with the consumption-equivalent welfare growth decomposition
-table = open(os.path.join(tables, 'Welfare loss 2020 with caption.tex'), 'w')
+table = open(os.path.join(tables, 'Welfare loss 2020.tex'), 'w')
 lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\begin{threeparttable}',
@@ -543,7 +543,7 @@ table.write('\n'.join(lines))
 table.close()
 
 # Write a table with the consumption-equivalent welfare growth decomposition
-table = open(os.path.join(tables, 'Welfare loss 2020.tex'), 'w')
+table = open(os.path.join(tables, 'Welfare loss 2020 slides.tex'), 'w')
 lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\begin{threeparttable}',
@@ -592,10 +592,6 @@ lines = [r'\begin{table}[ht]',
          r'\hline',
          r'\hline',
          r'\end{tabular}',
-         r'\begin{tablenotes}[flushleft]',
-         r'\footnotesize',
-         r'\item Note: The last five columns report the additive decomposition in equation~\eqref{eq:lambda}, where $\sigma$ denotes the inequality terms.',
-         r'\end{tablenotes}',
          r'\label{tab:Welfare loss 2020}',
          r'\end{threeparttable}',
          r'\end{table}']
@@ -737,7 +733,7 @@ covid = covid.astype({'covid19_weighted': 'int'})
 deaths = covid.loc[(covid.raceethnicity == 'All Race/Ethnicity Groups') & (covid.sex == 'All Sexes') & (covid.agegroup == 'All Ages'), 'covid19_weighted'].sum()
 
 # Write a table with the COVID-19 welfare statistics
-table = open(os.path.join(tables, 'Welfare and COVID-19.tex'), 'w')
+table = open(os.path.join(tables, 'Welfare and COVID-19 slides.tex'), 'w')
 lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\begin{threeparttable}',
@@ -780,7 +776,7 @@ table.write('\n'.join(lines))
 table.close()
 
 # Write a table with the COVID-19 welfare statistics
-table = open(os.path.join(tables, 'Welfare and COVID-19 with caption.tex'), 'w')
+table = open(os.path.join(tables, 'Welfare and COVID-19.tex'), 'w')
 lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\caption{Welfare and COVID-19}',
@@ -875,7 +871,7 @@ for year in years:
                                                inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)[i]
 
 # Write a table with the consumption-equivalent welfare level decomposition
-table = open(os.path.join(tables, 'Welfare decompositon with caption.tex'), 'w')
+table = open(os.path.join(tables, 'Welfare decompositon.tex'), 'w')
 lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\begin{threeparttable}',
@@ -921,7 +917,7 @@ table.write('\n'.join(lines))
 table.close()
 
 # Write a table with the consumption-equivalent welfare level decomposition
-table = open(os.path.join(tables, 'Welfare decompositon.tex'), 'w')
+table = open(os.path.join(tables, 'Welfare decompositon slides.tex'), 'w')
 lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\begin{threeparttable}',
@@ -955,10 +951,6 @@ lines = [r'\begin{table}[ht]',
          r'\hline',
          r'\hline',
          r'\end{tabular}',
-         r'\begin{tablenotes}[flushleft]',
-         r'\footnotesize',
-         r'\item Note: The last five columns report the additive decomposition in equation~\eqref{eq:lambda}, where $\sigma$ denotes the inequality terms.',
-         r'\end{tablenotes}',
          r'\end{threeparttable}',
          r'\end{table}']
 table.write('\n'.join(lines))
@@ -1016,7 +1008,7 @@ cps.loc[:, 'year'] = cps.year - 1
 cps = cps.loc[cps.year.isin([1984, 2019]) & cps.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'earnings': np.average(x.earnings, weights=x.weight)}))
 
 # Write a table with the consumption-equivalent welfare growth decomposition
-table = open(os.path.join(tables, 'Welfare growth with caption.tex'), 'w')
+table = open(os.path.join(tables, 'Welfare growth.tex'), 'w')
 lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\begin{threeparttable}',
@@ -1063,7 +1055,7 @@ table.write('\n'.join(lines))
 table.close()
 
 # Write a table with the consumption-equivalent welfare growth decomposition
-table = open(os.path.join(tables, 'Welfare growth.tex'), 'w')
+table = open(os.path.join(tables, 'Welfare growth slides.tex'), 'w')
 lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\begin{threeparttable}',
@@ -1098,10 +1090,6 @@ lines = [r'\begin{table}[ht]',
          r'\hline',
          r'\hline',
          r'\end{tabular}',
-         r'\begin{tablenotes}[flushleft]',
-         r'\footnotesize',
-         r'\item Note: The last five columns report the additive decomposition in equation~\eqref{eq:lambda}, where $\sigma$ denotes the inequality terms.',
-         r'\end{tablenotes}',
          r'\label{tab:Welfare growth}',
          r'\end{threeparttable}',
          r'\end{table}']
@@ -1163,7 +1151,7 @@ for race in [1, 2]:
                                                                       S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal)[i]
 
 # Write a table with the consumption-equivalent welfare growth decomposition
-table = open(os.path.join(tables, 'Welfare growth historical with caption.tex'), 'w')
+table = open(os.path.join(tables, 'Welfare growth historical.tex'), 'w')
 lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\begin{threeparttable}',
@@ -1214,7 +1202,7 @@ table.write('\n'.join(lines))
 table.close()
 
 # Write a table with the consumption-equivalent welfare growth decomposition
-table = open(os.path.join(tables, 'Welfare growth historical.tex'), 'w')
+table = open(os.path.join(tables, 'Welfare growth historical slides.tex'), 'w')
 lines = [r'\begin{table}[ht]',
          r'\centering',
          r'\begin{threeparttable}',
