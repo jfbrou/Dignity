@@ -4,8 +4,6 @@ import pandas as pd
 pd.options.mode.chained_assignment = None
 import beapy
 import statsmodels.formula.api as smf
-from dotenv import load_dotenv
-load_dotenv()
 import os
 import calendar
 
@@ -14,7 +12,7 @@ from functions import *
 from directories import *
 
 # Start the BEA client
-bea = beapy.BEA(key=os.getenv('bea_api_key'))
+bea = beapy.BEA(key=os.getenv("bea_api_key"))
 
 ################################################################################
 #                                                                              #
@@ -23,7 +21,7 @@ bea = beapy.BEA(key=os.getenv('bea_api_key'))
 ################################################################################
 
 # Define a list of years
-years = range(1984, 2020 + 1)
+years = range(1984, 2022 + 1)
 
 # Define the variable columns of the MEMI data files
 columns = [None] * len(years)
@@ -50,7 +48,7 @@ for year in years:
                                       (202, 203), # RACE
                                       (244, 245), # SEX
                                       (74, 75)]   # CU_CODE
-    elif (year >= 1986) & (year <= 1994):
+    elif (year >= 1986) & (year <= 1995):
         columns[years.index(year)] = [(0, 8),     # NEWID
                                       (8, 11),    # AGE
                                       (82, 84),   # EDUCA
@@ -61,92 +59,95 @@ for year in years:
                                       (196, 197), # RACE
                                       (238, 239), # SEX
                                       (74, 75)]   # CU_CODE
-    elif ((year >= 1995) & (year <= 2002)):
-        columns[years.index(year)] = ['NEWID',
-                                      'AGE',
-                                      'EDUCA',
-                                      'INCWEEKQ',
-                                      'INC_HRSQ',
-                                      'MEMBNO',
-                                      'ORIGINR',
-                                      'RACE',
-                                      'SEX',
-                                      'CU_CODE']
+    elif ((year >= 1996) & (year <= 2002)):
+        columns[years.index(year)] = ["NEWID",
+                                      "AGE",
+                                      "EDUCA",
+                                      "INCWEEKQ",
+                                      "INC_HRSQ",
+                                      "MEMBNO",
+                                      "ORIGINR",
+                                      "RACE",
+                                      "SEX",
+                                      "CU_CODE"]
     else:
-        columns[years.index(year)] = ['NEWID',
-                                      'AGE',
-                                      'EDUCA',
-                                      'INCWEEKQ',
-                                      'INC_HRSQ',
-                                      'MEMBNO',
-                                      'HORIGIN',
-                                      'MEMBRACE',
-                                      'RC_WHITE',
-                                      'RC_BLACK',
-                                      'RC_NATAM',
-                                      'RC_ASIAN',
-                                      'RC_PACIL',
-                                      'SEX',
-                                      'CU_CODE']
+        columns[years.index(year)] = ["NEWID",
+                                      "AGE",
+                                      "EDUCA",
+                                      "INCWEEKQ",
+                                      "INC_HRSQ",
+                                      "MEMBNO",
+                                      "HORIGIN",
+                                      "MEMBRACE",
+                                      "RC_WHITE",
+                                      "RC_BLACK",
+                                      "RC_NATAM",
+                                      "RC_ASIAN",
+                                      "RC_PACIL",
+                                      "SEX",
+                                      "CU_CODE"]
 
 # Define the variable names of the MEMI data files
-names = ['NEWID',
-         'AGE',
-         'EDUCA',
-         'INC_HRSQ',
-         'INCWEEKQ',
-         'MEMBNO',
-         'ORIGINR',
-         'RACE',
-         'SEX',
-         'CU_CODE']
+names = [None] * len(years)
+for year in years:
+    if year <= 2002:
+        names[years.index(year)] = ["NEWID",
+                                    "AGE",
+                                    "EDUCA",
+                                    "INC_HRSQ",
+                                    "INCWEEKQ",
+                                    "MEMBNO",
+                                    "ORIGINR",
+                                    "RACE",
+                                    "SEX",
+                                    "CU_CODE"]
+    else:
+        names[years.index(year)] = ["NEWID",
+                                    "AGE",
+                                    "EDUCA",
+                                    "INC_HRSQ",
+                                    "INCWEEKQ",
+                                    "MEMBNO",
+                                    "HORIGIN",
+                                    "MEMBRACE",
+                                    "RC_WHITE",
+                                    "RC_BLACK",
+                                    "RC_NATAM",
+                                    "RC_ASIAN",
+                                    "RC_PACIL",
+                                    "SEX",
+                                    "CU_CODE"]
 
 # Define the variable types of the MEMI data files
 types = [None] * len(years)
 for year in years:
     if year <= 2002:
-        types[years.index(year)] = {'NEWID':    'str',
-                                    'AGE':      'int',
-                                    'EDUCA':    'float',
-                                    'INC_HRSQ': 'str',
-                                    'INCWEEKQ': 'str',
-                                    'MEMBNO':   'int',
-                                    'ORIGINR':  'int',
-                                    'RACE':     'int',
-                                    'SEX':      'int',
-                                    'CU_CODE':  'int'}
-    elif year == 2015:
-        types[years.index(year)] = {'NEWID':    'str',
-                                    'AGE':      'str',
-                                    'EDUCA':    'float',
-                                    'INC_HRSQ': 'str',
-                                    'INCWEEKQ': 'str',
-                                    'MEMBNO':   'int',
-                                    'HORIGIN':  'int',
-                                    'MEMBRACE': 'int',
-                                    'RC_WHITE': 'float',
-                                    'RC_BLACK': 'float',
-                                    'RC_NATAM': 'float',
-                                    'RC_ASIAN': 'float',
-                                    'RC_PACIL': 'float',
-                                    'SEX':      'int',
-                                    'CU_CODE':  'int'}
+        types[years.index(year)] = {"NEWID":    "str",
+                                    "AGE":      "float",
+                                    "EDUCA":    "float",
+                                    "INC_HRSQ": "str",
+                                    "INCWEEKQ": "str",
+                                    "MEMBNO":   "int",
+                                    "ORIGINR":  "int",
+                                    "RACE":     "int",
+                                    "SEX":      "int",
+                                    "CU_CODE":  "int"}
     else:
-        types[years.index(year)] = {'NEWID':    'str',
-                                    'AGE':      'int',
-                                    'EDUCA':    'float',
-                                    'INC_HRSQ': 'str',
-                                    'INCWEEKQ': 'str',
-                                    'MEMBNO':   'int',
-                                    'HORIGIN':  'int',
-                                    'MEMBRACE': 'int',
-                                    'RC_WHITE': 'float',
-                                    'RC_BLACK': 'float',
-                                    'RC_NATAM': 'float',
-                                    'RC_ASIAN': 'float',
-                                    'RC_PACIL': 'float',
-                                    'SEX':      'int',
-                                    'CU_CODE':  'int'}
+        types[years.index(year)] = {"NEWID":    "str",
+                                    "AGE":      "float",
+                                    "EDUCA":    "float",
+                                    "INC_HRSQ": "str",
+                                    "INCWEEKQ": "str",
+                                    "MEMBNO":   "int",
+                                    "HORIGIN":  "int",
+                                    "MEMBRACE": "int",
+                                    "RC_WHITE": "float",
+                                    "RC_BLACK": "float",
+                                    "RC_NATAM": "float",
+                                    "RC_ASIAN": "float",
+                                    "RC_PACIL": "float",
+                                    "SEX":      "int",
+                                    "CU_CODE":  "int"}
 
 # Define a race encoding
 race_map = [None] * len(years)
@@ -242,20 +243,32 @@ for year in years:
     # Initialize a data frame
     df = pd.DataFrame()
 
-    # Load the data
-    for interview in range(1, 5 + 1):
-        if (year >= 1984) & (year <= 1994):
-            df_memi = pd.read_fwf(os.path.join(cex_r_data, 'CEX' + str(year), 'memi' + str(interview) + '.txt'), colspecs=columns[years.index(year)], names=names, dtype=types[years.index(year)])
-            df_memi.loc[:, 'interview'] = interview
-        elif (year == 2003) & (interview == 1):
-            df_memi = pd.read_csv(os.path.join(cex_r_data, 'CEX' + str(year), 'memi' + str(interview) + '.csv'), usecols=columns[years.index(year - 1)], dtype=types[years.index(year - 1)]).rename(columns={'RACE': 'MEMBRACE', 'ORIGINR': 'HORIGIN'})
-            df_memi.loc[:, 'interview'] = interview
+    for interview in range(2, 5 + 1):
+        if (year >= 1984) & (year <= 1995):
+            if interview == 5:
+                suffix = str(year + 1)[2:] + "1" + ".txt"
+            else:
+                suffix = str(year)[2:] + str(interview) + ".txt"
+            df_memi = pd.read_fwf(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "membi" + suffix), colspecs=columns[years.index(year)], names=names[years.index(year)])
+            df_memi = df_memi.astype(types[years.index(year)])
+            df_memi.loc[:, "interview"] = interview
+        elif (year == 2004) | (year == 2011) | (year == 2014) | (year == 2015):
+            if interview == 5:
+                suffix = str(year + 1)[2:] + "1" + ".dta"
+            else:
+                suffix = str(year)[2:] + str(interview) + ".dta"
+            df_memi = pd.read_stata(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "memi" + suffix), columns=[string.lower() for string in columns[years.index(year)]]).rename(columns=dict(zip([string.lower() for string in columns[years.index(year)]], columns[years.index(year)])))
+            df_memi = df_memi.replace("", np.nan)
+            df_memi = df_memi.astype(types[years.index(year)])
+            df_memi.loc[:, "interview"] = interview
         else:
-            df_memi = pd.read_csv(os.path.join(cex_r_data, 'CEX' + str(year), 'memi' + str(interview) + '.csv'), usecols=columns[years.index(year)], dtype=types[years.index(year)])
-            df_memi.loc[:, 'interview'] = interview
-
-        # Append the data frames for all interviews
-        df = df.append(df_memi, ignore_index=True)
+            if interview == 5:
+                suffix = str(year + 1)[2:] + "1" + ".csv"
+            else:
+                suffix = str(year)[2:] + str(interview) + ".csv"
+            df_memi = pd.read_csv(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "memi" + suffix), usecols=columns[years.index(year)], dtype=types[years.index(year)])
+            df_memi.loc[:, "interview"] = interview
+        df = pd.concat([df, df_memi], ignore_index=True)
 
     # Create a unique identifier for each family and family member since the last digit of NEWID encodes the interview number
     df.loc[:, 'NEWID'] = df.NEWID.apply(lambda x: x.zfill(8))
@@ -299,7 +312,7 @@ for year in years:
         second.loc[:, 'race_weight'] = second.race_weight / 2
         df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & (df.RC_BLACK == 2) & df.RC_NATAM.isna() & df.RC_ASIAN.isna() & df.RC_PACIL.isna(), 'RACE'] = 1
         df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & (df.RC_BLACK == 2) & df.RC_NATAM.isna() & df.RC_ASIAN.isna() & df.RC_PACIL.isna(), 'race_weight'] = df.race_weight / 2
-        df = df.append(second, ignore_index=True)
+        df = pd.concat([df, second], ignore_index=True)
 
         # Split the White and Native American observations in each category
         second = df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & df.RC_BLACK.isna() & (df.RC_NATAM == 3) & df.RC_ASIAN.isna() & df.RC_PACIL.isna(), :].copy(deep=True)
@@ -307,7 +320,7 @@ for year in years:
         second.loc[:, 'race_weight'] = second.race_weight / 2
         df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & df.RC_BLACK.isna() & (df.RC_NATAM == 3) & df.RC_ASIAN.isna() & df.RC_PACIL.isna(), 'RACE'] = 1
         df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & df.RC_BLACK.isna() & (df.RC_NATAM == 3) & df.RC_ASIAN.isna() & df.RC_PACIL.isna(), 'race_weight'] = df.race_weight / 2
-        df = df.append(second, ignore_index=True)
+        df = pd.concat([df, second], ignore_index=True)
 
         # Split the White and Asian or Pacific Islander observations in each category
         second = df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & df.RC_BLACK.isna() & df.RC_NATAM.isna() & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), :].copy(deep=True)
@@ -315,7 +328,7 @@ for year in years:
         second.loc[:, 'race_weight'] = second.race_weight / 2
         df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & df.RC_BLACK.isna() & df.RC_NATAM.isna() & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), 'RACE'] = 1
         df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & df.RC_BLACK.isna() & df.RC_NATAM.isna() & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), 'race_weight'] = df.race_weight / 2
-        df = df.append(second, ignore_index=True)
+        df = pd.concat([df, second], ignore_index=True)
 
         # Split the Black and Native American observations in each category
         second = df.loc[(df.RACE == 5) & df.RC_WHITE.isna() & (df.RC_BLACK == 2) & (df.RC_NATAM == 3) & df.RC_ASIAN.isna() & df.RC_PACIL.isna(), :].copy(deep=True)
@@ -323,7 +336,7 @@ for year in years:
         second.loc[:, 'race_weight'] = second.race_weight / 2
         df.loc[(df.RACE == 5) & df.RC_WHITE.isna() & (df.RC_BLACK == 2) & (df.RC_NATAM == 3) & df.RC_ASIAN.isna() & df.RC_PACIL.isna(), 'RACE'] = 2
         df.loc[(df.RACE == 5) & df.RC_WHITE.isna() & (df.RC_BLACK == 2) & (df.RC_NATAM == 3) & df.RC_ASIAN.isna() & df.RC_PACIL.isna(), 'race_weight'] = df.race_weight / 2
-        df = df.append(second, ignore_index=True)
+        df = pd.concat([df, second], ignore_index=True)
 
         # Split the Black and Asian or Pacific Islander observations in each category
         second = df.loc[(df.RACE == 5) & df.RC_WHITE.isna() & (df.RC_BLACK == 2) & df.RC_NATAM.isna() & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), :].copy(deep=True)
@@ -331,7 +344,7 @@ for year in years:
         second.loc[:, 'race_weight'] = second.race_weight / 2
         df.loc[(df.RACE == 5) & df.RC_WHITE.isna() & (df.RC_BLACK == 2) & df.RC_NATAM.isna() & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), 'RACE'] = 2
         df.loc[(df.RACE == 5) & df.RC_WHITE.isna() & (df.RC_BLACK == 2) & df.RC_NATAM.isna() & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), 'race_weight'] = df.race_weight / 2
-        df = df.append(second, ignore_index=True)
+        df = pd.concat([df, second], ignore_index=True)
 
         # Split the Native American and Asian or Pacific Islander observations in each category
         second = df.loc[(df.RACE == 5) & df.RC_WHITE.isna() & df.RC_BLACK.isna() & (df.RC_NATAM == 3) & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), :].copy(deep=True)
@@ -339,7 +352,7 @@ for year in years:
         second.loc[:, 'race_weight'] = second.race_weight / 2
         df.loc[(df.RACE == 5) & df.RC_WHITE.isna() & df.RC_BLACK.isna() & (df.RC_NATAM == 3) & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), 'RACE'] = 3
         df.loc[(df.RACE == 5) & df.RC_WHITE.isna() & df.RC_BLACK.isna() & (df.RC_NATAM == 3) & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), 'race_weight'] = df.race_weight / 2
-        df = df.append(second, ignore_index=True)
+        df = pd.concat([df, second], ignore_index=True)
 
         # Split the White, Black and Native American observations in each category
         second = df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & (df.RC_BLACK == 2) & (df.RC_NATAM == 3) & df.RC_ASIAN.isna() & df.RC_PACIL.isna(), :].copy(deep=True)
@@ -350,7 +363,7 @@ for year in years:
         third.loc[:, 'race_weight'] = third.race_weight / 3
         df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & (df.RC_BLACK == 2) & (df.RC_NATAM == 3) & df.RC_ASIAN.isna() & df.RC_PACIL.isna(), 'RACE'] = 1
         df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & (df.RC_BLACK == 2) & (df.RC_NATAM == 3) & df.RC_ASIAN.isna() & df.RC_PACIL.isna(), 'race_weight'] = df.race_weight / 3
-        df = df.append(second.append(third, ignore_index=True), ignore_index=True)
+        df = pd.concat([df, second, third], ignore_index=True)
 
         # Split the White, Black and Asian or Pacific Islander observations in each category
         second = df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & (df.RC_BLACK == 2) & df.RC_NATAM.isna() & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), :].copy(deep=True)
@@ -361,7 +374,7 @@ for year in years:
         third.loc[:, 'race_weight'] = third.race_weight / 3
         df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & (df.RC_BLACK == 2) & df.RC_NATAM.isna() & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), 'RACE'] = 1
         df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & (df.RC_BLACK == 2) & df.RC_NATAM.isna() & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), 'race_weight'] = df.race_weight / 3
-        df = df.append(second.append(third, ignore_index=True), ignore_index=True)
+        df = pd.concat([df, second, third], ignore_index=True)
 
         # Split the White, Native American and Asian or Pacific Islander observations in each category
         second = df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & df.RC_BLACK.isna() & (df.RC_NATAM == 3) & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), :].copy(deep=True)
@@ -372,7 +385,7 @@ for year in years:
         third.loc[:, 'race_weight'] = third.race_weight / 3
         df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & df.RC_BLACK.isna() & (df.RC_NATAM == 3) & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), 'RACE'] = 1
         df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & df.RC_BLACK.isna() & (df.RC_NATAM == 3) & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), 'race_weight'] = df.race_weight / 3
-        df = df.append(second.append(third, ignore_index=True), ignore_index=True)
+        df = pd.concat([df, second, third], ignore_index=True)
 
         # Split the Black, Native American and Asian or Pacific Islander observations in each category
         second = df.loc[(df.RACE == 5) & df.RC_WHITE.isna() & (df.RC_BLACK == 2) & (df.RC_NATAM == 3) & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), :].copy(deep=True)
@@ -383,7 +396,7 @@ for year in years:
         third.loc[:, 'race_weight'] = third.race_weight / 3
         df.loc[(df.RACE == 5) & df.RC_WHITE.isna() & (df.RC_BLACK == 2) & (df.RC_NATAM == 3) & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), 'RACE'] = 2
         df.loc[(df.RACE == 5) & df.RC_WHITE.isna() & (df.RC_BLACK == 2) & (df.RC_NATAM == 3) & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), 'race_weight'] = df.race_weight / 3
-        df = df.append(second.append(third, ignore_index=True), ignore_index=True)
+        df = pd.concat([df, second, third], ignore_index=True)
 
         # Split the White, Black, Native American and Asian or Pacific Islander observations in each category
         second = df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & (df.RC_BLACK == 2) & (df.RC_NATAM == 3) & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), :].copy(deep=True)
@@ -397,7 +410,7 @@ for year in years:
         fourth.loc[:, 'race_weight'] = fourth.race_weight / 4
         df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & (df.RC_BLACK == 2) & (df.RC_NATAM == 3) & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), 'RACE'] = 1
         df.loc[(df.RACE == 5) & (df.RC_WHITE == 1) & (df.RC_BLACK == 2) & (df.RC_NATAM == 3) & ((df.RC_ASIAN == 4) | (df.RC_PACIL == 5)), 'race_weight'] = df.race_weight / 4
-        df = df.append(second.append(third.append(fourth, ignore_index=True), ignore_index=True), ignore_index=True)
+        df = pd.concat([df, second, third, fourth], ignore_index=True)
 
         # Drop the unknown race observations and multi-race variables
         df = df.loc[df.RACE != 5, :]
@@ -407,11 +420,7 @@ for year in years:
     df.loc[:, 'member_id'] = df.member_id + df.RACE.astype('int').astype('str')
 
     # Recode the latin origin variable
-    if year == 2003:
-        df.loc[df.interview == 1, 'HORIGIN'] = df.HORIGIN.map(latin_map[years.index(year - 1)])
-        df.loc[df.interview != 1, 'HORIGIN'] = df.HORIGIN.map(latin_map[years.index(year)])
-    else:
-        df.loc[:, 'HORIGIN'] = df.HORIGIN.map(latin_map[years.index(year)])
+    df.loc[:, 'HORIGIN'] = df.HORIGIN.map(latin_map[years.index(year)])
 
     # Recode the education variable
     df.loc[:, 'EDUCA'] = df.EDUCA.map(education_map[years.index(year)])
@@ -438,7 +447,7 @@ for year in years:
 
     # Create the year variable and append the data frames for all years
     df.loc[:, 'year'] = year
-    cex_memi = cex_memi.append(df, ignore_index=True)
+    cex_memi = pd.concat([cex_memi, df], ignore_index=True)
 
 ################################################################################
 #                                                                              #

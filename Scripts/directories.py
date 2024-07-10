@@ -2,11 +2,11 @@
 import os
 
 # Identify the storage directory
-path = 'D://Dignity'
+path = "/Users/jfbrou/Library/CloudStorage/Dropbox/Dignity/Github"
 
 # Identify the data directory
-r_data = os.path.join(path, 'Data//Raw')
-f_data = os.path.join(path, 'Data//Final')
+r_data = os.path.join(path, "Data/Raw")
+f_data = os.path.join(path, "Data/Final")
 
 # Identify the directory containing the data files from the American Community Surveys (ACS) and U.S. censuses
 acs_r_data = os.path.join(r_data, 'ACS')

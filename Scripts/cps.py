@@ -3,8 +3,6 @@ import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
 import beapy
-from dotenv import load_dotenv
-load_dotenv()
 import os
 import calendar
 
