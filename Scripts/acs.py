@@ -4,8 +4,6 @@ import pandas as pd
 pd.options.mode.chained_assignment = None
 import beapy
 import statsmodels.api as sm
-from dotenv import load_dotenv
-load_dotenv()
 import os
 import calendar
 
@@ -14,10 +12,10 @@ from functions import *
 from directories import *
 
 # Start the BEA client
-bea = beapy.BEA(key=os.getenv('bea_api_key'))
+bea = beapy.BEA(key=bea_api_key)
 
 # Define a list of years
-years = list(range(1940, 1990 + 1, 10)) + list(range(2000, 2020 + 1))
+years = list(range(1940, 1990 + 1, 10)) + list(range(2000, 2023 + 1))
 
 # Define variable columns
 columns = ['YEAR',
@@ -145,19 +143,19 @@ BEA = pd.DataFrame(data={'YEAR': years, 'consumption_nipa': pce})
 
 # Define a function to read the data by year
 def year_chunk(file, chunksize=1e6):
-    iterator = pd.read_csv(file, compression='gzip', header=0, usecols=columns, dtype=types, iterator=True, chunksize=chunksize)
+    iterator = pd.read_csv(file, header=0, usecols=columns, dtype=types, iterator=True, chunksize=chunksize)
     chunk = pd.DataFrame()
     for df in iterator:
         unique_years = np.sort(df.YEAR.unique())
         if len(unique_years) == 1:
-            chunk = chunk.append(df, ignore_index=True)
+            chunk = pd.concat([chunk, df], ignore_index=True)
         else:
-            chunk = chunk.append(df.loc[df.YEAR == unique_years[0], :], ignore_index=True)
+            chunk = pd.concat([chunk, df.loc[df.YEAR == unique_years[0], :]], ignore_index=True)
             yield chunk
             chunk = pd.DataFrame()
-            chunk = chunk.append(df.loc[df.YEAR == unique_years[1], :], ignore_index=True)
+            chunk = pd.concat([chunk, df.loc[df.YEAR == unique_years[1], :]], ignore_index=True)
     yield chunk
-chunks = year_chunk(os.path.join(acs_r_data, 'acs.csv.gz'), chunksize=1e6)
+chunks = year_chunk(os.path.join(acs_r_data, 'acs.csv'), chunksize=1e6)
 
 # Initialize a data frame
 acs = pd.DataFrame()
@@ -191,7 +189,7 @@ for chunk in chunks:
 	second.loc[:, 'PERWT'] = second.PERWT / 2
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'RACE'] = 1
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'PERWT'] = chunk.PERWT / 2
-	chunk = chunk.append(second, ignore_index=True)
+	chunk = pd.concat([chunk, second], ignore_index=True)
 
 	# Split the White and Native American observations in each category
 	second = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), :].copy(deep=True)
@@ -199,7 +197,7 @@ for chunk in chunks:
 	second.loc[:, 'PERWT'] = second.PERWT / 2
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'RACE'] = 1
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'PERWT'] = chunk.PERWT / 2
-	chunk = chunk.append(second, ignore_index=True)
+	chunk = pd.concat([chunk, second], ignore_index=True)
 
 	# Split the White and Asian or Pacific Islander observations in each category
 	second = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), :].copy(deep=True)
@@ -207,7 +205,7 @@ for chunk in chunks:
 	second.loc[:, 'PERWT'] = second.PERWT / 2
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 1
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'PERWT'] = chunk.PERWT / 2
-	chunk = chunk.append(second, ignore_index=True)
+	chunk = pd.concat([chunk, second], ignore_index=True)
 
 	# Split the Black and Native American observations in each category
 	second = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), :].copy(deep=True)
@@ -215,7 +213,7 @@ for chunk in chunks:
 	second.loc[:, 'PERWT'] = second.PERWT / 2
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'RACE'] = 2
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'PERWT'] = chunk.PERWT / 2
-	chunk = chunk.append(second, ignore_index=True)
+	chunk = pd.concat([chunk, second], ignore_index=True)
 
 	# Split the Black and Asian or Pacific Islander observations in each category
 	second = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), :].copy(deep=True)
@@ -223,7 +221,7 @@ for chunk in chunks:
 	second.loc[:, 'PERWT'] = second.PERWT / 2
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 2
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'PERWT'] = chunk.PERWT / 2
-	chunk = chunk.append(second, ignore_index=True)
+	chunk = pd.concat([chunk, second], ignore_index=True)
 
 	# Split the Native American and Asian or Pacific Islander observations in each category
 	second = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), :].copy(deep=True)
@@ -231,7 +229,7 @@ for chunk in chunks:
 	second.loc[:, 'PERWT'] = second.PERWT / 2
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 3
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'PERWT'] = chunk.PERWT / 2
-	chunk = chunk.append(second, ignore_index=True)
+	chunk = pd.concat([chunk, second], ignore_index=True)
 
 	# Split the White, Black and Native American observations in each category
 	second = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), :].copy(deep=True)
@@ -242,7 +240,7 @@ for chunk in chunks:
 	third.loc[:, 'PERWT'] = third.PERWT / 3
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'RACE'] = 1
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'PERWT'] = chunk.PERWT / 3
-	chunk = chunk.append(second.append(third, ignore_index=True), ignore_index=True)
+	chunk = pd.concat([chunk, second, third], ignore_index=True)
 
 	# Split the White, Black and Asian or Pacific Islander observations in each category
 	second = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), :].copy(deep=True)
@@ -253,7 +251,7 @@ for chunk in chunks:
 	third.loc[:, 'PERWT'] = third.PERWT / 3
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 1
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'PERWT'] = chunk.PERWT / 3
-	chunk = chunk.append(second.append(third, ignore_index=True), ignore_index=True)
+	chunk = pd.concat([chunk, second, third], ignore_index=True)
 
 	# Split the White, Native American and Asian or Pacific Islander observations in each category
 	second = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), :].copy(deep=True)
@@ -264,7 +262,7 @@ for chunk in chunks:
 	third.loc[:, 'PERWT'] = third.PERWT / 3
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 1
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'PERWT'] = chunk.PERWT / 3
-	chunk = chunk.append(second.append(third, ignore_index=True), ignore_index=True)
+	chunk = pd.concat([chunk, second, third], ignore_index=True)
 
 	# Split the Black, Native American and Asian or Pacific Islander observations in each category
 	second = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), :].copy(deep=True)
@@ -275,7 +273,7 @@ for chunk in chunks:
 	third.loc[:, 'PERWT'] = third.PERWT / 3
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 2
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'PERWT'] = chunk.PERWT / 3
-	chunk = chunk.append(second.append(third, ignore_index=True), ignore_index=True)
+	chunk = pd.concat([chunk, second, third], ignore_index=True)
 
 	# Split the White, Black, Native American and Asian or Pacific Islander observations in each category
 	second = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), :].copy(deep=True)
@@ -289,7 +287,7 @@ for chunk in chunks:
 	fourth.loc[:, 'PERWT'] = fourth.PERWT / 4
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 1
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'PERWT'] = chunk.PERWT / 4
-	chunk = chunk.append(second.append(third.append(fourth, ignore_index=True), ignore_index=True), ignore_index=True)
+	chunk = pd.concat([chunk, second, third, fourth], ignore_index=True)
 
 	# Drop the unknown race observations and multi-race variables
 	chunk = chunk.loc[chunk.RACE.notna() & (chunk.RACE != 5), :]
@@ -443,7 +441,7 @@ for chunk in chunks:
 		chunk = chunk.groupby(['year', 'race', 'latin', 'gender', 'education', 'age'], as_index=False).apply(f)
 
 	# Append the data frames for all chunks
-	acs = acs.append(chunk, ignore_index=True)
+	acs = pd.concat([acs, chunk], ignore_index=True)
 
 # Calculate the ratio of the average of the first leisure variable to the average of the other leisure variables in 1980 and 1990
 sample = ((acs.year == 1980) | (acs.year == 1990))
