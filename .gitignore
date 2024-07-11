@@ -1,6 +1,7 @@
-Scripts/.ipynb_checkpoints/
-Scripts/__pycache__/
-Scripts/notebook.ipynb
-Scripts/.env
+Programs/.ipynb_checkpoints/
+Programs/__pycache__/
+Programs/notebook.ipynb
 Graveyard/
 Data/
+Figures/
+Tables/
