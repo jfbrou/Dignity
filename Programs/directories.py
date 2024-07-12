@@ -2,7 +2,7 @@
 import os
 
 # Identify the storage directory
-path = "/Users/jfbrou/Library/CloudStorage/Dropbox/Dignity/Github"
+path = "/Users/jfbrou/Library/CloudStorage/Dropbox/GitHub/Dignity"
 
 # Define the BEA API key
 bea_api_key = "59DDFDFD-09EB-4529-B4DB-08880867FAEB"

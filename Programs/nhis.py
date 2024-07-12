@@ -121,7 +121,7 @@ limited_any_map = {10: 1,
 				   22: np.nan}
 
 # Load the NHIS data
-nhis = pd.read_csv(os.path.join(nhis_r_data, 'nhis.csv.gz'), compression='gzip', header=0, usecols=columns)
+nhis = pd.read_csv(os.path.join(nhis_r_data, 'nhis.csv'), header=0, usecols=columns)
 
 # Drop observations with not sampling weights
 nhis = nhis.dropna(subset=['PERWEIGHT'])
