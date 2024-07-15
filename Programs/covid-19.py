@@ -20,7 +20,8 @@ from directories import *
 ################################################################################
 
 # Retrieve the COVID-19 mortality data
-client = Socrata('data.cdc.gov', os.getenv('cdc_api_key'))
+
+client = Socrata('data.cdc.gov', cdc_api_key)
 covid = pd.DataFrame.from_records(client.get('m74n-4hbs', limit=500000)).loc[:, ['mmwryear', 'mmwrweek', 'raceethnicity', 'sex', 'agegroup', 'covid19_weighted']]
 
 # Find the first day of each week

@@ -243,10 +243,12 @@ for year in years:
     # Initialize a data frame
     df = pd.DataFrame()
 
-    for interview in range(2, 5 + 1):
+    for interview in range(1, 5 + 1):
         if (year >= 1984) & (year <= 1995):
             if interview == 5:
                 suffix = str(year + 1)[2:] + "1" + ".txt"
+            elif interview == 1:
+                suffix = str(year)[2:] + str(interview) + "x.txt"
             else:
                 suffix = str(year)[2:] + str(interview) + ".txt"
             df_memi = pd.read_fwf(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "membi" + suffix), colspecs=columns[years.index(year)], names=names[years.index(year)])
@@ -255,18 +257,37 @@ for year in years:
         elif (year == 2004) | (year == 2011) | (year == 2014) | (year == 2015):
             if interview == 5:
                 suffix = str(year + 1)[2:] + "1" + ".dta"
+            elif interview == 1:
+                suffix = str(year)[2:] + str(interview) + "x.dta"
             else:
                 suffix = str(year)[2:] + str(interview) + ".dta"
             df_memi = pd.read_stata(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "memi" + suffix), columns=[string.lower() for string in columns[years.index(year)]]).rename(columns=dict(zip([string.lower() for string in columns[years.index(year)]], columns[years.index(year)])))
             df_memi = df_memi.replace("", np.nan)
             df_memi = df_memi.astype(types[years.index(year)])
             df_memi.loc[:, "interview"] = interview
+        elif year >= 2020:
+            if interview == 5:
+                prefix = str(year)[2:]
+                suffix = str(year + 1)[2:] + "1" + ".csv"
+            elif interview == 1:
+                prefix = str(year - 1)[2:]
+                suffix = str(year)[2:] + str(interview) + ".csv"
+            else:
+                prefix = str(year)[2:]
+                suffix = str(year)[2:] + str(interview) + ".csv"
+            df_memi = pd.read_csv(os.path.join(cex_r_data, "intrvw" + prefix, "memi" + suffix), usecols=columns[years.index(year)], dtype=types[years.index(year)])
+            df_memi.loc[:, "interview"] = interview
         else:
             if interview == 5:
                 suffix = str(year + 1)[2:] + "1" + ".csv"
+            elif interview == 1:
+                suffix = str(year)[2:] + str(interview) + "x.csv"
             else:
                 suffix = str(year)[2:] + str(interview) + ".csv"
-            df_memi = pd.read_csv(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "memi" + suffix), usecols=columns[years.index(year)], dtype=types[years.index(year)])
+            if (year == 2003) & (interview == 1):
+                df_memi = pd.read_csv(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "memi" + suffix), usecols=columns[years.index(year - 1)], dtype=types[years.index(year - 1)])
+            else:
+                df_memi = pd.read_csv(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "memi" + suffix), usecols=columns[years.index(year)], dtype=types[years.index(year)])
             df_memi.loc[:, "interview"] = interview
         df = pd.concat([df, df_memi], ignore_index=True)
 
@@ -280,16 +301,18 @@ for year in years:
     df.loc[:, "interviews"] = df.loc[:, "member_id"].map(df.loc[:, "member_id"].value_counts())
 
     # Redefine the type of the age variable in 2015
-    if year == 2015:
-        df.loc[:, "AGE"] = pd.to_numeric(df.loc[:, "AGE"], errors="coerce")
-        df = df.loc[df.AGE.notna(), :]
+    df = df.loc[df.AGE.notna(), :]
 
     # Rename the race and latin origin variables
+    if year == 2003:
+        df.loc[df.interview == 1, "HORIGIN"] = df.loc[df.interview == 1, "ORIGINR"]
+        df.loc[df.interview == 1, "MEMBRACE"] = df.loc[df.interview == 1, "RACE"]
+        df = df.drop(["ORIGINR", "RACE"], axis=1)
     if year <= 2002:
         df = df.rename(columns={"ORIGINR": "HORIGIN"})
     else:
         df = df.rename(columns={"MEMBRACE": "RACE"})
-
+    
     # Recode the race variable
     df.loc[:, "race_weight"] = 1
     df.loc[:, "RACE"] = df.RACE.map(race_map[years.index(year)])
@@ -532,23 +555,42 @@ for year in years:
     df = pd.DataFrame()
 
     # Load the data
-    for interview in range(2, 5 + 1):
+    for interview in range(1, 5 + 1):
         if (year >= 1984) & (year <= 1995):
             if interview == 5:
                 suffix = str(year + 1)[2:] + "1" + ".txt"
+            elif interview == 1:
+                suffix = str(year)[2:] + str(interview) + "x.txt"
             else:
                 suffix = str(year)[2:] + str(interview) + ".txt"
             df_fmli = pd.read_fwf(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "fmlyi" + suffix), colspecs=columns[years.index(year)], names=names, dtype=types)
         elif (year == 2004) | (year == 2011) | (year == 2014) | (year == 2015):
             if interview == 5:
                 suffix = str(year + 1)[2:] + "1" + ".dta"
+            elif interview == 1:
+                suffix = str(year)[2:] + str(interview) + "x.dta"
             else:
                 suffix = str(year)[2:] + str(interview) + ".dta"
             df_fmli = pd.read_stata(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "fmli" + suffix), columns=[string.lower() for string in columns[years.index(year)]]).rename(columns=dict(zip([string.lower() for string in columns[years.index(year)]], columns[years.index(year)])))
             df_fmli = df_fmli.astype({key: types[key] for key in df_fmli.columns})
+        elif year >= 2020:
+            if interview == 5:
+                prefix = str(year)[2:]
+                suffix = str(year + 1)[2:] + "1" + ".csv"
+            elif interview == 1:
+                prefix = str(year - 1)[2:]
+                suffix = str(year)[2:] + str(interview) + ".csv"
+            else:
+                prefix = str(year)[2:]
+                suffix = str(year)[2:] + str(interview) + ".csv"
+            df_fmli = pd.read_csv(os.path.join(cex_r_data, "intrvw" + prefix, "fmli" + suffix), usecols=columns[years.index(year)])
+            df_fmli = df_fmli.replace(".", np.nan)
+            df_fmli = df_fmli.astype({key: types[key] for key in df_fmli.columns})
         else:
             if interview == 5:
                 suffix = str(year + 1)[2:] + "1" + ".csv"
+            elif interview == 1:
+                suffix = str(year)[2:] + str(interview) + "x.csv"
             else:
                 suffix = str(year)[2:] + str(interview) + ".csv"
             df_fmli = pd.read_csv(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "fmli" + suffix), usecols=columns[years.index(year)])
@@ -649,10 +691,12 @@ for year in years:
     df = pd.DataFrame()
 
     # Load the data
-    for interview in range(2, 5 + 1):
+    for interview in range(1, 5 + 1):
         if (year >= 1984) & (year <= 1995):
             if interview == 5:
                 suffix = str(year + 1)[2:] + "1" + ".txt"
+            elif interview == 1:
+                suffix = str(year)[2:] + str(interview) + "x.txt"
             else:
                 suffix = str(year)[2:] + str(interview) + ".txt"
             df_mtbi = pd.read_fwf(os.path.join(cex_r_data, 'intrvw' + str(year)[2:], 'mtabi' + suffix), colspecs=mtbi_columns[years.index(year)], names=mtbi_names, dtype=mtbi_types)
@@ -661,6 +705,8 @@ for year in years:
         elif (year == 2004) | (year == 2011) | (year == 2014) | (year == 2015):
             if interview == 5:
                 suffix = str(year + 1)[2:] + "1" + ".dta"
+            elif interview == 1:
+                suffix = str(year)[2:] + str(interview) + "x.dta"
             else:
                 suffix = str(year)[2:] + str(interview) + ".dta"
             df_mtbi = pd.read_stata(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "mtbi" + suffix), columns=[string.lower() for string in mtbi_columns[years.index(year)]]).rename(columns=dict(zip([string.lower() for string in mtbi_columns[years.index(year)]], mtbi_columns[years.index(year)])))
@@ -668,9 +714,24 @@ for year in years:
             df_mtbi = df_mtbi.astype({key: mtbi_types[key] for key in df_mtbi.columns})
             df_itbi = df_itbi.astype({key: itbi_types[key] for key in df_itbi.columns})
             df_expenditures = pd.concat([df_mtbi, df_itbi], ignore_index=True)
+        elif year >= 2020:
+            if interview == 5:
+                prefix = str(year)[2:]
+                suffix = str(year + 1)[2:] + "1" + ".csv"
+            elif interview == 1:
+                prefix = str(year - 1)[2:]
+                suffix = str(year)[2:] + str(interview) + ".csv"
+            else:
+                prefix = str(year)[2:]
+                suffix = str(year)[2:] + str(interview) + ".csv"
+            df_mtbi = pd.read_csv(os.path.join(cex_r_data, 'intrvw' + prefix, 'mtbi' + suffix), usecols=mtbi_columns[years.index(year)], dtype=mtbi_types)
+            df_itbi = pd.read_csv(os.path.join(cex_r_data, 'intrvw' + prefix, 'itbi' + suffix), usecols=itbi_columns[years.index(year)], dtype=itbi_types)
+            df_expenditures = pd.concat([df_mtbi, df_itbi], ignore_index=True)
         else:
             if interview == 5:
                 suffix = str(year + 1)[2:] + "1" + ".csv"
+            elif interview == 1:
+                suffix = str(year)[2:] + str(interview) + "x.csv"
             else:
                 suffix = str(year)[2:] + str(interview) + ".csv"
             df_mtbi = pd.read_csv(os.path.join(cex_r_data, 'intrvw' + str(year)[2:], 'mtbi' + suffix), usecols=mtbi_columns[years.index(year)], dtype=mtbi_types)

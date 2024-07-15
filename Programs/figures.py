@@ -6,8 +6,6 @@ import beapy
 import matplotlib.pyplot as plt
 from matplotlib import rc
 import seaborn as sns
-from dotenv import load_dotenv
-load_dotenv()
 import os
 
 # Import functions and directories
@@ -31,7 +29,7 @@ newcolors = sns.color_palette('viridis', 4)
 newnewcolors = sns.color_palette('viridis', 5)
 
 # Start the BEA client
-bea = beapy.BEA(key=os.getenv('bea_api_key'))
+bea = beapy.BEA(key=bea_api_key)
 
 # Load the bootstrap data from the CEX, CPS and ACS
 dignity_bs = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap.csv'))
@@ -359,50 +357,6 @@ ax.spines['top'].set_visible(False)
 fig.tight_layout()
 fig.savefig(os.path.join(figures, 'Consumption imputation.pdf'), format='pdf')
 plt.close()
-
-################################################################################
-#                                                                              #
-# This section of the script plots housing consumption against the number of   #
-# rooms in a CU's living quarters for Black and White Americans in 2019.       #
-#                                                                              #
-################################################################################
-
-# Load the CEX data
-#cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
-
-# Calculate monthly housing expenditures by number of rooms and race
-#df = cex.loc[(cex.year == 2019) & (cex.rooms >= 1) & (cex.rooms <= cex.rooms.quantile(0.95)), :]
-#df.loc[:, 'housing'] = df.housing * df.consumption
-#df = df.groupby(['rooms', 'race'], as_index=False).agg({'housing': lambda x: weighted_average(x, data=df, weights='weight')})
-
-# Initialize the figure
-#fig, ax = plt.subplots(figsize=(6, 4))
-
-# Plot the lines
-#ax.scatter(df.loc[df.race == 1, 'rooms'], df.loc[df.race == 1, 'housing'], color=colors[0], s=45, clip_on=False)
-#ax.annotate('White', xy=(df.loc[df.race == 1, 'rooms'].iloc[-1] + 0.25, df.loc[df.race == 1, 'housing'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
-#ax.scatter(df.loc[df.race == 2, 'rooms'], df.loc[df.race == 2, 'housing'], color=colors[1], s=45, clip_on=False)
-#ax.annotate('Black', xy=(df.loc[df.race == 2, 'rooms'].iloc[-1] + 0.25, df.loc[df.race == 2, 'housing'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
-
-# Set the horizontal axis
-#ax.set_xlim(0.75, 10)
-#ax.set_xticks(np.linspace(1, 10, 10))
-#ax.set_xlabel('Rooms', fontsize=12, ha='center', va='center')
-#ax.xaxis.set_label_coords(0.5, -0.135)
-
-# Set the vertical axis
-#ax.set_ylim(0, 1800)
-#ax.set_ylabel(r'\$', fontsize=12, rotation=0, ha='center', va='center')
-#ax.yaxis.set_label_coords(0, 1.1)
-
-# Remove the top and right axes
-#ax.spines['right'].set_visible(False)
-#ax.spines['top'].set_visible(False)
-
-# Save and close the figure
-#fig.tight_layout()
-#fig.savefig(os.path.join(figures, 'Housing.pdf'), format='pdf')
-#plt.close()
 
 ################################################################################
 #                                                                              #

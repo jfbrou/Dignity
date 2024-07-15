@@ -15,7 +15,7 @@ from directories import *
 bea = beapy.BEA(key=bea_api_key)
 
 # Define a list of years
-years = list(range(1940, 1990 + 1, 10)) + list(range(2000, 2023 + 1))
+years = list(range(1940, 1990 + 1, 10)) + list(range(2000, 2022 + 1))
 
 # Define variable columns
 columns = ['YEAR',
@@ -154,7 +154,8 @@ def year_chunk(file, chunksize=1e6):
             yield chunk
             chunk = pd.DataFrame()
             chunk = pd.concat([chunk, df.loc[df.YEAR == unique_years[1], :]], ignore_index=True)
-    yield chunk
+    if not chunk.empty:
+        yield chunk
 chunks = year_chunk(os.path.join(acs_r_data, 'acs.csv'), chunksize=1e6)
 
 # Initialize a data frame
