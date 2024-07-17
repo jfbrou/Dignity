@@ -14,14 +14,14 @@ from directories import *
 # Start the BEA client
 bea = beapy.BEA(key=bea_api_key)
 
+# Define a list of years
+years = range(1984, 2022 + 1)
+
 ################################################################################
 #                                                                              #
 # This section of the script processes the CEX MEMI data files.                #
 #                                                                              #
 ################################################################################
-
-# Define a list of years
-years = range(1984, 2022 + 1)
 
 # Define the variable columns of the MEMI data files
 columns = [None] * len(years)
@@ -48,7 +48,7 @@ for year in years:
                                       (202, 203), # RACE
                                       (244, 245), # SEX
                                       (74, 75)]   # CU_CODE
-    elif (year >= 1986) & (year <= 1995):
+    elif (year >= 1986) & (year <= 1989):
         columns[years.index(year)] = [(0, 8),     # NEWID
                                       (8, 11),    # AGE
                                       (82, 84),   # EDUCA
@@ -59,7 +59,7 @@ for year in years:
                                       (196, 197), # RACE
                                       (238, 239), # SEX
                                       (74, 75)]   # CU_CODE
-    elif ((year >= 1996) & (year <= 2002)):
+    elif ((year >= 1990) & (year <= 2002)):
         columns[years.index(year)] = ["NEWID",
                                       "AGE",
                                       "EDUCA",
@@ -130,6 +130,22 @@ for year in years:
                                     "MEMBNO":   "int",
                                     "ORIGINR":  "int",
                                     "RACE":     "int",
+                                    "SEX":      "int",
+                                    "CU_CODE":  "int"}
+    elif year == 2015:
+        types[years.index(year)] = {"NEWID":    "str",
+                                    "AGE":      "str",
+                                    "EDUCA":    "float",
+                                    "INC_HRSQ": "str",
+                                    "INCWEEKQ": "str",
+                                    "MEMBNO":   "int",
+                                    "HORIGIN":  "int",
+                                    "MEMBRACE": "int",
+                                    "RC_WHITE": "float",
+                                    "RC_BLACK": "float",
+                                    "RC_NATAM": "float",
+                                    "RC_ASIAN": "float",
+                                    "RC_PACIL": "float",
                                     "SEX":      "int",
                                     "CU_CODE":  "int"}
     else:
@@ -244,50 +260,23 @@ for year in years:
     df = pd.DataFrame()
 
     for interview in range(1, 5 + 1):
-        if (year >= 1984) & (year <= 1995):
+        if (year >= 1984) & (year <= 1989):
             if interview == 5:
-                suffix = str(year + 1)[2:] + "1" + ".txt"
-            elif interview == 1:
-                suffix = str(year)[2:] + str(interview) + "x.txt"
+                suffix = "memi" + str(year + 1)[2:] + "1" + ".txt"
             else:
-                suffix = str(year)[2:] + str(interview) + ".txt"
-            df_memi = pd.read_fwf(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "membi" + suffix), colspecs=columns[years.index(year)], names=names[years.index(year)])
+                suffix = "memi" + str(year)[2:] + str(interview) + ".txt"
+            df_memi = pd.read_fwf(os.path.join(cex_r_data, "intrvw" + str(year)[2:], suffix), colspecs=columns[years.index(year)], names=names[years.index(year)])
             df_memi = df_memi.astype(types[years.index(year)])
-            df_memi.loc[:, "interview"] = interview
-        elif (year == 2004) | (year == 2011) | (year == 2014) | (year == 2015):
-            if interview == 5:
-                suffix = str(year + 1)[2:] + "1" + ".dta"
-            elif interview == 1:
-                suffix = str(year)[2:] + str(interview) + "x.dta"
-            else:
-                suffix = str(year)[2:] + str(interview) + ".dta"
-            df_memi = pd.read_stata(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "memi" + suffix), columns=[string.lower() for string in columns[years.index(year)]]).rename(columns=dict(zip([string.lower() for string in columns[years.index(year)]], columns[years.index(year)])))
-            df_memi = df_memi.replace("", np.nan)
-            df_memi = df_memi.astype(types[years.index(year)])
-            df_memi.loc[:, "interview"] = interview
-        elif year >= 2020:
-            if interview == 5:
-                prefix = str(year)[2:]
-                suffix = str(year + 1)[2:] + "1" + ".csv"
-            elif interview == 1:
-                prefix = str(year - 1)[2:]
-                suffix = str(year)[2:] + str(interview) + ".csv"
-            else:
-                prefix = str(year)[2:]
-                suffix = str(year)[2:] + str(interview) + ".csv"
-            df_memi = pd.read_csv(os.path.join(cex_r_data, "intrvw" + prefix, "memi" + suffix), usecols=columns[years.index(year)], dtype=types[years.index(year)])
             df_memi.loc[:, "interview"] = interview
         else:
             if interview == 5:
-                suffix = str(year + 1)[2:] + "1" + ".csv"
-            elif interview == 1:
-                suffix = str(year)[2:] + str(interview) + "x.csv"
+                suffix = "memi" + str(year + 1)[2:] + "1" + ".csv"
             else:
-                suffix = str(year)[2:] + str(interview) + ".csv"
+                suffix = "memi" + str(year)[2:] + str(interview) + ".csv"
             if (year == 2003) & (interview == 1):
-                df_memi = pd.read_csv(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "memi" + suffix), usecols=columns[years.index(year - 1)], dtype=types[years.index(year - 1)])
+                df_memi = pd.read_csv(os.path.join(cex_r_data, "intrvw" + str(year)[2:], suffix), usecols=columns[years.index(year - 1)], dtype=types[years.index(year - 1)]).rename(columns={"RACE": "MEMBRACE", "ORIGINR": "HORIGIN"})
             else:
-                df_memi = pd.read_csv(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "memi" + suffix), usecols=columns[years.index(year)], dtype=types[years.index(year)])
+                df_memi = pd.read_csv(os.path.join(cex_r_data, "intrvw" + str(year)[2:], suffix), usecols=columns[years.index(year)], dtype=types[years.index(year)])
             df_memi.loc[:, "interview"] = interview
         df = pd.concat([df, df_memi], ignore_index=True)
 
@@ -301,13 +290,11 @@ for year in years:
     df.loc[:, "interviews"] = df.loc[:, "member_id"].map(df.loc[:, "member_id"].value_counts())
 
     # Redefine the type of the age variable in 2015
+    if year == 2015:
+        df.loc[:, "AGE"] = pd.to_numeric(df.loc[:, "AGE"], errors="coerce")
     df = df.loc[df.AGE.notna(), :]
 
     # Rename the race and latin origin variables
-    if year == 2003:
-        df.loc[df.interview == 1, "HORIGIN"] = df.loc[df.interview == 1, "ORIGINR"]
-        df.loc[df.interview == 1, "MEMBRACE"] = df.loc[df.interview == 1, "RACE"]
-        df = df.drop(["ORIGINR", "RACE"], axis=1)
     if year <= 2002:
         df = df.rename(columns={"ORIGINR": "HORIGIN"})
     else:
@@ -443,7 +430,11 @@ for year in years:
     df.loc[:, "member_id"] = df.member_id + df.RACE.astype("int").astype("str")
 
     # Recode the latin origin variable
-    df.loc[:, "HORIGIN"] = df.HORIGIN.map(latin_map[years.index(year)])
+    if year == 2003:
+        df.loc[df.interview == 1, "HORIGIN"] = df.HORIGIN.map(latin_map[years.index(year - 1)])
+        df.loc[df.interview != 1, "HORIGIN"] = df.HORIGIN.map(latin_map[years.index(year)])
+    else:
+        df.loc[:, "HORIGIN"] = df.HORIGIN.map(latin_map[years.index(year)])
 
     # Recode the education variable
     df.loc[:, "EDUCA"] = df.EDUCA.map(education_map[years.index(year)])
@@ -488,7 +479,7 @@ for year in years:
                                       (605, 616),   # FINLWT21
                                       (671, 679),   # FSALARYX
                                       (1028, 1029)] # RESPSTAT
-    elif (year >= 1986) & (year <= 1995):
+    elif (year >= 1986) & (year <= 1989):
         columns[years.index(year)] = [(0, 8),     # NEWID
                                       (273, 282), # EARNINCX
                                       (334, 336), # FAM_SIZE
@@ -544,7 +535,7 @@ types = {"NEWID":    "str",
          "FFRMINCX": "float",
          "FNONFRMM": "float",
          "FFRMINCM": "float",
-         "ROOMSQ":   "float"}
+         "ROOMSQ":   "str"}
 
 # Initialize a data frame
 cex_fmli = pd.DataFrame()
@@ -556,46 +547,18 @@ for year in years:
 
     # Load the data
     for interview in range(1, 5 + 1):
-        if (year >= 1984) & (year <= 1995):
+        if (year >= 1984) & (year <= 1989):
             if interview == 5:
-                suffix = str(year + 1)[2:] + "1" + ".txt"
-            elif interview == 1:
-                suffix = str(year)[2:] + str(interview) + "x.txt"
+                suffix = "fmli" + str(year + 1)[2:] + "1" + ".txt"
             else:
-                suffix = str(year)[2:] + str(interview) + ".txt"
-            df_fmli = pd.read_fwf(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "fmlyi" + suffix), colspecs=columns[years.index(year)], names=names, dtype=types)
-        elif (year == 2004) | (year == 2011) | (year == 2014) | (year == 2015):
-            if interview == 5:
-                suffix = str(year + 1)[2:] + "1" + ".dta"
-            elif interview == 1:
-                suffix = str(year)[2:] + str(interview) + "x.dta"
-            else:
-                suffix = str(year)[2:] + str(interview) + ".dta"
-            df_fmli = pd.read_stata(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "fmli" + suffix), columns=[string.lower() for string in columns[years.index(year)]]).rename(columns=dict(zip([string.lower() for string in columns[years.index(year)]], columns[years.index(year)])))
-            df_fmli = df_fmli.astype({key: types[key] for key in df_fmli.columns})
-        elif year >= 2020:
-            if interview == 5:
-                prefix = str(year)[2:]
-                suffix = str(year + 1)[2:] + "1" + ".csv"
-            elif interview == 1:
-                prefix = str(year - 1)[2:]
-                suffix = str(year)[2:] + str(interview) + ".csv"
-            else:
-                prefix = str(year)[2:]
-                suffix = str(year)[2:] + str(interview) + ".csv"
-            df_fmli = pd.read_csv(os.path.join(cex_r_data, "intrvw" + prefix, "fmli" + suffix), usecols=columns[years.index(year)])
-            df_fmli = df_fmli.replace(".", np.nan)
-            df_fmli = df_fmli.astype({key: types[key] for key in df_fmli.columns})
+                suffix = "fmli" + str(year)[2:] + str(interview) + ".txt"
+            df_fmli = pd.read_fwf(os.path.join(cex_r_data, "intrvw" + str(year)[2:], suffix), colspecs=columns[years.index(year)], names=names, dtype=types)
         else:
             if interview == 5:
-                suffix = str(year + 1)[2:] + "1" + ".csv"
-            elif interview == 1:
-                suffix = str(year)[2:] + str(interview) + "x.csv"
+                suffix = "fmli" + str(year + 1)[2:] + "1" + ".csv"
             else:
-                suffix = str(year)[2:] + str(interview) + ".csv"
-            df_fmli = pd.read_csv(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "fmli" + suffix), usecols=columns[years.index(year)])
-            df_fmli = df_fmli.replace(".", np.nan)
-            df_fmli = df_fmli.astype({key: types[key] for key in df_fmli.columns})
+                suffix = "fmli" + str(year)[2:] + str(interview) + ".csv"
+            df_fmli = pd.read_csv(os.path.join(cex_r_data, "intrvw" + str(year)[2:], suffix), usecols=columns[years.index(year)], dtype=types)
 
         # Append the data frames for all interviews
         df = pd.concat([df, df_fmli], ignore_index=True)
@@ -664,23 +627,23 @@ cex_memi = cex_memi.groupby(["year", "member_id"], as_index=False).agg({"FINLWT2
 mtbi_columns = [None] * len(years)
 itbi_columns = [None] * len(years)
 for year in years:
-    if (year >= 1984) & (year <= 1995):
+    if (year >= 1984) & (year <= 1989):
         mtbi_columns[years.index(year)] = [(0, 8), (8, 14), (14, 26), (27, 28)]
         itbi_columns[years.index(year)] = [(0, 8), (12, 18), (19, 31)]
     else:
-        mtbi_columns[years.index(year)] = ['NEWID', 'UCC', 'COST', 'GIFT']
-        itbi_columns[years.index(year)] = ['NEWID', 'UCC', 'VALUE']
+        mtbi_columns[years.index(year)] = ["NEWID", "UCC", "COST", "GIFT"]
+        itbi_columns[years.index(year)] = ["NEWID", "UCC", "VALUE"]
 
 # Define the variable names of the MTBI and ITBI data files
-mtbi_names = ['NEWID', 'UCC', 'COST', 'GIFT']
-itbi_names = ['NEWID', 'UCC', 'VALUE']
+mtbi_names = ["NEWID", "UCC", "COST", "GIFT"]
+itbi_names = ["NEWID", "UCC", "VALUE"]
 
 # Define the variable types of the MTBI and ITBI data files
-mtbi_types = {'NEWID': 'str', 'UCC': 'int', 'COST': 'float', 'GIFT': 'int'}
-itbi_types = {'NEWID': 'str', 'UCC': 'int', 'VALUE': 'float'}
+mtbi_types = {"NEWID": "str", "UCC": "int", "COST": "float", "GIFT": "int"}
+itbi_types = {"NEWID": "str", "UCC": "int", "VALUE": "float"}
 
 # Load the UCC dictionary
-ucc = pd.read_csv(os.path.join(cex_r_data, 'ucc.csv'))
+ucc = pd.read_csv(os.path.join(cex_r_data, "ucc.csv"))
 
 # Initialize a data frame
 cex_expenditures = pd.DataFrame()
@@ -692,74 +655,45 @@ for year in years:
 
     # Load the data
     for interview in range(1, 5 + 1):
-        if (year >= 1984) & (year <= 1995):
+        if (year >= 1984) & (year <= 1989):
             if interview == 5:
                 suffix = str(year + 1)[2:] + "1" + ".txt"
-            elif interview == 1:
-                suffix = str(year)[2:] + str(interview) + "x.txt"
             else:
                 suffix = str(year)[2:] + str(interview) + ".txt"
-            df_mtbi = pd.read_fwf(os.path.join(cex_r_data, 'intrvw' + str(year)[2:], 'mtabi' + suffix), colspecs=mtbi_columns[years.index(year)], names=mtbi_names, dtype=mtbi_types)
-            df_itbi = pd.read_fwf(os.path.join(cex_r_data, 'intrvw' + str(year)[2:], 'itabi' + suffix), colspecs=itbi_columns[years.index(year)], names=itbi_names, dtype=itbi_types).rename(columns={'VALUE': 'COST'})
-            df_expenditures = pd.concat([df_mtbi, df_itbi], ignore_index=True)
-        elif (year == 2004) | (year == 2011) | (year == 2014) | (year == 2015):
-            if interview == 5:
-                suffix = str(year + 1)[2:] + "1" + ".dta"
-            elif interview == 1:
-                suffix = str(year)[2:] + str(interview) + "x.dta"
-            else:
-                suffix = str(year)[2:] + str(interview) + ".dta"
-            df_mtbi = pd.read_stata(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "mtbi" + suffix), columns=[string.lower() for string in mtbi_columns[years.index(year)]]).rename(columns=dict(zip([string.lower() for string in mtbi_columns[years.index(year)]], mtbi_columns[years.index(year)])))
-            df_itbi = pd.read_stata(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "itbi" + suffix), columns=[string.lower() for string in itbi_columns[years.index(year)]]).rename(columns=dict(zip([string.lower() for string in itbi_columns[years.index(year)]], itbi_columns[years.index(year)])))
-            df_mtbi = df_mtbi.astype({key: mtbi_types[key] for key in df_mtbi.columns})
-            df_itbi = df_itbi.astype({key: itbi_types[key] for key in df_itbi.columns})
-            df_expenditures = pd.concat([df_mtbi, df_itbi], ignore_index=True)
-        elif year >= 2020:
-            if interview == 5:
-                prefix = str(year)[2:]
-                suffix = str(year + 1)[2:] + "1" + ".csv"
-            elif interview == 1:
-                prefix = str(year - 1)[2:]
-                suffix = str(year)[2:] + str(interview) + ".csv"
-            else:
-                prefix = str(year)[2:]
-                suffix = str(year)[2:] + str(interview) + ".csv"
-            df_mtbi = pd.read_csv(os.path.join(cex_r_data, 'intrvw' + prefix, 'mtbi' + suffix), usecols=mtbi_columns[years.index(year)], dtype=mtbi_types)
-            df_itbi = pd.read_csv(os.path.join(cex_r_data, 'intrvw' + prefix, 'itbi' + suffix), usecols=itbi_columns[years.index(year)], dtype=itbi_types)
+            df_mtbi = pd.read_fwf(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "mtbi" + suffix), colspecs=mtbi_columns[years.index(year)], names=mtbi_names, dtype=mtbi_types)
+            df_itbi = pd.read_fwf(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "itbi" + suffix), colspecs=itbi_columns[years.index(year)], names=itbi_names, dtype=itbi_types).rename(columns={"VALUE": "COST"})
             df_expenditures = pd.concat([df_mtbi, df_itbi], ignore_index=True)
         else:
             if interview == 5:
                 suffix = str(year + 1)[2:] + "1" + ".csv"
-            elif interview == 1:
-                suffix = str(year)[2:] + str(interview) + "x.csv"
             else:
                 suffix = str(year)[2:] + str(interview) + ".csv"
-            df_mtbi = pd.read_csv(os.path.join(cex_r_data, 'intrvw' + str(year)[2:], 'mtbi' + suffix), usecols=mtbi_columns[years.index(year)], dtype=mtbi_types)
-            df_itbi = pd.read_csv(os.path.join(cex_r_data, 'intrvw' + str(year)[2:], 'itbi' + suffix), usecols=itbi_columns[years.index(year)], dtype=itbi_types)
+            df_mtbi = pd.read_csv(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "mtbi" + suffix), usecols=mtbi_columns[years.index(year)], dtype=mtbi_types)
+            df_itbi = pd.read_csv(os.path.join(cex_r_data, "intrvw" + str(year)[2:], "itbi" + suffix), usecols=itbi_columns[years.index(year)], dtype=itbi_types).rename(columns={"VALUE": "COST"})
             df_expenditures = pd.concat([df_mtbi, df_itbi], ignore_index=True)
 
         # Append the data frames for all interviews
         df = pd.concat([df, df_expenditures], ignore_index=True)
 
     # Recode the NEWID variable
-    df.loc[:, 'NEWID'] = df.NEWID.apply(lambda x: x.zfill(8))
+    df.loc[:, "NEWID"] = df.NEWID.apply(lambda x: x.zfill(8))
 
     # Merge the expenditures data frame with the UCC dictionary
-    df = pd.merge(df, ucc, how='left')
-    df.loc[:, 'COST'] = df.COST * df.factor
+    df = pd.merge(df, ucc, how="left")
+    df.loc[:, "COST"] = df.COST * df.factor
 
     # Only keep non-gift consumption expenditures
     df = df.loc[(df.GIFT != 1) & (df.consumption == 1), :]
 
     # Re-scale food at home expenditures before 1987
     if year <= 1987:
-        df.loc[df.level2 == 'FDHOME', 'COST'] = df.COST / np.exp(-0.10795)
+        df.loc[df.level2 == "FDHOME", "COST"] = df.COST / np.exp(-0.10795)
 
     # Aggregate expenditures, create the year variable and append the data frames for all years
-    df_aggregate = df.groupby('NEWID', as_index=False).agg({'COST': 'sum'}).rename(columns={'COST': 'consumption'})
-    df_aggregate_nd = df.loc[df.durable == 0, :].groupby('NEWID', as_index=False).agg({'COST': 'sum'}).rename(columns={'COST': 'consumption_nd'})
-    df = pd.merge(df_aggregate, df_aggregate_nd, how='outer')
-    df.loc[:, 'year'] = year
+    df_aggregate = df.groupby("NEWID", as_index=False).agg({"COST": "sum"}).rename(columns={"COST": "consumption"})
+    df_aggregate_nd = df.loc[df.durable == 0, :].groupby("NEWID", as_index=False).agg({"COST": "sum"}).rename(columns={"COST": "consumption_nd"})
+    df = pd.merge(df_aggregate, df_aggregate_nd, how="outer")
+    df.loc[:, "year"] = year
     cex_expenditures = pd.concat([cex_expenditures, df], ignore_index=True)
 
 ################################################################################
@@ -770,208 +704,209 @@ for year in years:
 ################################################################################
 
 # Merge the FMLI and expenditures data frames
-cex = pd.merge(cex_fmli, cex_expenditures, how='left').fillna(0)
+cex = pd.merge(cex_fmli, cex_expenditures, how="left").fillna(0)
 
 # Aggregate variables over interviews
-cex = cex.groupby(['year', 'member_id'], as_index=False).agg({'consumption':    'sum',
-                                                              'consumption_nd': 'sum',
-                                                              'FINLWT21':       'mean',
-                                                              'EARNINCX':       'mean',
-                                                              'FSALARYX':       'mean',
-                                                              'ROOMSQ':         lambda x: x.iloc[0],
-                                                              'RESPSTAT':       lambda x: x.iloc[0],
-                                                              'family_id':      lambda x: x.iloc[0],
-                                                              'FAM_SIZE':       lambda x: x.iloc[0],
-                                                              'interviews':     lambda x: x.iloc[0],
-                                                              'RACE':           lambda x: x.iloc[0]}).drop('member_id', axis=1)
+cex = cex.groupby(["year", "member_id"], as_index=False).agg({"consumption":    "sum",
+                                                              "consumption_nd": "sum",
+                                                              "FINLWT21":       "mean",
+                                                              "EARNINCX":       "mean",
+                                                              "FSALARYX":       "mean",
+                                                              "ROOMSQ":         lambda x: x.iloc[0],
+                                                              "RESPSTAT":       lambda x: x.iloc[0],
+                                                              "family_id":      lambda x: x.iloc[0],
+                                                              "FAM_SIZE":       lambda x: x.iloc[0],
+                                                              "interviews":     lambda x: x.iloc[0],
+                                                              "RACE":           lambda x: x.iloc[0]}).drop("member_id", axis=1)
 
 # Drop observations with nonpositve consumption
 cex = cex.loc[(cex.consumption > 0) & (cex.consumption_nd > 0), :]
 
 # Divide the consumption measures by the number of family members or its square root
-for column in [column for column in cex.columns if column.startswith('consumption')]:
-    cex.loc[:, column + '_sqrt'] = cex.loc[:, column] / np.sqrt(cex.FAM_SIZE)
+for column in [column for column in cex.columns if column.startswith("consumption")]:
+    cex.loc[:, column + "_sqrt"] = cex.loc[:, column] / np.sqrt(cex.FAM_SIZE)
     cex.loc[:, column] = cex.loc[:, column] / cex.FAM_SIZE
 
 # Divide earnings by the number of family members
-for column in ['EARNINCX', 'FSALARYX']:
+for column in ["EARNINCX", "FSALARYX"]:
     cex.loc[:, column] = cex.loc[:, column] / cex.FAM_SIZE
 
 # Recode the complete income respondent variable
-cex.loc[:, 'RESPSTAT'] = cex.RESPSTAT.map({1: 1, 2: 0}).fillna(0)
+cex.loc[:, "RESPSTAT"] = cex.RESPSTAT.map({1: 1, 2: 0}).fillna(0)
 
 # Re-scale consumption by the number of interviews and take its logarithm for the nondurable component of consumption
-for column in [column for column in cex.columns if column.startswith('consumption') and column.find('_nd') == -1]:
+for column in [column for column in cex.columns if column.startswith("consumption") and column.find("_nd") == -1]:
     cex.loc[:, column] = 4 * cex.loc[:, column] / cex.interviews
-for column in [column for column in cex.columns if column.startswith('consumption') and column.find('_nd') != -1]:
+for column in [column for column in cex.columns if column.startswith("consumption") and column.find("_nd") != -1]:
     cex.loc[:, column] = np.log(4 * cex.loc[:, column] / cex.interviews)
 
 # Define a function to calculate the weighted standard deviation of log nondurable consumption for all families by the number of interviews in which they participated in
 def f(x):
     d = {}
-    columns = [column for column in x.columns if column.startswith('consumption') and column.find('_nd') != -1]
+    columns = [column for column in x.columns if column.startswith("consumption") and column.find("_nd") != -1]
     for column in columns:
-        d[column.replace('consumption', 'scale')] = np.sqrt(np.average((x.loc[:, column] - np.average(x.loc[:, column], weights=x.FINLWT21))**2, weights=x.FINLWT21))
+        d[column.replace("consumption", "scale")] = np.sqrt(np.average((x.loc[:, column] - np.average(x.loc[:, column], weights=x.FINLWT21))**2, weights=x.FINLWT21))
     return pd.Series(d, index=[key for key, value in d.items()])
 
 # Calculate the weighted standard deviation of log nondurable consumption for all families by the number of interviews in which they participated in
-d_rename = dict(zip([column.replace('consumption', 'scale') for column in cex.columns if column.startswith('consumption') and column.find('_nd') != -1],
-                    [column.replace('consumption', 'scale_4') for column in cex.columns if column.startswith('consumption') and column.find('_nd') != -1]))
-cex = pd.merge(cex, cex.groupby(['year', 'interviews'], as_index=False).apply(f), how='left')
-cex = pd.merge(cex, cex.loc[cex.interviews == 4, :].groupby('year', as_index=False).apply(f).rename(columns=d_rename), how='left')
+d_rename = dict(zip([column.replace("consumption", "scale") for column in cex.columns if column.startswith("consumption") and column.find("_nd") != -1],
+                    [column.replace("consumption", "scale_4") for column in cex.columns if column.startswith("consumption") and column.find("_nd") != -1]))
+cex = pd.merge(cex, cex.groupby(["year", "interviews"], as_index=False).apply(f), how="left")
+cex = pd.merge(cex, cex.loc[cex.interviews == 4, :].groupby("year", as_index=False).apply(f).rename(columns=d_rename), how="left")
 
 # Calculate the ratio of those standard deviations relative to the four-interviews households
-for column in [column for column in cex.columns if column.startswith('scale') and column.find('_4') == -1]:
-    cex.loc[:, column] = cex.loc[:, column.replace('scale', 'scale_4')] / cex.loc[:, column]
-cex = cex.drop(['interviews'] + [column for column in cex.columns if column.startswith('scale_4')], axis=1)
+for column in [column for column in cex.columns if column.startswith("scale") and column.find("_4") == -1]:
+    cex.loc[:, column] = cex.loc[:, column.replace("scale", "scale_4")] / cex.loc[:, column]
+cex = cex.drop(["interviews"] + [column for column in cex.columns if column.startswith("scale_4")], axis=1)
 
 # Define a function to calculate the average log nondurable consumption by year and race
 def f(x):
     d = {}
-    columns = [column for column in x.columns if column.startswith('consumption') and column.find('_nd') != -1]
+    columns = [column for column in x.columns if column.startswith("consumption") and column.find("_nd") != -1]
     for column in columns:
-        d[column + '_average'] = np.average(x.loc[:, column], weights=x.FINLWT21)
+        d[column + "_average"] = np.average(x.loc[:, column], weights=x.FINLWT21)
     return pd.Series(d, index=[key for key, value in d.items()])
 
 # Calculate average log nondurable consumption by year and race
-cex = pd.merge(cex, cex.groupby(['year', 'RACE'], as_index=False).apply(f), how='left')
+cex = pd.merge(cex, cex.groupby(["year", "RACE"], as_index=False).apply(f), how="left")
 
 # Re-scale log nondurable consumption to adjust for differences in standard deviations across the number of interviews
-for column in [column for column in cex.columns if column.startswith('consumption') and not column.endswith('average') and column.find('_nd') != -1]:
-    cex.loc[:, column] = np.exp(cex.loc[:, column + '_average'] + cex.loc[:, column.replace('consumption', 'scale')] * (cex.loc[:, column] - cex.loc[:, column + '_average']))
-cex = cex.drop([column for column in cex.columns if column.endswith('average') or column.startswith('scale')], axis=1)
+for column in [column for column in cex.columns if column.startswith("consumption") and not column.endswith("average") and column.find("_nd") != -1]:
+    cex.loc[:, column] = np.exp(cex.loc[:, column + "_average"] + cex.loc[:, column.replace("consumption", "scale")] * (cex.loc[:, column] - cex.loc[:, column + "_average"]))
+cex = cex.drop([column for column in cex.columns if column.endswith("average") or column.startswith("scale")], axis=1)
 
 # Only keep the relevant variables
-mean_columns = [column for column in cex.columns if column.startswith('consumption')] + ['EARNINCX', 'FSALARYX']
-mean_functions = ['mean'] * len(mean_columns)
-first_columns = ['ROOMSQ', 'FAM_SIZE', 'RESPSTAT']
+mean_columns = [column for column in cex.columns if column.startswith("consumption")] + ["EARNINCX", "FSALARYX"]
+mean_functions = ["mean"] * len(mean_columns)
+first_columns = ["ROOMSQ", "FAM_SIZE", "RESPSTAT"]
 first_functions = [lambda x: x.iloc[0]] * len(first_columns)
 d_functions = dict(zip(mean_columns, mean_functions))
 d_functions.update(dict(zip(first_columns, first_functions)))
-cex = cex.groupby(['year', 'family_id'], as_index=False).agg(d_functions)
+cex = cex.groupby(["year", "family_id"], as_index=False).agg(d_functions)
 
 # Merge the member data frame with the family and expenditures one
-cex = pd.merge(cex_memi, cex, how='inner').drop('family_id', axis=1)
+cex = pd.merge(cex_memi, cex, how="inner").drop("family_id", axis=1)
 
 # Calculate total NIPA PCE, nondurable PCE and the poverty threshold in each year, which corresponds to 2000 USD in 2012
-pce = bea.data('nipa', tablename='t20405', frequency='a', year=years).data.DPCERC.values.squeeze() - bea.data('nipa', tablename='t20405', frequency='a', year=years).data.DINSRC.values.squeeze()
-pce_nd = pce - bea.data('nipa', tablename='t20405', frequency='a', year=years).data.DDURRC.values.squeeze()
-population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=years).data.B230RC.values.squeeze()
-deflator = 1e2 / bea.data('nipa', tablename='t10104', frequency='a', year=years).data.DPCERG.values.squeeze()
+pce = bea.data("nipa", tablename="t20405", frequency="a", year=years).data.DPCERC.values.squeeze() - bea.data("nipa", tablename="t20405", frequency="a", year=years).data.DINSRC.values.squeeze()
+pce_nd = pce - bea.data("nipa", tablename="t20405", frequency="a", year=years).data.DDURRC.values.squeeze()
+population = 1e3 * bea.data("nipa", tablename="t20100", frequency="a", year=years).data.B230RC.values.squeeze()
+deflator = 1e2 / bea.data("nipa", tablename="t10104", frequency="a", year=years).data.DPCERG.values.squeeze()
+deflator = deflator / deflator[years.index(2012)]
 pce = 1e6 * deflator * pce / population
 pce_nd = 1e6 * deflator * pce_nd / population
 poverty = 2000 * deflator
 
 # Store the above two series in the data frame
-cex = pd.merge(cex, pd.DataFrame(data={'year':    years,
-                                       'pce':     pce,
-                                       'pce_nd':  pce_nd,
-                                       'poverty': poverty}), how='left')
+cex = pd.merge(cex, pd.DataFrame(data={"year":    years,
+                                       "pce":     pce,
+                                       "pce_nd":  pce_nd,
+                                       "poverty": poverty}), how="left")
 
 # Define a function to calculate the average consumption by year
 def f(x):
     d = {}
-    columns = [column for column in x.columns if column.startswith('consumption')]
+    columns = [column for column in x.columns if column.startswith("consumption")]
     for column in columns:
-        d[column + '_average'] = np.average(x.loc[:, column], weights=x.FINLWT21)
+        d[column + "_average"] = np.average(x.loc[:, column], weights=x.FINLWT21)
     return pd.Series(d, index=[key for key, value in d.items()])
 
 # Re-scale consumption such that it aggregates to the NIPA personal consumption expenditures
-cex = pd.merge(cex, cex.groupby('year', as_index=False).apply(f), how='left')
-for column in [column for column in cex.columns if column.startswith('consumption') and not column.endswith('average')]:
-    if column.find('_nd') == -1:
-        cex.loc[:, column] = cex.pce + cex.pce * (cex.loc[:, column] - cex.loc[:, column + '_average']) / cex.loc[:, column + '_average']
+cex = pd.merge(cex, cex.groupby("year", as_index=False).apply(f), how="left")
+for column in [column for column in cex.columns if column.startswith("consumption") and not column.endswith("average")]:
+    if column.find("_nd") == -1:
+        cex.loc[:, column] = cex.pce + cex.pce * (cex.loc[:, column] - cex.loc[:, column + "_average"]) / cex.loc[:, column + "_average"]
     else:
-        cex.loc[:, column] = cex.pce_nd + cex.pce_nd * (cex.loc[:, column] - cex.loc[:, column + '_average']) / cex.loc[:, column + '_average']
-    cex = cex.drop(column + '_average', axis=1)
+        cex.loc[:, column] = cex.pce_nd + cex.pce_nd * (cex.loc[:, column] - cex.loc[:, column + "_average"]) / cex.loc[:, column + "_average"]
+    cex = cex.drop(column + "_average", axis=1)
 cex = cex.loc[(cex.consumption > 0) & (cex.consumption_nd > 0), :]
 
 # Enforce the consumption floor on total consumption
-for column in [column for column in cex.columns if column.startswith('consumption') and column.find('_nd') == -1]:
+for column in [column for column in cex.columns if column.startswith("consumption") and column.find("_nd") == -1]:
     cex.loc[cex.loc[:, column] <= cex.poverty, column] = cex.poverty
-cex = cex.drop([column for column in cex.columns if column.startswith('pce')] + ['poverty'], axis=1)
+cex = cex.drop([column for column in cex.columns if column.startswith("pce")] + ["poverty"], axis=1)
 
 # Set the values of the rooms variable to missing values for years other than 2019
-cex.loc[cex.year != 2019, 'ROOMSQ'] = np.nan
+cex.loc[cex.year != 2019, "ROOMSQ"] = np.nan
 
 # Recode the CU_CODE variable
-cex.loc[cex.CU_CODE != 1, 'CU_CODE'] = 0
+cex.loc[cex.CU_CODE != 1, "CU_CODE"] = 0
 
 # Rename variables
-cex = cex.rename(columns={'SEX':      'gender',
-                          'RACE':     'race',
-                          'HORIGIN':  'latin',
-                          'EDUCA':    'education',
-                          'AGE':      'age',
-                          'FAM_SIZE': 'family_size',
-                          'EARNINCX': 'earnings',
-                          'FSALARYX': 'salary',
-                          'RESPSTAT': 'complete',
-                          'CU_CODE':  'respondent',
-                          'ROOMSQ':   'rooms',
-                          'FINLWT21': 'weight'})
+cex = cex.rename(columns={"SEX":      "gender",
+                          "RACE":     "race",
+                          "HORIGIN":  "latin",
+                          "EDUCA":    "education",
+                          "AGE":      "age",
+                          "FAM_SIZE": "family_size",
+                          "EARNINCX": "earnings",
+                          "FSALARYX": "salary",
+                          "RESPSTAT": "complete",
+                          "CU_CODE":  "respondent",
+                          "ROOMSQ":   "rooms",
+                          "FINLWT21": "weight"})
 
 # Redefine the types of all variables
-cex = cex.astype({'year':                'int',
-                  'gender':              'int',
-                  'race':                'int',
-                  'latin':               'float',
-                  'education':           'float',
-                  'age':                 'int',
-                  'family_size':         'int',
-                  'consumption':         'float',
-                  'consumption_sqrt':    'float',
-                  'consumption_nd':      'float',
-                  'consumption_nd_sqrt': 'float',
-                  'rooms':               'float',
-                  'earnings':            'float',
-                  'salary':              'float',
-                  'leisure':             'float',
-                  'complete':            'float',
-                  'respondent':          'int',
-                  'weight':              'float'})
+cex = cex.astype({"year":                "int",
+                  "gender":              "int",
+                  "race":                "int",
+                  "latin":               "float",
+                  "education":           "float",
+                  "age":                 "int",
+                  "family_size":         "int",
+                  "consumption":         "float",
+                  "consumption_sqrt":    "float",
+                  "consumption_nd":      "float",
+                  "consumption_nd_sqrt": "float",
+                  "rooms":               "float",
+                  "earnings":            "float",
+                  "salary":              "float",
+                  "leisure":             "float",
+                  "complete":            "float",
+                  "respondent":          "int",
+                  "weight":              "float"})
 
 # Sort and save the data
-cex = cex.sort_values(by='year')
-cex.to_csv(os.path.join(cex_f_data, 'cex.csv'), index=False)
+cex = cex.sort_values(by="year")
+cex.to_csv(os.path.join(cex_f_data, "cex.csv"), index=False)
 
 # Keep the imputation sample
 df = cex.loc[cex.complete == 1, :]
 
 # Create race binary variables
-df = pd.concat([df, pd.get_dummies(df.race.astype('int'), prefix='race')], axis=1)
+df = pd.concat([df, pd.get_dummies(df.race.astype("int"), prefix="race")], axis=1)
 
 # Create education binary variables
-df.loc[df.education.isna() | (df.age < 30), 'education'] = 4
-df = pd.concat([df, pd.get_dummies(df.education.astype('int'), prefix='education')], axis=1)
+df.loc[df.education.isna() | (df.age < 30), "education"] = 4
+df = pd.concat([df, pd.get_dummies(df.education.astype("int"), prefix="education")], axis=1)
 
 # Recode the gender variable
-df.loc[:, 'gender'] = df.gender.replace({1: 1, 2: 0})
+df.loc[:, "gender"] = df.gender.replace({1: 1, 2: 0})
 
 # Define a function to calculate the average of consumption, income, and demographics by year
 def f(x):
     d = {}
-    columns = ['consumption', 'earnings', 'salary'] + ['race_' + str(i) for i in range(1, 4 + 1)] \
-                                                    + ['education_' + str(i) for i in range(1, 4 + 1)] \
-                                                    + ['family_size', 'latin', 'gender', 'age']
+    columns = ["consumption", "earnings", "salary"] + ["race_" + str(i) for i in range(1, 4 + 1)] \
+                                                    + ["education_" + str(i) for i in range(1, 4 + 1)] \
+                                                    + ["family_size", "latin", "gender", "age"]
     for column in columns:
-        d[column + '_average'] = np.average(x.loc[:, column], weights=x.weight)
+        d[column + "_average"] = np.average(x.loc[:, column], weights=x.weight)
     return pd.Series(d, index=[key for key, value in d.items()])
 
 # Calculate the average of consumption, income, and demographics by year
-df = pd.merge(df, df.groupby('year', as_index=False).apply(f), how='left')
+df = pd.merge(df, df.groupby("year", as_index=False).apply(f), how="left")
 
 # Calculate the percentage deviation of consumption, income and demographics from their annual average
-columns = ['consumption', 'earnings', 'salary'] + ['race_' + str(i) for i in range(1, 4 + 1)] \
-                                                + ['education_' + str(i) for i in range(1, 4 + 1)] \
-                                                + ['family_size', 'latin', 'gender', 'age']
+columns = ["consumption", "earnings", "salary"] + ["race_" + str(i) for i in range(1, 4 + 1)] \
+                                                + ["education_" + str(i) for i in range(1, 4 + 1)] \
+                                                + ["family_size", "latin", "gender", "age"]
 for column in columns:
-    df.loc[:, column + '_deviation'] = df.loc[:, column] / df.loc[:, column + '_average'] - 1
+    df.loc[:, column + "_deviation"] = df.loc[:, column] / df.loc[:, column + "_average"] - 1
 
 # Fit and save the OLS models for consumption
-earnings_formula = 'consumption_deviation ~ ' + ' + '.join([column for column in df.columns if column.endswith('deviation') and not column.startswith('consumption') and not column.startswith('salary')])
-salary_formula = 'consumption_deviation ~ ' + ' + '.join([column for column in df.columns if column.endswith('deviation') and not column.startswith('consumption') and not column.startswith('earnings')])
+earnings_formula = "consumption_deviation ~ " + " + ".join([column for column in df.columns if column.endswith("deviation") and not column.startswith("consumption") and not column.startswith("salary")])
+salary_formula = "consumption_deviation ~ " + " + ".join([column for column in df.columns if column.endswith("deviation") and not column.startswith("consumption") and not column.startswith("earnings")])
 earnings_model = smf.wls(formula=earnings_formula, data=df, weights=df.weight.to_numpy()).fit()
 salary_model = smf.wls(formula=salary_formula, data=df, weights=df.weight.to_numpy()).fit()
-earnings_model.save(os.path.join(cex_f_data, 'earnings.pickle'))
-salary_model.save(os.path.join(cex_f_data, 'salary.pickle'))
+earnings_model.save(os.path.join(cex_f_data, "earnings.pickle"))
+salary_model.save(os.path.join(cex_f_data, "salary.pickle"))
