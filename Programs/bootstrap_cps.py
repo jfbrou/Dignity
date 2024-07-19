@@ -18,13 +18,13 @@ data = '/scratch/users/jfbrou/Dignity'
 def bootstrap(b):
     # Load the CPS data
     cps = pd.read_csv(os.path.join(data, 'cps.csv'), usecols=['year', 'weight', 'leisure', 'race', 'latin', 'age'], dtype={'year': 'uint16', 'weight': 'float32', 'leisure': 'float32', 'race': 'uint8', 'latin': 'float16', 'age': 'uint8'})
-    cps = cps.loc[cps.year.isin(range(1985, 2021 + 1)), :]
+    cps = cps.loc[cps.year.isin(range(1985, 2023 + 1)), :]
     cps.loc[:, 'year'] = cps.year - 1
 
     # Sample from the data
     df_b = pd.DataFrame()
-    for year in range(1984, 2020 + 1):
-        df_b = df_b.append(cps.loc[cps.year == year, :].sample(frac=1, replace=True, random_state=b), ignore_index=True)
+    for year in range(1984, 2022 + 1):
+        df_b = pd.concat([df_b, cps.loc[cps.year == year, :].sample(frac=1, replace=True, random_state=b)], ignore_index=True)
     del cps
     
     # Define functions to perform the aggregation
@@ -48,12 +48,12 @@ def bootstrap(b):
     df.loc[:, ['Ev_of_ell', 'ell_bar']] = df.groupby(['year', 'race'], as_index=False)[['Ev_of_ell', 'ell_bar']].transform(lambda x: filter(x, 100)).values
     df.loc[df.loc[:, 'Ev_of_ell'] > 0, 'Ev_of_ell'] = 0
     df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
-    df_cps = df_cps.append(df, ignore_index=True)
+    df_cps = pd.concat([df_cps, df], ignore_index=True)
 
     # Calculate CPS leisure statistics by year and race in the current bootstrap sample
     df = df_b.loc[df_b.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).apply(f_simple)
     df = pd.merge(expand({'year': df.year.unique(), 'age': [np.nan], 'race': [1, 2], 'latin': [-1], 'bootstrap': [b], 'simple': [True]}), df, how='left')
-    df_cps = df_cps.append(df, ignore_index=True)
+    df_cps = pd.concat([df_cps, df], ignore_index=True)
 
     # Calculate CPS leisure statistics by year and age for Latinos in the current bootstrap sample
     df = df_b.loc[(df_b.latin == 1) & (df_b.year >= 2006), :].groupby(['year', 'age'], as_index=False).apply(f)
@@ -61,12 +61,12 @@ def bootstrap(b):
     df.loc[:, ['Ev_of_ell', 'ell_bar']] = df.groupby('year', as_index=False)[['Ev_of_ell', 'ell_bar']].transform(lambda x: filter(x, 100)).values
     df.loc[df.loc[:, 'Ev_of_ell'] > 0, 'Ev_of_ell'] = 0
     df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
-    df_cps = df_cps.append(df, ignore_index=True)
+    df_cps = pd.concat([df_cps, df], ignore_index=True)
 
     # Calculate CPS leisure statistics by year for Latinos in the current bootstrap sample
     df = df_b.loc[(df_b.latin == 1) & (df_b.year >= 2006), :].groupby('year', as_index=False).apply(f_simple)
     df = pd.merge(expand({'year': df.year.unique(), 'age': [np.nan], 'race': [-1], 'latin': [1], 'bootstrap': [b], 'simple': [True]}), df, how='left')
-    df_cps = df_cps.append(df, ignore_index=True)
+    df_cps = pd.concat([df_cps, df], ignore_index=True)
 
     # Calculate CPS leisure statistics by year, race and age for non-Latinos in the current bootstrap sample
     df = df_b.loc[df_b.race.isin([1, 2]) & (df_b.latin == 0) & (df_b.year >= 2006), :].groupby(['year', 'race', 'age'], as_index=False).apply(f)
@@ -74,12 +74,12 @@ def bootstrap(b):
     df.loc[:, ['Ev_of_ell', 'ell_bar']] = df.groupby(['year', 'race'], as_index=False)[['Ev_of_ell', 'ell_bar']].transform(lambda x: filter(x, 100)).values
     df.loc[df.loc[:, 'Ev_of_ell'] > 0, 'Ev_of_ell'] = 0
     df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
-    df_cps = df_cps.append(df, ignore_index=True)
+    df_cps = pd.concat([df_cps, df], ignore_index=True)
 
     # Calculate CPS leisure statistics by year and race for non-Latinos in the current bootstrap sample
     df = df_b.loc[df_b.race.isin([1, 2]) & (df_b.latin == 0) & (df_b.year >= 2006), :].groupby(['year', 'race'], as_index=False).apply(f_simple)
     df = pd.merge(expand({'year': df.year.unique(), 'age': [np.nan], 'race': [1, 2], 'latin': [0], 'bootstrap': [b], 'simple': [True]}), df, how='left')
-    df_cps = df_cps.append(df, ignore_index=True)
+    df_cps = pd.concat([df_cps, df], ignore_index=True)
 
     # Save the data frame
     df_cps.to_csv(os.path.join(data, 'dignity_cps_bootstrap_' + str(b) + '.csv'), index=False)

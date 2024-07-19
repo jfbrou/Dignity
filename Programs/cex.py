@@ -285,7 +285,7 @@ for year in years:
     df.loc[:, "family_id"] = df.NEWID.str[:-1]
     df.loc[:, "member_id"] = df.NEWID.str[:-1] + df.MEMBNO.astype("str")
     df.loc[:, "member_id"] = df.member_id.apply(lambda x: x.zfill(9))
-
+    
     # Count the number of interviews in which each family member has participated
     df.loc[:, "interviews"] = df.loc[:, "member_id"].map(df.loc[:, "member_id"].value_counts())
 

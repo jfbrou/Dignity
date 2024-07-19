@@ -24,12 +24,12 @@ def bootstrap(b):
         for df in iterator:
             unique_years = np.sort(df.year.unique())
             if len(unique_years) == 1:
-                chunk = chunk.append(df, ignore_index=True)
+                chunk = pd.concat([chunk, df], ignore_index=True)
             else:
-                chunk = chunk.append(df.loc[df.year == unique_years[0], :], ignore_index=True)
+                chunk = pd.concat([chunk, df.loc[df.year == unique_years[0], :]], ignore_index=True)
                 yield chunk
                 chunk = pd.DataFrame()
-                chunk = chunk.append(df.loc[df.year == unique_years[1], :], ignore_index=True)
+                chunk = pd.concat([chunk, df.loc[df.year == unique_years[1], :]], ignore_index=True)
         yield chunk
     chunks = year_chunk(os.path.join(data, 'bootstrap_acs.csv'), chunksize=1e6 / 2)
     
@@ -82,7 +82,7 @@ def bootstrap(b):
             chunk = chunk.groupby(['year', 'race', 'age'], as_index=False).apply(f)
 
         # Append the data frames for all chunks
-        df_b = df_b.append(chunk, ignore_index=True)
+        df_b = pd.concat([df_b, chunk], ignore_index=True)
         del chunk
     del chunks
 
@@ -105,8 +105,8 @@ def bootstrap(b):
     df_b = df_b.drop(['leisure_1', 'leisure_2', 'leisure_3', 'leisure_4'], axis=1)
 
     # Normalize consumption
-    df_b.loc[:, 'consumption_simple'] = df_b.consumption / np.average(df_b.loc[(df_b.year == 2019) & (df_b.race == 1), 'consumption'], weights=df_b.loc[(df_b.year == 2019) & (df_b.race == 1), 'weight'])
-    df_b.loc[:, 'consumption'] = df_b.consumption / np.average(df_b.loc[df_b.year == 2019, 'consumption'], weights=df_b.loc[df_b.year == 2019, 'weight'])
+    df_b.loc[:, 'consumption_simple'] = df_b.consumption / np.average(df_b.loc[(df_b.year == 2022) & (df_b.race == 1), 'consumption'], weights=df_b.loc[(df_b.year == 2022) & (df_b.race == 1), 'weight'])
+    df_b.loc[:, 'consumption'] = df_b.consumption / np.average(df_b.loc[df_b.year == 2022, 'consumption'], weights=df_b.loc[df_b.year == 2022, 'weight'])
 
     # Instantiate empty data frames
     df_acs_consumption = pd.DataFrame()
@@ -116,37 +116,37 @@ def bootstrap(b):
     df = df_b.groupby(['year', 'age'], as_index=False).apply(lambda x: pd.Series({'c_bar': np.average(x.consumption, weights=x.weight)}))
     df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [-1], 'bootstrap': [b], 'simple': [False]}), df, how='left')
     df.loc[:, 'c_bar'] = df.groupby('year', as_index=False).c_bar.transform(lambda x: filter(x, 1600)).values
-    df_acs_consumption = df_acs_consumption.append(df, ignore_index=True)
+    df_acs_consumption = pd.concat([df_acs_consumption, df], ignore_index=True)
 
     # Calculate ACS consumption statistics by year, race and age in the current bootstrap sample
     df = df_b.loc[df_b.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(lambda x: pd.Series({'c_bar': np.average(x.consumption, weights=x.weight)}))
     df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'bootstrap': [b], 'simple': [False]}), df, how='left')
     df.loc[:, 'c_bar'] = df.groupby(['year', 'race'], as_index=False).c_bar.transform(lambda x: filter(x, 1600)).values
-    df_acs_consumption = df_acs_consumption.append(df, ignore_index=True)
+    df_acs_consumption = pd.concat([df_acs_consumption, df], ignore_index=True)
 
     # Calculate ACS consumption statistics by year and race in the current bootstrap sample
     df = df_b.loc[df_b.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption_average': np.log(np.average(x.consumption_simple, weights=x.weight))}))
     df = pd.merge(expand({'year': df.year.unique(), 'age': [np.nan], 'race': [1, 2], 'bootstrap': [b], 'simple': [True]}), df, how='left')
-    df_acs_consumption = df_acs_consumption.append(df, ignore_index=True)
+    df_acs_consumption = pd.concat([df_acs_consumption, df], ignore_index=True)
 
     # Calculate ACS leisure statistics by year and age in the current bootstrap sample
     df = df_b.groupby(['year', 'age'], as_index=False).apply(lambda x: pd.Series({'ell_bar': np.average(x.leisure, weights=x.weight)}))
     df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [-1], 'bootstrap': [b], 'simple': [False]}), df, how='left')
     df.loc[:, 'ell_bar'] = df.groupby('year', as_index=False)['ell_bar'].transform(lambda x: filter(x, 100)).values
     df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
-    df_acs_leisure = df_acs_leisure.append(df, ignore_index=True)
+    df_acs_leisure = pd.concat([df_acs_leisure, df], ignore_index=True)
 
     # Calculate ACS leisure statistics by year, race and age in the current bootstrap sample
     df = df_b.loc[df_b.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(lambda x: pd.Series({'ell_bar': np.average(x.leisure, weights=x.weight)}))
     df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'bootstrap': [b], 'simple': [False]}), df, how='left')
     df.loc[:, 'ell_bar'] = df.groupby(['year', 'race'], as_index=False)['ell_bar'].transform(lambda x: filter(x, 100)).values
     df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
-    df_acs_leisure = df_acs_leisure.append(df, ignore_index=True)
+    df_acs_leisure = pd.concat([df_acs_leisure, df], ignore_index=True)
 
     # Calculate ACS leisure statistics by year and race in the current bootstrap sample
     df = df_b.loc[df_b.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'leisure_average': np.average(x.leisure, weights=x.weight)}))
     df = pd.merge(expand({'year': df.year.unique(), 'age': [np.nan], 'race': [1, 2], 'bootstrap': [b], 'simple': [True]}), df, how='left')
-    df_acs_leisure = df_acs_leisure.append(df, ignore_index=True)
+    df_acs_leisure = pd.concat([df_acs_leisure, df], ignore_index=True)
 
     # Merge and save the two data frames
     df_acs = pd.merge(df_acs_consumption, df_acs_leisure, how='left')

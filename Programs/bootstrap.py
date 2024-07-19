@@ -22,9 +22,9 @@ for b in range(1000):
     df_cex = pd.read_csv(os.path.join(data, 'dignity_cex_bootstrap_' + str(b) + '.csv'))
     df_cps = pd.read_csv(os.path.join(data, 'dignity_cps_bootstrap_' + str(b) + '.csv'))
     df_acs = pd.read_csv(os.path.join(data, 'dignity_acs_bootstrap_' + str(b) + '.csv'))
-    dignity_cex_bootstrap = dignity_cex_bootstrap.append(df_cex, ignore_index=True)
-    dignity_cps_bootstrap = dignity_cps_bootstrap.append(df_cps, ignore_index=True)
-    dignity_bootstrap_historical = dignity_bootstrap_historical.append(df_acs, ignore_index=True)
+    dignity_cex_bootstrap = pd.concat([dignity_cex_bootstrap, df_cex], ignore_index=True)
+    dignity_cps_bootstrap = pd.concat([dignity_cps_bootstrap, df_cps], ignore_index=True)
+    dignity_bootstrap_historical = pd.concat([dignity_bootstrap_historical, df_acs], ignore_index=True)
     del df_cex, df_cps
 dignity_bootstrap = pd.merge(dignity_cex_bootstrap, dignity_cps_bootstrap, how='left')
 dignity_bootstrap.to_csv(os.path.join(data, 'dignity_bootstrap.csv'), index=False)
@@ -38,7 +38,7 @@ dignity_bootstrap_historical = pd.read_csv(os.path.join(data, 'dignity_bootstrap
 c_nominal = 31046.442985362326
 def cew(b):
     # Use the data for the consumption-equivalent welfare of Black relative to White Americans calculation
-    years = range(1984, 2019 + 1)
+    years = range(1984, 2022 + 1)
     df_bootstrap = dignity_bootstrap.loc[dignity_bootstrap.year.isin(years) & (dignity_bootstrap.bootstrap == b) & (dignity_bootstrap.simple == False) & (dignity_bootstrap.race != -1) & (dignity_bootstrap.latin == -1), :]
     df_survival = dignity.loc[dignity.year.isin(years) & (dignity.historical == False) & (dignity.race != -1) & (dignity.latin == -1), :]
 
@@ -67,7 +67,7 @@ def cew(b):
                                                               inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
 
     # Use the data for the consumption-equivalent welfare of Black non-Latino relative to White non-Latino Americans calculation
-    years = range(2006, 2019 + 1)
+    years = range(2006, 2022 + 1)
     df_bootstrap = dignity_bootstrap.loc[dignity_bootstrap.year.isin(years) & (dignity_bootstrap.bootstrap == b) & (dignity_bootstrap.simple == False) & (dignity_bootstrap.race != -1) & (dignity_bootstrap.latin == 0), :]
     df_survival = dignity.loc[dignity.year.isin(years) & (dignity.historical == False) & (dignity.race != -1) & (dignity.latin == 0), :]
 
@@ -96,7 +96,7 @@ def cew(b):
                                                               inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
 
     # Use the data for the consumption-equivalent welfare of Latino relative to White non-Latino Americans calculation
-    years = range(2006, 2019 + 1)
+    years = range(2006, 2022 + 1)
     df_bootstrap = dignity_bootstrap.loc[dignity_bootstrap.year.isin(years) & (dignity_bootstrap.bootstrap == b) & (dignity_bootstrap.simple == False), :]
     df_survival = dignity.loc[dignity.year.isin(years) & (dignity.historical == False), :]
     
@@ -125,7 +125,7 @@ def cew(b):
                                                               inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
 
     # Use the data for the cumulative welfare growth of Black and White Americans calculation
-    years = range(1984, 2019 + 1)
+    years = range(1984, 2022 + 1)
     df_bootstrap = dignity_bootstrap.loc[dignity_bootstrap.year.isin(years) & (dignity_bootstrap.bootstrap == b) & (dignity_bootstrap.simple == False) & (dignity_bootstrap.race != -1) & (dignity_bootstrap.latin == -1), :]
     df_survival = dignity.loc[dignity.year.isin(years) & (dignity.historical == False) & (dignity.race != -1) & (dignity.latin == -1), :]
 
@@ -159,7 +159,7 @@ def cew(b):
     df_4.loc[:, 'log_lambda'] = df_4.groupby('race', as_index=False).log_lambda.transform(lambda x: np.exp(np.cumsum(x))).log_lambda.values
 
     # Use the data for the historical consumption-equivalent welfare of Black relative to White Americans calculation
-    years = list(range(1940, 1990 + 1, 10)) + list(range(2000, 2019 + 1))
+    years = list(range(1940, 1990 + 1, 10)) + list(range(2000, 2022 + 1))
     df_bootstrap = dignity_bootstrap_historical.loc[dignity_bootstrap_historical.year.isin(years) & (dignity_bootstrap_historical.bootstrap == b) & (dignity_bootstrap_historical.simple == False) & (dignity_bootstrap_historical.race != -1), :]
     df_survival = dignity.loc[dignity.year.isin(years) & (dignity.historical == True) & (dignity.race != -1) & (dignity.latin == -1), :]
 
@@ -179,7 +179,7 @@ def cew(b):
                                                               S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal)['log_lambda']
 
     # Use the data for the historical consumption-equivalent welfare growth by decade for Black and White Americans calculation
-    years = list(range(1940, 2010 + 1, 10)) + [2019]
+    years = list(range(1940, 2020 + 1, 10)) + [2022]
     df_bootstrap = dignity_bootstrap_historical.loc[dignity_bootstrap_historical.year.isin(years) & (dignity_bootstrap_historical.bootstrap == b) & (dignity_bootstrap_historical.simple == False) & (dignity_bootstrap_historical.race != -1), :]
     df_survival = dignity.loc[dignity.year.isin(years) & (dignity.historical == True) & (dignity.race != -1) & (dignity.latin == -1), :]
 
@@ -201,7 +201,7 @@ def cew(b):
                                                                                            S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal)['log_lambda']
 
     # Use the data for the historical consumption-equivalent welfare growth and consumption by decade calculation
-    years = list(range(1940, 2010 + 1, 10)) + [2019]
+    years = list(range(1940, 2020 + 1, 10)) + [2022]
     df_bootstrap = dignity_bootstrap_historical.loc[dignity_bootstrap_historical.year.isin(years) & (dignity_bootstrap_historical.bootstrap == b) & (dignity_bootstrap_historical.simple == False) & (dignity_bootstrap_historical.race == -1), :]
     df_survival = dignity.loc[dignity.year.isin(years) & (dignity.historical == True) & (dignity.race == -1) & (dignity.latin == -1), :]
 
@@ -223,7 +223,7 @@ def cew(b):
                                                         S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal)[i]
 
     # Use the data for the historical consumption-equivalent welfare growth by decade for Black and White Americans calculation
-    years = list(range(1940, 2010 + 1, 10)) + [2019]
+    years = list(range(1940, 2020 + 1, 10)) + [2022]
     df_bootstrap = dignity_bootstrap_historical.loc[dignity_bootstrap_historical.year.isin(years) & (dignity_bootstrap_historical.bootstrap == b) & (dignity_bootstrap_historical.simple == False) & dignity_bootstrap_historical.race.isin([-1, 1, 2]), :]
     df_survival = dignity.loc[dignity.year.isin(years) & (dignity.historical == True) & dignity.race.isin([-1, 1, 2]) & (dignity.latin == -1), :]
 
@@ -248,13 +248,7 @@ def cew(b):
     df_8.loc[:, ['log_lambda', 'C']] = df_8.groupby('race', as_index=False)[['log_lambda', 'C']].transform(lambda x: np.exp(np.cumsum(x * np.diff(years)))).values
 
     # Append and save the data frames
-    df = df_1.append(df_2, ignore_index=True)
-    df = df.append(df_3, ignore_index=True)
-    df = df.append(df_4, ignore_index=True)
-    df = df.append(df_5, ignore_index=True)
-    df = df.append(df_6, ignore_index=True)
-    df = df.append(df_7, ignore_index=True)
-    df = df.append(df_8, ignore_index=True)
+    df = pd.concat([df_1, df_2, df_3, df_4, df_5, df_6, df_7, df_8], ignore_index=True)
     df.to_csv(os.path.join(data, 'cew_bootstrap_ ' + str(b) + '.csv'), index=False)
 
 # Calculate the consumption-equivalent welfare statistics across 1000 bootstrap samples
@@ -264,6 +258,6 @@ Parallel(n_jobs=n_cpu)(delayed(cew)(b) for b in range(1000))
 cew_bootstrap = pd.DataFrame()
 for b in range(1000):
     df = pd.read_csv(os.path.join(data, 'cew_bootstrap_ ' + str(b) + '.csv'))
-    cew_bootstrap = cew_bootstrap.append(df, ignore_index=True)
+    cew_bootstrap = pd.concat([cew_bootstrap, df], ignore_index=True)
     del df
 cew_bootstrap.to_csv(os.path.join(data, 'cew_bootstrap.csv'), index=False)

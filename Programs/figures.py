@@ -44,16 +44,16 @@ dignity_bs_historical = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap_hist
 
 # Load the CEX data
 cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
-cex = cex.loc[cex.year.isin(range(1984, 2019 + 1)), :]
+cex = cex.loc[cex.year.isin(range(1984, 2022 + 1)), :]
 
 # Normalize consumption by that of the reference group
-cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[(cex.year == 2019) & (cex.race == 1), 'consumption'], weights=cex.loc[(cex.year == 2019) & (cex.race == 1), 'weight'])
+cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[(cex.year == 2022) & (cex.race == 1), 'consumption'], weights=cex.loc[(cex.year == 2022) & (cex.race == 1), 'weight'])
 
 # Calculate the logarithm of average consumption by year and race
 df = cex.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption': np.log(np.average(x.consumption, weights=x.weight))}))
 
 # Calculate the 95% confidence interval
-df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2019 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == -1) & (dignity_bs.simple == True), :]
+df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2022 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == -1) & (dignity_bs.simple == True), :]
 df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.025)}).rename(columns={'consumption_average': 'lb'}),
                  df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.975)}).rename(columns={'consumption_average': 'ub'}), how='left')
 
@@ -63,14 +63,15 @@ fig, ax = plt.subplots(figsize=(6, 4))
 # Plot the lines
 ax.plot(df.year.unique(), df.loc[df.race == 1, 'consumption'], color=colors[0], linewidth=2.5)
 ax.fill_between(df_bs.year.unique(), df_bs.loc[df_bs.race == 1, 'lb'], y2=df_bs.loc[df_bs.race == 1, 'ub'], color=colors[0], alpha=0.2, linewidth=0)
-ax.annotate('White', xy=(2019.25, df.loc[df.race == 1, 'consumption'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('White', xy=(2022.25, df.loc[df.race == 1, 'consumption'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
 ax.plot(df.year.unique(), df.loc[df.race == 2, 'consumption'], color=colors[1], linewidth=2.5)
 ax.fill_between(df_bs.year.unique(), df_bs.loc[df_bs.race == 2, 'lb'], y2=df_bs.loc[df_bs.race == 2, 'ub'], color=colors[1], alpha=0.2, linewidth=0)
-ax.annotate('Black', xy=(2019.25, df.loc[df.race == 2, 'consumption'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('Black', xy=(2022.25, df.loc[df.race == 2, 'consumption'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
 
 # Set the horizontal axis
-ax.set_xlim(1984, 2019)
-ax.set_xticks(np.append(np.linspace(1985, 2015, 7), 2019))
+ax.set_xlim(1984, 2022)
+ax.set_xticks(np.append(np.linspace(1985, 2020, 8), 2022))
+ax.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""))
 
 # Set the vertical axis
 ax.set_ylim(np.log(0.3), np.log(1))
@@ -90,59 +91,6 @@ plt.close()
 
 ################################################################################
 #                                                                              #
-# This section of the script plots log average consumption by year for Black   #
-# and White Americans from 1984 to 2019.                                       #
-#                                                                              #
-################################################################################
-
-# Load the CEX data
-cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
-cex = cex.loc[cex.year.isin(range(1984, 2019 + 1)), :]
-
-# Normalize consumption by that of the reference group
-cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[(cex.year == 2019) & (cex.race == 1), 'consumption'], weights=cex.loc[(cex.year == 2019) & (cex.race == 1), 'weight'])
-cex.loc[:, 'consumption_nipa'] = cex.consumption_nipa / np.average(cex.loc[(cex.year == 2019) & (cex.race == 1), 'consumption_nipa'], weights=cex.loc[(cex.year == 2019) & (cex.race == 1), 'weight'])
-
-# Calculate the logarithm of average consumption by year and race
-df = cex.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption':      np.log(np.average(x.consumption, weights=x.weight)),
-                                                                              'consumption_nipa': np.log(np.average(x.consumption_nipa, weights=x.weight))}))
-
-# Initialize the figure
-fig, ax = plt.subplots(figsize=(6, 4))
-
-# Plot the lines
-ax.plot(df.year.unique(), df.loc[df.race == 1, 'consumption'], color=colors[0], linewidth=2.5, label='_nolegend_')
-ax.plot(df.year.unique(), df.loc[df.race == 1, 'consumption_nipa'], color=colors[0], linewidth=2.5, alpha=0.2)
-ax.annotate('White', xy=(2019.25, df.loc[df.race == 1, 'consumption'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
-ax.plot(df.year.unique(), df.loc[df.race == 2, 'consumption'], color=colors[1], linewidth=2.5, label='_nolegend_')
-ax.plot(df.year.unique(), df.loc[df.race == 2, 'consumption_nipa'], color=colors[1], linewidth=2.5, alpha=0.2)
-ax.annotate('Black', xy=(2019.25, df.loc[df.race == 2, 'consumption'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
-
-# Set the horizontal axis
-ax.set_xlim(1984, 2019)
-ax.set_xticks(np.append(np.linspace(1985, 2015, 7), 2019))
-
-# Set the vertical axis
-ax.set_ylim(np.log(0.28), np.log(1))
-ax.set_yticks(np.log(np.linspace(0.3, 1, 8)))
-ax.set_yticklabels(np.linspace(30, 100, 8).astype('int'))
-ax.set_ylabel('$\%$', fontsize=12, rotation=0, ha='center', va='center')
-ax.yaxis.set_label_coords(0, 1.1)
-
-# Set the legend
-ax.legend(['White (NIPA adjustment)', 'Black (NIPA adjustment)'], frameon=False, fontsize=12)
-
-# Remove the top and right axes
-ax.spines['right'].set_visible(False)
-ax.spines['top'].set_visible(False)
-
-# Save and close the figure
-fig.tight_layout()
-fig.savefig(os.path.join(figures, 'Average consumption nipa.pdf'), format='pdf')
-plt.close()
-
-################################################################################
-#                                                                              #
 # This section of the script plots the standard deviation of log nondurable    #
 # consumption by year for Black and White Americans from 1984 to 2019.         #
 #                                                                              #
@@ -150,16 +98,16 @@ plt.close()
 
 # Load the CEX data
 cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
-cex = cex.loc[cex.year.isin(range(1984, 2019 + 1)), :]
+cex = cex.loc[cex.year.isin(range(1984, 2022 + 1)), :]
 
 # Normalize consumption by that of the reference group
-cex.loc[:, 'consumption_nd'] = cex.consumption_nd / np.average(cex.loc[(cex.year == 2019) & (cex.race == 1), 'consumption_nd'], weights=cex.loc[(cex.year == 2019) & (cex.race == 1), 'weight'])
+cex.loc[:, 'consumption_nd'] = cex.consumption_nd / np.average(cex.loc[(cex.year == 2022) & (cex.race == 1), 'consumption_nd'], weights=cex.loc[(cex.year == 2022) & (cex.race == 1), 'weight'])
 
 # Calculate the standard deviation of log consumption by year and race
 df = cex.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption_nd': np.sqrt(np.average((np.log(x.consumption_nd) - np.average(np.log(x.consumption_nd), weights=x.weight))**2, weights=x.weight))}))
 
 # Calculate the 95% confidence interval
-df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2019 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == -1) & (dignity_bs.simple == True), :]
+df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2022 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == -1) & (dignity_bs.simple == True), :]
 df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_sd': lambda x: x.quantile(0.025)}).rename(columns={'consumption_sd': 'lb'}),
                  df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_sd': lambda x: x.quantile(0.975)}).rename(columns={'consumption_sd': 'ub'}), how='left')
 
@@ -175,8 +123,9 @@ ax.fill_between(df_bs.year.unique(), df_bs.loc[df_bs.race == 2, 'lb'], y2=df_bs.
 ax.annotate('Black', xy=(2004, 0.5), color='k', fontsize=12, ha='center', va='center', annotation_clip=False)
 
 # Set the horizontal axis
-ax.set_xlim(1984, 2019)
-ax.set_xticks(np.append(np.linspace(1985, 2015, 7), 2019))
+ax.set_xlim(1984, 2022)
+ax.set_xticks(np.append(np.linspace(1985, 2020, 8), 2022))
+ax.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""))
 
 # Set the vertical axis
 ax.set_ylim(0.47, 0.65)

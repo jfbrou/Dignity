@@ -19,19 +19,19 @@ data = '/scratch/users/jfbrou/Dignity'
 def bootstrap(b):
     # Load the CEX data
     cex = pd.read_csv(os.path.join(data, 'cex.csv'))
-    cex = cex.loc[cex.year.isin(range(1984, 2020 + 1)), :]
+    cex = cex.loc[cex.year.isin(range(1984, 2022 + 1)), :]
 
     # Sample from the data
     df_b = pd.DataFrame()
-    for year in range(1984, 2020 + 1):
-        df_b = df_b.append(cex.loc[cex.year == year, :].sample(frac=1, replace=True, random_state=b), ignore_index=True)
+    for year in range(1984, 2022 + 1):
+        df_b = pd.concat([df_b, cex.loc[cex.year == year, :].sample(frac=1, replace=True, random_state=b)], ignore_index=True)
     del cex
     
     # Normalize consumption
     for column in ['consumption', 'consumption_nd']:
-        df_b.loc[:, column + '_simple'] = df_b.loc[:, column] / np.average(df_b.loc[(df_b.year == 2019) & (df_b.race == 1), column], weights=df_b.loc[(df_b.year == 2019) & (df_b.race == 1), 'weight'])
-        df_b.loc[:, column + '_simple_latin'] = df_b.loc[:, column] / np.average(df_b.loc[(df_b.year == 2019) & (df_b.race == 1) & (df_b.latin == 0), column], weights=df_b.loc[(df_b.year == 2019) & (df_b.race == 1) & (df_b.latin == 0), 'weight'])
-        df_b.loc[:, column] = df_b.loc[:, column] / np.average(df_b.loc[df_b.year == 2019, column], weights=df_b.loc[df_b.year == 2019, 'weight'])
+        df_b.loc[:, column + '_simple'] = df_b.loc[:, column] / np.average(df_b.loc[(df_b.year == 2022) & (df_b.race == 1), column], weights=df_b.loc[(df_b.year == 2022) & (df_b.race == 1), 'weight'])
+        df_b.loc[:, column + '_simple_latin'] = df_b.loc[:, column] / np.average(df_b.loc[(df_b.year == 2022) & (df_b.race == 1) & (df_b.latin == 0), column], weights=df_b.loc[(df_b.year == 2022) & (df_b.race == 1) & (df_b.latin == 0), 'weight'])
+        df_b.loc[:, column] = df_b.loc[:, column] / np.average(df_b.loc[df_b.year == 2022, column], weights=df_b.loc[df_b.year == 2022, 'weight'])
 
     # Define functions to perform the aggregation
     def f(x):
@@ -62,34 +62,34 @@ def bootstrap(b):
     df = df_b.loc[df_b.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(f)
     df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'latin': [-1], 'bootstrap': [b], 'simple': [False]}), df, how='left')
     df.loc[:, columns] = df.groupby(['year', 'race'], as_index=False)[columns].transform(lambda x: filter(x, 1600)).values
-    df_cex = df_cex.append(df, ignore_index=True)
+    df_cex = pd.concat([df_cex, df], ignore_index=True)
 
     # Calculate CEX consumption statistics by year and race in the current bootstrap sample
     df = df_b.loc[df_b.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).apply(f_simple)
     df = pd.merge(expand({'year': df.year.unique(), 'age': [np.nan], 'race': [1, 2], 'latin': [-1], 'bootstrap': [b], 'simple': [True]}), df, how='left')
-    df_cex = df_cex.append(df, ignore_index=True)
+    df_cex = pd.concat([df_cex, df], ignore_index=True)
 
     # Calculate CEX consumption statistics by year and age for Latinos in the current bootstrap sample
     df = df_b.loc[(df_b.latin == 1) & (df_b.year >= 2006), :].groupby(['year', 'age'], as_index=False).apply(f)
     df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [-1], 'latin': [1], 'bootstrap': [b], 'simple': [False]}), df, how='left')
     df.loc[:, columns] = df.groupby('year', as_index=False)[columns].transform(lambda x: filter(x, 1600)).values
-    df_cex = df_cex.append(df, ignore_index=True)
+    df_cex = pd.concat([df_cex, df], ignore_index=True)
 
     # Calculate CEX consumption statistics by year for Latinos in the current bootstrap sample
     df = df_b.loc[(df_b.latin == 1) & (df_b.year >= 2006), :].groupby('year', as_index=False).apply(f_simple_latin)
     df = pd.merge(expand({'year': df.year.unique(), 'age': [np.nan], 'race': [-1], 'latin': [1], 'bootstrap': [b], 'simple': [True]}), df, how='left')
-    df_cex = df_cex.append(df, ignore_index=True)
+    df_cex = pd.concat([df_cex, df], ignore_index=True)
 
     # Calculate CEX consumption statistics by year, race and age for non-Latinos in the current bootstrap sample
     df = df_b.loc[df_b.race.isin([1, 2]) & (df_b.latin == 0) & (df_b.year >= 2006), :].groupby(['year', 'race', 'age'], as_index=False).apply(f)
     df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'latin': [0], 'bootstrap': [b], 'simple': [False]}), df, how='left')
     df.loc[:, columns] = df.groupby(['year', 'race'], as_index=False)[columns].transform(lambda x: filter(x, 1600)).values
-    df_cex = df_cex.append(df, ignore_index=True)
+    df_cex = pd.concat([df_cex, df], ignore_index=True)
 
     # Calculate CEX consumption statistics by year and race for non-Latinos in the current bootstrap sample
     df = df_b.loc[df_b.race.isin([1, 2]) & (df_b.latin == 0) & (df_b.year >= 2006), :].groupby(['year', 'race'], as_index=False).apply(f_simple_latin)
     df = pd.merge(expand({'year': df.year.unique(), 'age': [np.nan], 'race': [1, 2], 'latin': [0], 'bootstrap': [b], 'simple': [True]}), df, how='left')
-    df_cex = df_cex.append(df, ignore_index=True)
+    df_cex = pd.concat([df_cex, df], ignore_index=True)
 
     # Keep the imputation sample
     df_b = df_b.loc[df_b.complete == 1, :]
