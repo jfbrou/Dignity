@@ -14,8 +14,8 @@ URL = "https://api.openai.com/v1/chat/completions"
 API_KEY = 'sk-None-hO8SyBtYbgt8z65D54qeT3BlbkFJjxeODok8EBlysTp6RPB6'
 
 # List of files
-years = range(1984, 1994 + 1, 1)
-filepaths = [os.path.join(cex_r_data, "intrvw" + str(year)[2:], "codebook.txt") for year in years]
+years = range(1997, 1997 + 1, 1)
+filepaths = [os.path.join(cex_r_data, "stubs", "CE-HG-Inter-" + str(year) + ".txt") for year in years]
 print(f"{len(filepaths)} files found")
 
 # Define several functions
@@ -76,7 +76,7 @@ for filepath in filepaths:
 
     # Save the processed codebook
     year = years[filepaths.index(filepath)]
-    output_filepath = os.path.join(cex_r_data, "intrvw" + str(year)[2:], "codebook_cleaned.json")
+    output_filepath = os.path.join(cex_r_data, "stubs", "codebook_" + str(year) + "_cleaned.json")
 
     # Skip if already exists
     if os.path.exists(output_filepath):
@@ -105,16 +105,33 @@ for filepath in filepaths:
         # --- Compose your prompt ---
         prompt = f"""
 
-Here's a file containing codes and descriptions:
+Below is a file containing 7 columns of data. 
+Some rows start with a *. These rows are comments and should be ignored.
+The first column takes two values, either 1 or 2. When it takes the value of 2, it means that the corresponding text in the third column is a continuation of the text in the row above the current row. For those rows where the first column is equal to 2, the text in the third column should be concatenated with the text in the third column of the row above the current row.
+The second column contains integers that determine the level of aggregation of the data in the row.
+The third column contains text.
+The fourth column contains either a code or some text. When it contains text, it is a description of an aggregation category. When it contains a code, it is a specific element in that category.
+The fifth column takes three values, either "I", "G", or "S". When it takes the value of "I", it means that it is an element in a category. When it takes the values of "G" or "S", it means that it is a cateogry.
+The sixth column contains values.
+The seventh column contains text.
 
 {excerpt}
 
-Extract as a JSON each code and their descriptions. Example:
+Transform this file as a JSON file. Example:
 
-    "220122": "Same as 220121 - owned vacation home, vacation coops",
-    "190903": "Food and non-alc beverages at restaurants, cafes, fast food places on trips",
-    "980330": "Percent vehicle owner",
-    ...
+    1  1  Average annual expenditures                                    TOTALEXP  G  1  EXPEND                            
+    1  2    Food                                                         FOODTOTL  G  1  EXPEND                            
+    1  3      Food at home                                               FOODHOME  G  1  FOOD                              
+    1  4        Grocery stores                                           790220    I  1  FOOD                              
+    1  4        Convenience stores                                       790230    I  1  FOOD                              
+    1  4        Food prepared by consumer unit on out-of-town trips      190904    I  1  FOOD                              
+    1  3      Food away from home                                        FOODAWAY  G  1  FOOD                              
+    1  4        Meals at restaurants, carry-outs and other               790410    I  1  FOOD                              
+    1  4        Board (including at school)                              190901    I  1  FOOD                              
+    1  4        Catered affairs                                          190902    I  1  FOOD                              
+    1  4        Food on out-of-town trips                                190903    I  1  FOOD                              
+    1  4        School lunches                                           790430    I  1  FOOD                              
+    1  4        Meals as pay                                             800700    I  1  FOOD
 
 """.strip()
 
