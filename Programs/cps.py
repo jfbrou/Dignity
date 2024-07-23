@@ -141,7 +141,8 @@ income_series = meta.loc[meta.LineDescription == 'Equals: Disposable personal in
 earnings = 1e6 * bea.data('nipa', tablename='t20100', frequency='a', year=years).data.loc[:, earnings_series].sum(axis=1).values.squeeze()
 income = 1e6 * bea.data('nipa', tablename='t20100', frequency='a', year=years).data[income_series]
 population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=years).data.B230RC.values.squeeze()
-deflator = 1e2 / bea.data('nipa', tablename='t10104', frequency='a', year=years).data.DPCERG.values.squeeze()
+deflator = 1e2 / bea.data("nipa", tablename="t10104", frequency="a", year=years).data.DPCERG.values.squeeze()
+deflator = deflator / deflator[years.index(2012)]
 earnings_per_capita = deflator * earnings / population
 income_per_capita = deflator * income / population
 

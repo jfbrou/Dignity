@@ -6,7 +6,7 @@
 #SBATCH --output=/home/users/jfbrou/Dignity_bash/output_%x_%j.out
 #SBATCH --time=1-00:00:00
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=10
+#SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=100G
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jfbrou@stanford.edu

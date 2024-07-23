@@ -17,7 +17,7 @@ data = '/scratch/users/jfbrou/Dignity'
 # Define a function to calculate CPS leisure statistics across bootstrap samples
 def bootstrap(b):
     # Load the CPS data
-    cps = pd.read_csv(os.path.join(data, 'cps.csv'), usecols=['year', 'weight', 'leisure', 'race', 'latin', 'age'], dtype={'year': 'uint16', 'weight': 'float32', 'leisure': 'float32', 'race': 'uint8', 'latin': 'float16', 'age': 'uint8'})
+    cps = pd.read_csv(os.path.join(data, 'cps.csv'), usecols=['year', 'weight', 'leisure', 'race', 'latin', 'age'])
     cps = cps.loc[cps.year.isin(range(1985, 2023 + 1)), :]
     cps.loc[:, 'year'] = cps.year - 1
 

@@ -18,20 +18,27 @@ data = '/scratch/users/jfbrou/Dignity'
 # Define a function to calculate ACS consumption and leisure statistics across bootstrap samples
 def bootstrap(b):
     # Define a function to read the data by year
-    def year_chunk(file, chunksize=1e6 / 2):
+    def year_chunk(file, chunksize=1e6):
         iterator = pd.read_csv(file, iterator=True, chunksize=chunksize)
         chunk = pd.DataFrame()
+        last_year = None
         for df in iterator:
             unique_years = np.sort(df.year.unique())
             if len(unique_years) == 1:
                 chunk = pd.concat([chunk, df], ignore_index=True)
+                last_year = unique_years[0]
             else:
-                chunk = pd.concat([chunk, df.loc[df.year == unique_years[0], :]], ignore_index=True)
-                yield chunk
-                chunk = pd.DataFrame()
-                chunk = pd.concat([chunk, df.loc[df.year == unique_years[1], :]], ignore_index=True)
-        yield chunk
-    chunks = year_chunk(os.path.join(data, 'bootstrap_acs.csv'), chunksize=1e6 / 2)
+                for year in unique_years:
+                    if year == last_year:
+                        chunk = pd.concat([chunk, df.loc[df.year == year, :]], ignore_index=True)
+                    else:
+                        if not chunk.empty:
+                            yield chunk
+                        chunk = df.loc[df.year == year, :].reset_index(drop=True)
+                        last_year = year
+        if not chunk.empty:
+            yield chunk
+    chunks = year_chunk(os.path.join(data, 'bootstrap_acs.csv'), chunksize=1e6)
     
     # Load and process the ACS data year by year
     df_b = pd.DataFrame()

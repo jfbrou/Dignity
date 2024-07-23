@@ -135,7 +135,8 @@ hours_map = {0: 0,
 # Load the NIPA personal earnings and PCE data from the BEA
 pce = 1e6 * (bea.data('nipa', tablename='t20405', frequency='a', year=years).data.DPCERC.values.squeeze() - bea.data('nipa', tablename='t20405', frequency='a', year=years).data.DINSRC.values.squeeze())
 population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=years).data.B230RC.values.squeeze()
-deflator = 1e2 / bea.data('nipa', tablename='t10104', frequency='a', year=years).data.DPCERG.values.squeeze()
+deflator = 1e2 / bea.data("nipa", tablename="t10104", frequency="a", year=years).data.DPCERG.values.squeeze()
+deflator = deflator / deflator[years.index(2012)]
 pce = deflator * pce / population
 
 # Store the above four series in a data frame
