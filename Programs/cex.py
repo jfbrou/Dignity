@@ -4,6 +4,7 @@ import pandas as pd
 pd.options.mode.chained_assignment = None
 import beapy
 import statsmodels.formula.api as smf
+from scipy.stats.mstats import winsorize
 import os
 import calendar
 
@@ -48,7 +49,7 @@ for year in years:
                                       (202, 203), # RACE
                                       (244, 245), # SEX
                                       (74, 75)]   # CU_CODE
-    elif (year >= 1986) & (year <= 1989):
+    elif (year >= 1986) & (year <= 1992):
         columns[years.index(year)] = [(0, 8),     # NEWID
                                       (8, 11),    # AGE
                                       (82, 84),   # EDUCA
@@ -260,7 +261,7 @@ for year in years:
     df = pd.DataFrame()
 
     for interview in range(1, 5 + 1):
-        if (year >= 1984) & (year <= 1989):
+        if (year >= 1984) & (year <= 1992):
             if interview == 5:
                 suffix = "memi" + str(year + 1)[2:] + "1" + ".txt"
             else:
@@ -288,6 +289,7 @@ for year in years:
     
     # Count the number of interviews in which each family member has participated
     df.loc[:, "interviews"] = df.loc[:, "member_id"].map(df.loc[:, "member_id"].value_counts())
+    df = df.loc[df.interviews <= 4, :]
 
     # Redefine the type of the age variable in 2015
     if year == 2015:
@@ -479,7 +481,7 @@ for year in years:
                                       (605, 616),   # FINLWT21
                                       (671, 679),   # FSALARYX
                                       (1028, 1029)] # RESPSTAT
-    elif (year >= 1986) & (year <= 1989):
+    elif (year >= 1986) & (year <= 1992):
         columns[years.index(year)] = [(0, 8),     # NEWID
                                       (273, 282), # EARNINCX
                                       (334, 336), # FAM_SIZE
@@ -545,7 +547,7 @@ for year in years:
 
     # Load the data
     for interview in range(1, 5 + 1):
-        if (year >= 1984) & (year <= 1989):
+        if (year >= 1984) & (year <= 1992):
             if interview == 5:
                 suffix = "fmli" + str(year + 1)[2:] + "1" + ".txt"
             else:
@@ -620,7 +622,7 @@ cex_memi = cex_memi.groupby(["year", "member_id"], as_index=False).agg({"FINLWT2
 mtbi_columns = [None] * len(years)
 itbi_columns = [None] * len(years)
 for year in years:
-    if (year >= 1984) & (year <= 1989):
+    if (year >= 1984) & (year <= 1992):
         mtbi_columns[years.index(year)] = [(0, 8), (8, 14), (14, 26), (27, 28)]
         itbi_columns[years.index(year)] = [(0, 8), (12, 18), (19, 31)]
     else:
@@ -645,7 +647,7 @@ for year in years:
 
     # Load the data
     for interview in range(1, 5 + 1):
-        if (year >= 1984) & (year <= 1989):
+        if (year >= 1984) & (year <= 1992):
             if interview == 5:
                 suffix = str(year + 1)[2:] + "1" + ".txt"
             else:
@@ -682,6 +684,10 @@ for year in years:
     if year <= 1987:
         df.loc[df.UCC.isin([790220, 790230, 790240, 190904]), "COST"] = df.COST / np.exp(-0.10795)
 
+    # Set the negative medical expenditures (reimbursements) to zero
+    df.loc[(df.UCC >= 540000) & (df.UCC < 590000) & (df.COST < 0), "COST"] = 0
+    df.loc[(df.UCC == 340906) & (df.COST < 0), "COST"] = 0
+
     # Aggregate expenditures, create the year variable and append the data frames for all years
     df_aggregate = df.groupby("NEWID", as_index=False).agg({"COST": "sum"}).rename(columns={"COST": "consumption"})
     df_aggregate_nd = df.loc[df.durable == 0, :].groupby("NEWID", as_index=False).agg({"COST": "sum"}).rename(columns={"COST": "consumption_nd"})
@@ -700,16 +706,15 @@ for year in years:
 cex = pd.merge(cex_fmli, cex_expenditures, how="left").fillna(0)
 
 # Aggregate variables over interviews
-cex = cex.groupby(["year", "member_id"], as_index=False).agg({"consumption":    "sum",
+cex = cex.groupby(["year", "family_id"], as_index=False).agg({"consumption":    "sum",
                                                               "consumption_nd": "sum",
                                                               "FINLWT21":       "mean",
                                                               "EARNINCX":       "mean",
                                                               "FSALARYX":       "mean",
                                                               "RESPSTAT":       lambda x: x.iloc[0],
-                                                              "family_id":      lambda x: x.iloc[0],
                                                               "FAM_SIZE":       lambda x: x.iloc[0],
                                                               "interviews":     lambda x: x.iloc[0],
-                                                              "RACE":           lambda x: x.iloc[0]}).drop("member_id", axis=1)
+                                                              "RACE":           lambda x: x.iloc[0]})
 
 # Drop observations with nonpositve consumption
 cex = cex.loc[(cex.consumption > 0) & (cex.consumption_nd > 0), :]
@@ -732,7 +737,18 @@ for column in [column for column in cex.columns if column.startswith("consumptio
 for column in [column for column in cex.columns if column.startswith("consumption") and column.find("_nd") != -1]:
     cex.loc[:, column] = np.log(4 * cex.loc[:, column] / cex.interviews)
 
-# Define a function to calculate the weighted standard deviation of log nondurable consumption for all families by the number of interviews in which they participated in
+# Define a function to calculate weighted percentiles
+def weighted_percentile(data, weights, percentile):
+    sorted_data, sorted_weights = map(np.array, zip(*sorted(zip(data, weights))))
+    cumulative_weight = np.cumsum(sorted_weights)
+    cutoff = percentile * cumulative_weight[-1]
+    return sorted_data[np.searchsorted(cumulative_weight, cutoff)]
+
+# Winsorize consumption to the 1st and 99th percentiles
+for column in [column for column in cex.columns if column.startswith("consumption")]:
+    cex.loc[:, column] = cex.groupby("year", as_index=False).apply(lambda x: np.clip(x.loc[:, column], a_min=weighted_percentile(x.loc[:, column], x.FINLWT21, 0.01), a_max=weighted_percentile(x.loc[:, column], x.FINLWT21, 0.99))).values
+
+# Define a function to calculate the weighted standard deviation of log nondurable consumption for all families by the number of interviews in which they participated
 def f(x):
     d = {}
     columns = [column for column in x.columns if column.startswith("consumption") and column.find("_nd") != -1]
@@ -766,15 +782,6 @@ cex = pd.merge(cex, cex.groupby(["year", "RACE"], as_index=False).apply(f), how=
 for column in [column for column in cex.columns if column.startswith("consumption") and not column.endswith("average") and column.find("_nd") != -1]:
     cex.loc[:, column] = np.exp(cex.loc[:, column + "_average"] + cex.loc[:, column.replace("consumption", "scale")] * (cex.loc[:, column] - cex.loc[:, column + "_average"]))
 cex = cex.drop([column for column in cex.columns if column.endswith("average") or column.startswith("scale")], axis=1)
-
-# Only keep the relevant variables
-mean_columns = [column for column in cex.columns if column.startswith("consumption")] + ["EARNINCX", "FSALARYX"]
-mean_functions = ["mean"] * len(mean_columns)
-first_columns = ["FAM_SIZE", "RESPSTAT"]
-first_functions = [lambda x: x.iloc[0]] * len(first_columns)
-d_functions = dict(zip(mean_columns, mean_functions))
-d_functions.update(dict(zip(first_columns, first_functions)))
-cex = cex.groupby(["year", "family_id"], as_index=False).agg(d_functions)
 
 # Merge the member data frame with the family and expenditures one
 cex = pd.merge(cex_memi, cex, how="inner").drop("family_id", axis=1)
@@ -811,7 +818,6 @@ for column in [column for column in cex.columns if column.startswith("consumptio
     else:
         cex.loc[:, column] = cex.pce_nd + cex.pce_nd * (cex.loc[:, column] - cex.loc[:, column + "_average"]) / cex.loc[:, column + "_average"]
     cex = cex.drop(column + "_average", axis=1)
-cex = cex.loc[(cex.consumption > 0) & (cex.consumption_nd > 0), :]
 
 # Enforce the consumption floor on total consumption
 for column in [column for column in cex.columns if column.startswith("consumption") and column.find("_nd") == -1]:

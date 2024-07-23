@@ -188,48 +188,48 @@ for chunk in chunks:
 	second = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), :].copy(deep=True)
 	second.loc[:, 'RACE'] = 2
 	second.loc[:, 'PERWT'] = second.PERWT / 2
-	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'RACE'] = 1
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'PERWT'] = chunk.PERWT / 2
+	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'RACE'] = 1
 	chunk = pd.concat([chunk, second], ignore_index=True)
 
 	# Split the White and Native American observations in each category
 	second = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), :].copy(deep=True)
 	second.loc[:, 'RACE'] = 3
 	second.loc[:, 'PERWT'] = second.PERWT / 2
-	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'RACE'] = 1
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'PERWT'] = chunk.PERWT / 2
+	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'RACE'] = 1
 	chunk = pd.concat([chunk, second], ignore_index=True)
 
 	# Split the White and Asian or Pacific Islander observations in each category
 	second = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), :].copy(deep=True)
 	second.loc[:, 'RACE'] = 4
 	second.loc[:, 'PERWT'] = second.PERWT / 2
-	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 1
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'PERWT'] = chunk.PERWT / 2
+	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 1
 	chunk = pd.concat([chunk, second], ignore_index=True)
 
 	# Split the Black and Native American observations in each category
 	second = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), :].copy(deep=True)
 	second.loc[:, 'RACE'] = 3
 	second.loc[:, 'PERWT'] = second.PERWT / 2
-	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'RACE'] = 2
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'PERWT'] = chunk.PERWT / 2
+	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'RACE'] = 2
 	chunk = pd.concat([chunk, second], ignore_index=True)
 
 	# Split the Black and Asian or Pacific Islander observations in each category
 	second = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), :].copy(deep=True)
 	second.loc[:, 'RACE'] = 4
 	second.loc[:, 'PERWT'] = second.PERWT / 2
-	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 2
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'PERWT'] = chunk.PERWT / 2
+	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 2
 	chunk = pd.concat([chunk, second], ignore_index=True)
 
 	# Split the Native American and Asian or Pacific Islander observations in each category
 	second = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), :].copy(deep=True)
 	second.loc[:, 'RACE'] = 4
 	second.loc[:, 'PERWT'] = second.PERWT / 2
-	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 3
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'PERWT'] = chunk.PERWT / 2
+	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 3
 	chunk = pd.concat([chunk, second], ignore_index=True)
 
 	# Split the White, Black and Native American observations in each category
@@ -239,8 +239,8 @@ for chunk in chunks:
 	third = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), :].copy(deep=True)
 	third.loc[:, 'RACE'] = 3
 	third.loc[:, 'PERWT'] = third.PERWT / 3
-	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'RACE'] = 1
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'PERWT'] = chunk.PERWT / 3
+	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & chunk.RACASIAN.isna() & chunk.RACPACIS.isna(), 'RACE'] = 1
 	chunk = pd.concat([chunk, second, third], ignore_index=True)
 
 	# Split the White, Black and Asian or Pacific Islander observations in each category
@@ -250,8 +250,8 @@ for chunk in chunks:
 	third = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), :].copy(deep=True)
 	third.loc[:, 'RACE'] = 4
 	third.loc[:, 'PERWT'] = third.PERWT / 3
-	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 1
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'PERWT'] = chunk.PERWT / 3
+	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.isna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 1
 	chunk = pd.concat([chunk, second, third], ignore_index=True)
 
 	# Split the White, Native American and Asian or Pacific Islander observations in each category
@@ -261,8 +261,8 @@ for chunk in chunks:
 	third = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), :].copy(deep=True)
 	third.loc[:, 'RACE'] = 4
 	third.loc[:, 'PERWT'] = third.PERWT / 3
-	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 1
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'PERWT'] = chunk.PERWT / 3
+	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.isna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 1
 	chunk = pd.concat([chunk, second, third], ignore_index=True)
 
 	# Split the Black, Native American and Asian or Pacific Islander observations in each category
@@ -272,8 +272,8 @@ for chunk in chunks:
 	third = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), :].copy(deep=True)
 	third.loc[:, 'RACE'] = 4
 	third.loc[:, 'PERWT'] = third.PERWT / 3
-	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 2
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'PERWT'] = chunk.PERWT / 3
+	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.isna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 2
 	chunk = pd.concat([chunk, second, third], ignore_index=True)
 
 	# Split the White, Black, Native American and Asian or Pacific Islander observations in each category
@@ -286,8 +286,8 @@ for chunk in chunks:
 	fourth = chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), :].copy(deep=True)
 	fourth.loc[:, 'RACE'] = 4
 	fourth.loc[:, 'PERWT'] = fourth.PERWT / 4
-	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 1
 	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'PERWT'] = chunk.PERWT / 4
+	chunk.loc[(chunk.RACE == 5) & chunk.RACWHT.notna() & chunk.RACBLK.notna() & chunk.RACAMIND.notna() & (chunk.RACASIAN.notna() | chunk.RACPACIS.notna()), 'RACE'] = 1
 	chunk = pd.concat([chunk, second, third, fourth], ignore_index=True)
 
 	# Drop the unknown race observations and multi-race variables

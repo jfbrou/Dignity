@@ -152,48 +152,48 @@ cps.loc[:, 'RACE'] = cps.RACE.map(race_map)
 second = cps.loc[cps.RACE == 12, :].copy(deep=True)
 second.loc[:, 'RACE'] = 2
 second.loc[:, 'ASECWT'] = second.ASECWT / 2
-cps.loc[cps.RACE == 12, 'RACE'] = 1
 cps.loc[cps.RACE == 12, 'ASECWT'] = cps.ASECWT / 2
+cps.loc[cps.RACE == 12, 'RACE'] = 1
 cps = pd.concat([cps, second], ignore_index=True)
 
 # Split the White and Native American observations in each category
 second = cps.loc[cps.RACE == 13, :].copy(deep=True)
 second.loc[:, 'RACE'] = 3
 second.loc[:, 'ASECWT'] = second.ASECWT / 2
-cps.loc[cps.RACE == 13, 'RACE'] = 1
 cps.loc[cps.RACE == 13, 'ASECWT'] = cps.ASECWT / 2
+cps.loc[cps.RACE == 13, 'RACE'] = 1
 cps = pd.concat([cps, second], ignore_index=True)
 
 # Split the White and Asian or Pacific Islander observations in each category
 second = cps.loc[cps.RACE == 14, :].copy(deep=True)
 second.loc[:, 'RACE'] = 4
 second.loc[:, 'ASECWT'] = second.ASECWT / 2
-cps.loc[cps.RACE == 14, 'RACE'] = 1
 cps.loc[cps.RACE == 14, 'ASECWT'] = cps.ASECWT / 2
+cps.loc[cps.RACE == 14, 'RACE'] = 1
 cps = pd.concat([cps, second], ignore_index=True)
 
 # Split the Black and Native American observations in each category
 second = cps.loc[cps.RACE == 23, :].copy(deep=True)
 second.loc[:, 'RACE'] = 3
 second.loc[:, 'ASECWT'] = second.ASECWT / 2
-cps.loc[cps.RACE == 23, 'RACE'] = 2
 cps.loc[cps.RACE == 23, 'ASECWT'] = cps.ASECWT / 2
+cps.loc[cps.RACE == 23, 'RACE'] = 2
 cps = pd.concat([cps, second], ignore_index=True)
 
 # Split the Black and Asian or Pacific Islander observations in each category
 second = cps.loc[cps.RACE == 24, :].copy(deep=True)
 second.loc[:, 'RACE'] = 4
 second.loc[:, 'ASECWT'] = second.ASECWT / 2
-cps.loc[cps.RACE == 24, 'RACE'] = 2
 cps.loc[cps.RACE == 24, 'ASECWT'] = cps.ASECWT / 2
+cps.loc[cps.RACE == 24, 'RACE'] = 2
 cps = pd.concat([cps, second], ignore_index=True)
 
 # Split the Native American and Asian or Pacific Islander observations in each category
 second = cps.loc[cps.RACE == 34, :].copy(deep=True)
 second.loc[:, 'RACE'] = 4
 second.loc[:, 'ASECWT'] = second.ASECWT / 2
-cps.loc[cps.RACE == 34, 'RACE'] = 3
 cps.loc[cps.RACE == 34, 'ASECWT'] = cps.ASECWT / 2
+cps.loc[cps.RACE == 34, 'RACE'] = 3
 cps = pd.concat([cps, second], ignore_index=True)
 
 # Split the White, Black and Native American observations in each category
@@ -203,8 +203,8 @@ second.loc[:, 'ASECWT'] = second.ASECWT / 3
 third = cps.loc[cps.RACE == 123, :].copy(deep=True)
 third.loc[:, 'RACE'] = 3
 third.loc[:, 'ASECWT'] = third.ASECWT / 3
-cps.loc[cps.RACE == 123, 'RACE'] = 1
 cps.loc[cps.RACE == 123, 'ASECWT'] = cps.ASECWT / 3
+cps.loc[cps.RACE == 123, 'RACE'] = 1
 cps = pd.concat([cps, second, third], ignore_index=True)
 
 # Split the White, Black and Asian or Pacific Islander observations in each category
@@ -214,8 +214,8 @@ second.loc[:, 'ASECWT'] = second.ASECWT / 3
 third = cps.loc[cps.RACE == 124, :].copy(deep=True)
 third.loc[:, 'RACE'] = 4
 third.loc[:, 'ASECWT'] = third.ASECWT / 3
-cps.loc[cps.RACE == 124, 'RACE'] = 1
 cps.loc[cps.RACE == 124, 'ASECWT'] = cps.ASECWT / 3
+cps.loc[cps.RACE == 124, 'RACE'] = 1
 cps = pd.concat([cps, second, third], ignore_index=True)
 
 # Split the White, Native American and Asian or Pacific Islander observations in each category
@@ -225,8 +225,8 @@ second.loc[:, 'ASECWT'] = second.ASECWT / 3
 third = cps.loc[cps.RACE == 134, :].copy(deep=True)
 third.loc[:, 'RACE'] = 4
 third.loc[:, 'ASECWT'] = third.ASECWT / 3
-cps.loc[cps.RACE == 134, 'RACE'] = 1
 cps.loc[cps.RACE == 134, 'ASECWT'] = cps.ASECWT / 3
+cps.loc[cps.RACE == 134, 'RACE'] = 1
 cps = pd.concat([cps, second, third], ignore_index=True)
 
 # Split the Black, Native American and Asian or Pacific Islander observations in each category
@@ -236,8 +236,8 @@ second.loc[:, 'ASECWT'] = second.ASECWT / 3
 third = cps.loc[cps.RACE == 234, :].copy(deep=True)
 third.loc[:, 'RACE'] = 4
 third.loc[:, 'ASECWT'] = third.ASECWT / 3
-cps.loc[cps.RACE == 234, 'RACE'] = 2
 cps.loc[cps.RACE == 234, 'ASECWT'] = cps.ASECWT / 3
+cps.loc[cps.RACE == 234, 'RACE'] = 2
 cps = pd.concat([cps, second, third], ignore_index=True)
 
 # Split the White, Black, Native American and Asian or Pacific Islander observations in each category
@@ -250,8 +250,8 @@ third.loc[:, 'ASECWT'] = third.ASECWT / 4
 fourth = cps.loc[cps.RACE == 1234, :].copy(deep=True)
 fourth.loc[:, 'RACE'] = 4
 fourth.loc[:, 'ASECWT'] = fourth.ASECWT / 4
-cps.loc[cps.RACE == 1234, 'RACE'] = 1
 cps.loc[cps.RACE == 1234, 'ASECWT'] = cps.ASECWT / 4
+cps.loc[cps.RACE == 1234, 'RACE'] = 1
 cps = pd.concat([cps, second, third, fourth], ignore_index=True)
 
 # Drop the unknown race observations
