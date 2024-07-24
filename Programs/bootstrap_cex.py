@@ -2,12 +2,11 @@
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
-from joblib import Parallel, delayed
 import statsmodels.formula.api as smf
 import os
 
-# Find the number of available CPUs
-n_cpu = os.cpu_count()
+# Set the job index
+idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
 
 # Import functions
 from functions import *
@@ -137,4 +136,6 @@ def bootstrap(b):
     del df_b, df_cex, df
 
 # Calculate CEX consumption statistics across 1000 bootstrap samples
-Parallel(n_jobs=n_cpu)(delayed(bootstrap)(b) for b in range(1000))
+samples = range((idx - 1) * 5 + 1, np.minimum(idx * 5, 1000) + 1, 1)
+for sample in samples:
+    bootstrap(sample)
