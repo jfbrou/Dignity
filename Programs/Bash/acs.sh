@@ -12,5 +12,5 @@
 #SBATCH --mail-user=jfbrou@stanford.edu
 
 cd /home/users/jfbrou/Dignity/Programs
-ml python
+ml python/3.9.0
 python3 acs.py
