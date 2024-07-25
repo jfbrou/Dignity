@@ -11,6 +11,12 @@ import calendar
 from functions import *
 from directories import *
 
+# Change the directory if the program is run on a different computer
+if os.getcwd() == '/home/users/jfbrou/Dignity/Programs':
+	acs_r_data = '/scratch/users/jfbrou/Dignity'
+	acs_f_data = '/scratch/users/jfbrou/Dignity'
+	cex_f_data = '/scratch/users/jfbrou/Dignity'
+
 # Start the BEA client
 bea = beapy.BEA(key=bea_api_key)
 
@@ -157,7 +163,10 @@ def year_chunk(file, chunksize=1e6):
             chunk = pd.concat([chunk, df.loc[df.YEAR == unique_years[1], :]], ignore_index=True)
     if not chunk.empty:
         yield chunk
-chunks = year_chunk(os.path.join(acs_r_data, 'acs.csv'), chunksize=1e6)
+if os.getcwd() == '/home/users/jfbrou/Dignity/Programs':
+	chunks = year_chunk(os.path.join(acs_r_data, 'acs_raw.csv'), chunksize=1e6)
+else:
+	chunks = year_chunk(os.path.join(acs_r_data, 'acs.csv'), chunksize=1e6)
 
 # Initialize a data frame
 acs = pd.DataFrame()
