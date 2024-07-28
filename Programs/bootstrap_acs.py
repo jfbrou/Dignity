@@ -47,10 +47,10 @@ def bootstrap(b):
 
         # Impute consumption
         if int(chunk.year.unique()) == 1940:
-            model = sm.load(os.path.join(data, 'salary_bootstrap_' + str(b) + '.pickle'))
+            model = pd.read_pickle(os.path.join(data, 'salary_bootstrap_' + str(b) + '.pickle'))
             chunk = chunk.rename(columns={'earnings_deviation': 'salary_deviation'})
         else:
-            model = sm.load(os.path.join(data, 'earnings_bootstrap_' + str(b) + '.pickle'))
+            model = pd.read_pickle(os.path.join(data, 'earnings_bootstrap_' + str(b) + '.pickle'))
         chunk.loc[:, 'consumption'] = model.predict(chunk)
 
         # Re-scale consumption expenditures such that it aggregates to the NIPA values

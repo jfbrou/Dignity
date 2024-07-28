@@ -14,5 +14,5 @@
 #SBATCH --array=1-200
 
 cd /home/users/jfbrou/Dignity/Programs
-ml python/3.9.0
+ml python/3.12.1
 python3 bootstrap_acs.py
