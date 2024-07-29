@@ -230,7 +230,7 @@ rope
 Rtree
 scikit-image
 scikit-learn
-scipy==1.10.0
+scipy
 Scrapy
 seaborn
 Send2Trash
