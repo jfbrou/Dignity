@@ -228,7 +228,6 @@ requests-file
 requests-toolbelt
 rope
 Rtree
-ruamel-yaml-conda
 scikit-image
 scikit-learn
 scipy==1.10.0
