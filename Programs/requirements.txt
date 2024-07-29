@@ -259,7 +259,7 @@ striprtf==0.0.26
 sympy
 tables
 tabulate
-TBB==0.2
+TBB
 tblib
 tenacity
 terminado
