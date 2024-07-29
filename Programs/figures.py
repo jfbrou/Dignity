@@ -33,12 +33,11 @@ bea = beapy.BEA(key=bea_api_key)
 
 # Load the bootstrap data from the CEX, CPS and ACS
 dignity_bs = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap.csv'))
-dignity_bs_historical = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap_historical.csv'))
 
 ################################################################################
 #                                                                              #
 # This section of the script plots log average consumption by year for Black   #
-# and White Americans from 1984 to 2019.                                       #
+# and White Americans from 1984 to 2022.                                       #
 #                                                                              #
 ################################################################################
 
