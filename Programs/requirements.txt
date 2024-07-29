@@ -275,7 +275,7 @@ toml
 tomli
 tomlkit
 toolz
-torch==1.12.1
+torch
 tornado
 tqdm
 traitlets
