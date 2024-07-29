@@ -46,7 +46,7 @@ def bootstrap(b):
         chunk = chunk.sample(frac=1, replace=True, random_state=b)
 
         # Impute consumption
-        if int(chunk.year.unique()) == 1940:
+        if chunk.year.unique() == 1940:
             model = pd.read_pickle(os.path.join(data, 'salary_bootstrap_' + str(b) + '.pickle'))
             chunk = chunk.rename(columns={'earnings_deviation': 'salary_deviation'})
         else:
