@@ -143,7 +143,7 @@ def cew(b):
 
     # Append and save the data frames
     df = pd.concat([df_1, df_2, df_3, df_4], ignore_index=True)
-    df.to_csv(os.path.join(data, 'cew_bootstrap_ ' + str(b) + '.csv'), index=False)
+    df.to_csv(os.path.join(data, 'cew_bootstrap_' + str(b) + '.csv'), index=False)
 
 # Calculate the consumption-equivalent welfare statistics across 1000 bootstrap samples
 samples = range((idx - 1) * 5 + 1, np.minimum(idx * 5, 1000) + 1, 1)
