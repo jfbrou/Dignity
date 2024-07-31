@@ -31,7 +31,7 @@ newnewcolors = sns.color_palette('viridis', 5)
 # Start the BEA client
 bea = beapy.BEA(key=bea_api_key)
 
-# Load the bootstrap data from the CEX, CPS and ACS
+# Load the bootstrap data from the CEX and CPS
 dignity_bs = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap.csv'))
 
 ################################################################################
@@ -73,7 +73,7 @@ ax.set_xticks(np.append(np.linspace(1985, 2020, 8), 2022))
 ax.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""))
 
 # Set the vertical axis
-ax.set_ylim(np.log(0.3), np.log(1))
+ax.set_ylim(np.log(0.29), np.log(1))
 ax.set_yticks(np.log(np.linspace(0.3, 1, 8)))
 ax.set_yticklabels(np.linspace(30, 100, 8).astype('int'))
 ax.set_ylabel('$\%$', fontsize=12, rotation=0, ha='center', va='center')
@@ -116,10 +116,10 @@ fig, ax = plt.subplots()
 # Plot the lines
 ax.plot(df.year.unique(), df.loc[df.race == 1, 'consumption_nd'], color=colors[0], linewidth=2.5)
 ax.fill_between(df_bs.year.unique(), df_bs.loc[df_bs.race == 1, 'lb'], y2=df_bs.loc[df_bs.race == 1, 'ub'], color=colors[0], alpha=0.2, linewidth=0)
-ax.annotate('White', xy=(2010, 0.58), color='k', fontsize=12, ha='center', va='center', annotation_clip=False)
+ax.annotate('White', xy=(2010, 0.585), color='k', fontsize=12, ha='center', va='center', annotation_clip=False)
 ax.plot(df.year.unique(), df.loc[df.race == 2, 'consumption_nd'], color=colors[1], linewidth=2.5)
 ax.fill_between(df_bs.year.unique(), df_bs.loc[df_bs.race == 2, 'lb'], y2=df_bs.loc[df_bs.race == 2, 'ub'], color=colors[1], alpha=0.2, linewidth=0)
-ax.annotate('Black', xy=(2012, 0.51), color='k', fontsize=12, ha='center', va='center', annotation_clip=False)
+ax.annotate('Black', xy=(2012, 0.50), color='k', fontsize=12, ha='center', va='center', annotation_clip=False)
 
 # Set the horizontal axis
 ax.set_xlim(1984, 2022)
@@ -347,7 +347,7 @@ ax.set_xticks(np.append(np.linspace(1985, 2020, 8), 2022))
 ax.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""))
 
 # Set the vertical axis
-ax.set_ylim(np.log(0.4), np.log(0.7))
+ax.set_ylim(np.log(0.39), np.log(0.7))
 ax.set_yticks(np.log(np.linspace(0.4, 0.7, 4)))
 ax.set_yticklabels(np.round_(np.linspace(0.4, 0.7, 4), 1))
 
@@ -405,6 +405,42 @@ scf_data = np.array([[462.59, 81.76],
                      [961.44, 149.05],
                      [952.91, 140.52]])
 
+# Calculate the 95% confidence interval
+df_bs = pd.read_csv(os.path.join(f_data, 'cew_bootstrap.csv'))
+df_bs = df_bs.loc[(df_bs.description == 'Welfare'), :]
+df_bs = pd.merge(df_bs.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.025)}).rename(columns={'log_lambda': 'lb'}),
+                 df_bs.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.975)}).rename(columns={'log_lambda': 'ub'}), how='left')
+
+# Calculate the consumption-equivalent welfare of Black relative to White Americans
+df = pd.DataFrame({'year': years, 'log_lambda': np.zeros(len(years))})
+for year in years:
+    S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
+    c_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_intercept.loc[:, 'S'].values
+    c_intercept = dignity_intercept.loc[:, 'c_bar'].values
+    ell_intercept = dignity_intercept.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ell'].values
+    df.loc[df.year == year, 'log_lambda'] = cew_level(S_i=S_i, S_j=S_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                      S_intercept=S_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                      inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
+
+# Calculate the 95% confidence interval
+df_bs = pd.read_csv(os.path.join(f_data, 'cew_bootstrap.csv'))
+df_bs = df_bs.loc[(df_bs.description == 'Welfare'), :]
+df_bs = pd.merge(df_bs.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.025)}).rename(columns={'log_lambda': 'lb'}),
+                 df_bs.groupby('year', as_index=False).agg({'log_lambda': lambda x: x.quantile(q=0.975)}).rename(columns={'log_lambda': 'ub'}), how='left')
+
 # Calculate the consumption-equivalent welfare of Black relative to White Americans
 df = pd.DataFrame({'year': years, 'log_lambda': np.zeros(len(years))})
 for year in years:
@@ -435,9 +471,10 @@ ax2 = ax1.twinx()
 
 # Plot the lines
 ax1.plot(years, df.log_lambda, color=colors[1], linewidth=2.5)
+ax1.fill_between(years, df_bs.lb, y2=df_bs.ub, color=colors[1], alpha=0.2, linewidth=0)
 ax1.annotate('{0:.2f}'.format(np.exp(df.log_lambda.iloc[-1])), xy=(2022.25, df.log_lambda.iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
 ax1.annotate('{0:.2f}'.format(np.exp(df.log_lambda.iloc[0])), xy=(1981.5, df.log_lambda.iloc[0]), color='k', fontsize=12, va='center', annotation_clip=False)
-ax1.annotate('Welfare', xy=(2012, np.log(0.59)), color='k', fontsize=12, va='center', annotation_clip=False)
+ax1.annotate('Welfare', xy=(2012, np.log(0.58)), color='k', fontsize=12, va='center', annotation_clip=False)
 ax1.plot(years, np.log(cex.consumption), color=colors[1], linewidth=2, linestyle='dashed')
 ax1.annotate('{0:.2f}'.format(cex.consumption.iloc[-1]), xy=(2022.25, np.log(cex.consumption.iloc[-1])), color='k', fontsize=12, va='center', annotation_clip=False)
 ax1.annotate('Consumption', xy=(1995, np.log(0.6)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
@@ -453,7 +490,7 @@ ax1.set_xticks(np.append(np.linspace(1985, 2020, 8), 2022))
 ax1.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""))
 
 # Set the vertical axes
-ax1.set_ylim(np.log(0.4), np.log(0.9))
+ax1.set_ylim(np.log(0.39), np.log(0.9))
 ax1.set_yticks(np.log(np.linspace(0.4, 0.9, 6)))
 ax1.set_yticklabels(np.round_(np.linspace(0.4, 0.9, 6), 1))
 ax1.spines['left'].set_color(colors[1])
@@ -472,7 +509,7 @@ ax2.spines['left'].set_visible(False)
 
 # Save and close the figure
 fig.tight_layout()
-fig.savefig(os.path.join(figures, 'Welfare, consumption, earnings and wealth.pdf'), format='pdf')
+fig.savefig(os.path.join(figures, 'Welfare, consumption, earnings, and wealth.pdf'), format='pdf')
 plt.close()
 
 ################################################################################
@@ -630,17 +667,17 @@ ax.set_xticks(np.append(np.linspace(1985, 2020, 8), 2022))
 ax.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""))
 
 # Set the vertical axis
-ax.set_ylim(np.log(1), np.log(3.5))
-ax.set_yticks(np.log(np.linspace(1, 3.5, 6)))
-ax.set_yticklabels(np.linspace(1, 3.5, 6))
+ax.set_ylim(np.log(1), np.log(4))
+ax.set_yticks(np.log(np.linspace(1, 4, 7)))
+ax.set_yticklabels(np.linspace(1, 4, 7))
 
 # Remove the top and right axes
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 
 # Set the figure's text
-ax.text(2012, np.log(2.15), 'White', fontsize=12, ha='center', color='k')
-ax.text(2012, np.log(3.25), 'Black', fontsize=12, ha='center', color='k')
+ax.text(2012, np.log(2.2), 'White', fontsize=12, ha='center', color='k')
+ax.text(2012, np.log(3.4), 'Black', fontsize=12, ha='center', color='k')
 
 # Save and close the figure
 fig.tight_layout()
