@@ -95,7 +95,7 @@ race_map = {100: 1,      # White
 		    999: np.nan} # Unknown
 
 # Define a latin encoding
-latin_map = {0:   0,	     # Not Hispanic
+latin_map = {0:   0,	  # Not Hispanic
 			 100: 1,      # Mexican
 			 102: 1,      # Mexican American
 			 103: 1,      # Mexicano/Mexicana

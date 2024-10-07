@@ -31,6 +31,10 @@ cex_f_data = os.path.join(f_data, "CEX")
 cps_r_data = os.path.join(r_data, "CPS")
 cps_f_data = os.path.join(f_data, "CPS")
 
+# Identify the directory containing the data files from the NPS
+nps_r_data = os.path.join(r_data, "NPS")
+nps_f_data = os.path.join(f_data, "NPS")
+
 # Identify the directory containing all figures
 figures = os.path.join(path, "Figures")
 
