@@ -35,6 +35,10 @@ cps_f_data = os.path.join(f_data, "CPS")
 nps_r_data = os.path.join(r_data, "NPS")
 nps_f_data = os.path.join(f_data, "NPS")
 
+# Identify the directory containing the population data files
+pop_r_data = os.path.join(r_data, "POP")
+pop_f_data = os.path.join(f_data, "POP")
+
 # Identify the directory containing all figures
 figures = os.path.join(path, "Figures")
 

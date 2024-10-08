@@ -8,7 +8,6 @@ import os
 from functions import *
 from directories import *
 
-
 # Load and process the NPS data
 nps = pd.read_csv(os.path.join(nps_r_data, 'nps.tsv'), delimiter='\t', usecols=['YEAR', 'STATE', 'WHITEM', 'WHITEF', 'BLACKM', 'BLACKF'])
 nps = nps.loc[(nps.STATE == 'US') & nps.YEAR.isin(range(1984, 2022 + 1, 1)), :].drop('STATE', axis=1)
