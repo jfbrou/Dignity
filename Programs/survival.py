@@ -34,7 +34,7 @@ df = pd.read_csv(os.path.join(cdc_f_data, "cdc.csv"))
 df = df.groupby(["year", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [-1], "latin": [-1], "gender": [-1]}), df, how="left")
+df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [-1], "latin": [-1], "gender": [-1], "region": [-1]}), df, how="left")
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
@@ -61,7 +61,7 @@ df = pd.read_csv(os.path.join(cdc_f_data, "cdc.csv"))
 df = df.groupby(["year", "gender", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [-1], "latin": [-1], "gender": [1, 2]}), df, how="left")
+df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [-1], "latin": [-1], "gender": [1, 2], "region": [-1]}), df, how="left")
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
@@ -88,7 +88,7 @@ df = pd.read_csv(os.path.join(cdc_f_data, "cdc.csv"))
 df = df.groupby(["year", "race", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [-1]}), df, how="left")
+df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [-1], "region": [-1]}), df, how="left")
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
@@ -115,7 +115,7 @@ df = pd.read_csv(os.path.join(cdc_f_data, "cdc.csv"))
 df = df.groupby(["year", "race", "gender", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [1, 2]}), df, how="left")
+df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [1, 2], "region": [-1]}), df, how="left")
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
@@ -143,7 +143,7 @@ df = df.loc[df.latin == 1, :]
 df = df.groupby(["year", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [-1], "latin": [1], "gender": [-1]}), df, how="left")
+df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [-1], "latin": [1], "gender": [-1], "region": [-1]}), df, how="left")
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
@@ -171,7 +171,7 @@ df = df.loc[df.latin == 1, :]
 df = df.groupby(["year", "gender", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [-1], "latin": [1], "gender": [1, 2]}), df, how="left")
+df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [-1], "latin": [1], "gender": [1, 2], "region": [-1]}), df, how="left")
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
@@ -199,7 +199,7 @@ df = df.loc[df.latin == 0, :]
 df = df.groupby(["year", "race", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [1, 2], "latin": [0], "gender": [-1]}), df, how="left")
+df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [1, 2], "latin": [0], "gender": [-1], "region": [-1]}), df, how="left")
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
@@ -228,7 +228,7 @@ df = df.loc[df.latin == 0, :]
 df = df.groupby(["year", "race", "gender", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [1, 2], "latin": [0], "gender": [1, 2]}), df, how="left")
+df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [1, 2], "latin": [0], "gender": [1, 2], "region": [-1]}), df, how="left")
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
@@ -237,6 +237,33 @@ df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race", "gender"], as_index=False).M.transform(gompertz).values
 df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
 df.loc[:, "S"] = df.groupby(["year", "race", "gender"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
+
+# Append the CDC data frame
+df = df.drop(["deaths", "population", "M"], axis=1)
+cdc_df = pd.concat([cdc_df, df], ignore_index=True)
+
+################################################################################
+#                                                                              #
+# This section of the script computes survival rates by race and region.       #
+#                                                                              #
+################################################################################
+
+# Load the cdc data from 2018 to 2022
+df = pd.read_csv(os.path.join(cdc_f_data, "cdc_region.csv"))
+
+# Aggregate mortality by year, race, region, and age
+df = df.groupby(["year", "race", "region", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
+
+# Create a data frame with all levels of all variables
+df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [-1], "region": [1, 2, 3, 4]}), df, how="left")
+
+# Compute mortality rates
+df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+
+# Calculate the survival rates
+df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race", "region"], as_index=False).M.transform(gompertz).values
+df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
+df.loc[:, "S"] = df.groupby(["year", "race", "region"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
 
 # Append the CDC data frame
 df = df.drop(["deaths", "population", "M"], axis=1)
@@ -255,7 +282,7 @@ df = pd.read_csv(os.path.join(cdc_f_data, "cdc_b.csv"))
 df = df.groupby(["year", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [-1], "latin": [-1], "gender": [-1]}), df, how="left")
+df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [-1], "latin": [-1], "gender": [-1], "region": [-1]}), df, how="left")
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
@@ -282,7 +309,7 @@ df = pd.read_csv(os.path.join(cdc_f_data, "cdc_b.csv"))
 df = df.groupby(["year", "gender", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [-1], "latin": [-1], "gender": [1, 2]}), df, how="left")
+df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [-1], "latin": [-1], "gender": [1, 2], "region": [-1]}), df, how="left")
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
@@ -309,7 +336,7 @@ df = pd.read_csv(os.path.join(cdc_f_data, "cdc_b.csv"))
 df = df.groupby(["year", "race", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [-1]}), df, how="left")
+df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [-1], "region": [-1]}), df, how="left")
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
@@ -336,7 +363,7 @@ df = pd.read_csv(os.path.join(cdc_f_data, "cdc_b.csv"))
 df = df.groupby(["year", "race", "gender", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [1, 2]}), df, how="left")
+df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [1, 2], "region": [-1]}), df, how="left")
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
@@ -364,7 +391,7 @@ df = df.loc[df.latin == 1, :]
 df = df.groupby(["year", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [-1], "latin": [1], "gender": [-1]}), df, how="left")
+df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [-1], "latin": [1], "gender": [-1], "region": [-1]}), df, how="left")
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
@@ -392,7 +419,7 @@ df = df.loc[df.latin == 1, :]
 df = df.groupby(["year", "gender", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [-1], "latin": [1], "gender": [1, 2]}), df, how="left")
+df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [-1], "latin": [1], "gender": [1, 2], "region": [-1]}), df, how="left")
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
@@ -420,7 +447,7 @@ df = df.loc[df.latin == 0, :]
 df = df.groupby(["year", "race", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [1, 2], "latin": [0], "gender": [-1]}), df, how="left")
+df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [1, 2], "latin": [0], "gender": [-1], "region": [-1]}), df, how="left")
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
@@ -449,7 +476,7 @@ df = df.loc[df.latin == 0, :]
 df = df.groupby(["year", "race", "gender", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [1, 2], "latin": [0], "gender": [1, 2]}), df, how="left")
+df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [1, 2], "latin": [0], "gender": [1, 2], "region": [-1]}), df, how="left")
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
@@ -458,6 +485,33 @@ df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race", "gender"], as_index=False).M.transform(gompertz).values
 df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
 df.loc[:, "S"] = df.groupby(["year", "race", "gender"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
+
+# Append the CDC data frame
+df = df.drop(["deaths", "population", "M"], axis=1)
+cdc_b_df = pd.concat([cdc_b_df, df], ignore_index=True)
+
+################################################################################
+#                                                                              #
+# This section of the script computes survival rates by race and region.       #
+#                                                                              #
+################################################################################
+
+# Load the cdc data from 1999 to 2020
+df = pd.read_csv(os.path.join(cdc_f_data, "cdc_b_region.csv"))
+
+# Aggregate mortality by year, race, region, and age
+df = df.groupby(["year", "race", "region", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
+
+# Create a data frame with all levels of all variables
+df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [-1], "region": [1, 2, 3, 4]}), df, how="left")
+
+# Compute mortality rates
+df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+
+# Calculate the survival rates
+df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race", "region"], as_index=False).M.transform(gompertz).values
+df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
+df.loc[:, "S"] = df.groupby(["year", "race", "region"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
 
 # Append the CDC data frame
 df = df.drop(["deaths", "population", "M"], axis=1)

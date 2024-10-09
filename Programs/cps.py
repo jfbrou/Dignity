@@ -36,7 +36,8 @@ columns = ['YEAR',
 		   'INCBUS',
 		   'INCFARM',
 		   'FEDTAX',
-		   'STATETAX']
+		   'STATETAX',
+           'REGION']
 
 # Define variable types
 types = {'YEAR':       'int',
@@ -61,7 +62,8 @@ types = {'YEAR':       'int',
 		 'INCBUS':     'float',
 		 'INCFARM':    'float',
 		 'FEDTAX':     'float',
-		 'STATETAX':   'float'}
+		 'STATETAX':   'float',
+         'REGION':     'int'}
 
 # Define a race encoding
 race_map = {100: 1,      # White
@@ -343,6 +345,9 @@ cps.loc[cps.status == 'unemployed', 'Δ_leisure'] = cps.weekly_leisure - cps.emp
 cps.loc[(cps.Δ_leisure < 0) | cps.Δ_leisure.isna(), 'Δ_leisure'] = 0
 cps = cps.drop('employed_leisure', axis=1)
 
+# Only keep the first digit of the REGION variable
+cps.loc[:, 'REGION'] = cps.loc[:, 'REGION'].apply(lambda x: int(str(x)[0]))
+
 # Rename variables
 cps = cps.rename(columns={'YEAR':     'year',
 						  'SEX':      'gender',
@@ -352,6 +357,7 @@ cps = cps.rename(columns={'YEAR':     'year',
 						  'AGE':      'age',
 						  'LABFORCE': 'laborforce',
 						  'WKSWORK1': 'weeks_worked',
+                          'REGION':   'region',
 						  'ASECWT':   'weight'})
 
 # Define the variable types
@@ -369,6 +375,7 @@ cps = cps.astype({'year':           'int',
 				  'income':         'float',
 				  'status':         'str',
 				  'laborforce':     'float',
+                  'region':         'int',
 				  'weight':         'float'})
 
 # Sort the data frame
