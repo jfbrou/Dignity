@@ -345,8 +345,9 @@ cps.loc[cps.status == 'unemployed', 'Δ_leisure'] = cps.weekly_leisure - cps.emp
 cps.loc[(cps.Δ_leisure < 0) | cps.Δ_leisure.isna(), 'Δ_leisure'] = 0
 cps = cps.drop('employed_leisure', axis=1)
 
-# Only keep the first digit of the REGION variable
-cps.loc[:, 'REGION'] = cps.loc[:, 'REGION'].apply(lambda x: int(str(x)[0]))
+# Only keep the first digit of the REGION variable and recode it
+cps.loc[:, 'REGION'] = cps.REGION.apply(lambda x: int(str(x)[0]))
+cps.loc[:, 'REGION'] = cps.REGION.map({1: 1, 2: 1, 3: 2, 4: 1})
 
 # Rename variables
 cps = cps.rename(columns={'YEAR':     'year',

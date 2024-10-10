@@ -836,6 +836,9 @@ cex = cex.drop([column for column in cex.columns if column.startswith("pce")] + 
 # Recode the CU_CODE variable
 cex.loc[cex.CU_CODE != 1, "CU_CODE"] = 0
 
+# Recode the REGION variable
+cex.loc[:, 'REGION'] = cex.REGION.map({1: 1, 2: 1, 3: 2, 4: 1, 0: np.nan})
+
 # Rename variables
 cex = cex.rename(columns={"SEX":      "gender",
                           "RACE":     "race",

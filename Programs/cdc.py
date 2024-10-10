@@ -46,8 +46,8 @@ df_region.loc[:, "race"] = df_region.race.map({"White": 1, "Black or African Ame
 df_b_region.loc[:, "race"] = df_b_region.race.map({"White": 1, "Black or African American": 2})
 
 # Recode the region variable
-df_region.loc[:, "region"] = df_region.region.map({"Census Region 1: Northeast": 1, "Census Region 2: Midwest": 2, "Census Region 3: South": 3, "Census Region 4: West": 4})
-df_b_region.loc[:, "region"] = df_b_region.region.map({"Census Region 1: Northeast": 1, "Census Region 2: Midwest": 2, "Census Region 3: South": 3, "Census Region 4: West": 4})
+df_region.loc[:, "region"] = df_region.region.map({"Census Region 1: Northeast": 1, "Census Region 2: Midwest": 1, "Census Region 3: South": 2, "Census Region 4: West": 1})
+df_b_region.loc[:, "region"] = df_b_region.region.map({"Census Region 1: Northeast": 1, "Census Region 2: Midwest": 1, "Census Region 3: South": 2, "Census Region 4: West": 1})
 
 # Adjust the types of the variables
 df = df.astype({"year": "int", "race": "int", "gender": "int", "latin": "int", "age": "int", "deaths": "int", "population": "int"})

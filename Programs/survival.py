@@ -38,6 +38,7 @@ df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+df.loc[df.M.isna() & (df.age < 85), "M"] = 0
 
 # Calculate the survival rates
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby("year", as_index=False).M.transform(gompertz).values
@@ -65,6 +66,7 @@ df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+df.loc[df.M.isna() & (df.age < 85), "M"] = 0
 
 # Calculate the survival rates
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "gender"], as_index=False).M.transform(gompertz).values
@@ -92,6 +94,7 @@ df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+df.loc[df.M.isna() & (df.age < 85), "M"] = 0
 
 # Calculate the survival rates
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race"], as_index=False).M.transform(gompertz).values
@@ -119,6 +122,7 @@ df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+df.loc[df.M.isna() & (df.age < 85), "M"] = 0
 
 # Calculate the survival rates
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race", "gender"], as_index=False).M.transform(gompertz).values
@@ -147,6 +151,7 @@ df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+df.loc[df.M.isna() & (df.age < 85), "M"] = 0
 
 # Calculate the survival rates
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby("year", as_index=False).M.transform(gompertz).values
@@ -175,6 +180,7 @@ df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+df.loc[df.M.isna() & (df.age < 85), "M"] = 0
 
 # Calculate the survival rates
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "gender"], as_index=False).M.transform(gompertz).values
@@ -203,6 +209,7 @@ df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+df.loc[df.M.isna() & (df.age < 85), "M"] = 0
 
 # Calculate the survival rates
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race"], as_index=False).M.transform(gompertz).values
@@ -232,6 +239,7 @@ df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+df.loc[df.M.isna() & (df.age < 85), "M"] = 0
 
 # Calculate the survival rates
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race", "gender"], as_index=False).M.transform(gompertz).values
@@ -255,10 +263,11 @@ df = pd.read_csv(os.path.join(cdc_f_data, "cdc_region.csv"))
 df = df.groupby(["year", "race", "region", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [-1], "region": [1, 2, 3, 4]}), df, how="left")
+df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [-1], "region": [1, 2]}), df, how="left")
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+df.loc[df.M.isna() & (df.age < 85), "M"] = 0
 
 # Calculate the survival rates
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race", "region"], as_index=False).M.transform(gompertz).values
@@ -286,6 +295,7 @@ df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+df.loc[df.M.isna() & (df.age < 85), "M"] = 0
 
 # Calculate the survival rates
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby("year", as_index=False).M.transform(gompertz).values
@@ -313,6 +323,7 @@ df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+df.loc[df.M.isna() & (df.age < 85), "M"] = 0
 
 # Calculate the survival rates
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "gender"], as_index=False).M.transform(gompertz).values
@@ -340,6 +351,7 @@ df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+df.loc[df.M.isna() & (df.age < 85), "M"] = 0
 
 # Calculate the survival rates
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race"], as_index=False).M.transform(gompertz).values
@@ -367,6 +379,7 @@ df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+df.loc[df.M.isna() & (df.age < 85), "M"] = 0
 
 # Calculate the survival rates
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race", "gender"], as_index=False).M.transform(gompertz).values
@@ -395,6 +408,7 @@ df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+df.loc[df.M.isna() & (df.age < 85), "M"] = 0
 
 # Calculate the survival rates
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby("year", as_index=False).M.transform(gompertz).values
@@ -423,6 +437,7 @@ df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+df.loc[df.M.isna() & (df.age < 85), "M"] = 0
 
 # Calculate the survival rates
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "gender"], as_index=False).M.transform(gompertz).values
@@ -451,6 +466,7 @@ df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+df.loc[df.M.isna() & (df.age < 85), "M"] = 0
 
 # Calculate the survival rates
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race"], as_index=False).M.transform(gompertz).values
@@ -480,6 +496,7 @@ df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+df.loc[df.M.isna() & (df.age < 85), "M"] = 0
 
 # Calculate the survival rates
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race", "gender"], as_index=False).M.transform(gompertz).values
@@ -503,10 +520,11 @@ df = pd.read_csv(os.path.join(cdc_f_data, "cdc_b_region.csv"))
 df = df.groupby(["year", "race", "region", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [-1], "region": [1, 2, 3, 4]}), df, how="left")
+df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [-1], "region": [1, 2]}), df, how="left")
 
 # Compute mortality rates
 df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
+df.loc[df.M.isna() & (df.age < 85), "M"] = 0
 
 # Calculate the survival rates
 df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race", "region"], as_index=False).M.transform(gompertz).values
@@ -547,6 +565,7 @@ lt.loc[lt.race == 5, "race"] = 2
 
 # Append the life tables with the above data frames
 lt.loc[:, "dataset"] = "lt"
+lt.loc[:, "region"] = -1
 lt = pd.concat([lt, cdc_df], ignore_index=True)
 lt.loc[lt.dataset.isna(), "dataset"] = "cdc"
 lt = pd.concat([lt, cdc_b_df], ignore_index=True)
@@ -556,44 +575,67 @@ lt.loc[lt.dataset.isna(), "dataset"] = "cdc_b"
 for race in [1, 2]:
     for latin in [-1, 0]:
         for gender in [-1, 1, 2]:
-            adjustment_2018 = lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "cdc"), "S"].values
-            adjustment_2019 = lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "cdc"), "S"].values
-            adjustment_2020 = lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "cdc"), "S"].values
+            adjustment_2018 = lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"].values
+            adjustment_2019 = lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"].values
+            adjustment_2020 = lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"].values
             adjustment = (adjustment_2018 + adjustment_2019 + adjustment_2020) / 3
-            lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "cdc"), "S"] * adjustment
-            lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "cdc"), "S"] * adjustment
+            lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] * adjustment
+            lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] * adjustment
 for gender in [-1, 1, 2]:
-    adjustment_2018 = lt.loc[(lt.year == 2018) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2018) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "cdc"), "S"].values
-    adjustment_2019 = lt.loc[(lt.year == 2019) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2019) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "cdc"), "S"].values
-    adjustment_2020 = lt.loc[(lt.year == 2020) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2020) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "cdc"), "S"].values
+    adjustment_2018 = lt.loc[(lt.year == 2018) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2018) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"].values
+    adjustment_2019 = lt.loc[(lt.year == 2019) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2019) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"].values
+    adjustment_2020 = lt.loc[(lt.year == 2020) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2020) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"].values
     adjustment = (adjustment_2018 + adjustment_2019 + adjustment_2020) / 3
-    lt.loc[(lt.year == 2021) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2021) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "cdc"), "S"] * adjustment
-    lt.loc[(lt.year == 2022) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2022) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "cdc"), "S"] * adjustment
+    lt.loc[(lt.year == 2021) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2021) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] * adjustment
+    lt.loc[(lt.year == 2022) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2022) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] * adjustment
+for race in [1, 2]:
+    for region in [1, 2]:
+        adjustment_2018 = lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"].values
+        adjustment_2019 = lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"].values
+        adjustment_2020 = lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"].values
+        adjustment = (adjustment_2018 + adjustment_2019 + adjustment_2020) / 3
+        lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"] * adjustment
+        lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"] * adjustment
 
-# Adjust the 2018-2020 survival rates
+# Adjust the post 2018 survival rates
 for race in [1, 2]:
     for latin in [-1, 0]:
         for gender in [-1, 1, 2]:
-            adjustment_2015 = lt.loc[(lt.year == 2015) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2015) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"].values
-            adjustment_2016 = lt.loc[(lt.year == 2016) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2016) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"].values
-            adjustment_2017 = lt.loc[(lt.year == 2017) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2017) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"].values
+            adjustment_2015 = lt.loc[(lt.year == 2015) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2015) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values
+            adjustment_2016 = lt.loc[(lt.year == 2016) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2016) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values
+            adjustment_2017 = lt.loc[(lt.year == 2017) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2017) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values
             adjustment = (adjustment_2015 + adjustment_2016 + adjustment_2017) / 3
-            lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"] * adjustment
-            lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"] * adjustment
-            lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"] * adjustment
+            lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] * adjustment
+            lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] * adjustment
+            lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] * adjustment
+            lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] * adjustment
+            lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] * adjustment
 for gender in [-1, 1, 2]:
-    adjustment_2015 = lt.loc[(lt.year == 2015) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2015) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"].values
-    adjustment_2016 = lt.loc[(lt.year == 2016) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2016) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"].values
-    adjustment_2017 = lt.loc[(lt.year == 2017) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2017) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"].values
+    adjustment_2015 = lt.loc[(lt.year == 2015) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2015) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values
+    adjustment_2016 = lt.loc[(lt.year == 2016) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2016) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values
+    adjustment_2017 = lt.loc[(lt.year == 2017) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2017) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values
     adjustment = (adjustment_2015 + adjustment_2016 + adjustment_2017) / 3
-    lt.loc[(lt.year == 2018) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2018) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"] * adjustment
-    lt.loc[(lt.year == 2019) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2019) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"] * adjustment
-    lt.loc[(lt.year == 2020) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2020) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.dataset == "cdc_b"), "S"] * adjustment
+    lt.loc[(lt.year == 2018) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2018) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] * adjustment
+    lt.loc[(lt.year == 2019) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2019) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] * adjustment
+    lt.loc[(lt.year == 2020) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2020) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] * adjustment
+    lt.loc[(lt.year == 2021) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2021) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] * adjustment
+    lt.loc[(lt.year == 2022) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2022) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] * adjustment
+for race in [1, 2]:
+    for region in [1, 2]:
+        adjustment_2015 = lt.loc[(lt.year == 2015) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2015) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values
+        adjustment_2016 = lt.loc[(lt.year == 2016) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2016) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values
+        adjustment_2017 = lt.loc[(lt.year == 2017) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2017) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values
+        adjustment = (adjustment_2015 + adjustment_2016 + adjustment_2017) / 3
+        lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc_b"), "S"] * adjustment
+        lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc_b"), "S"] * adjustment
+        lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc_b"), "S"] * adjustment
+        lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"] * adjustment
+        lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"] * adjustment
 
 # Drop the unused tables
 drop_sample_1 = lt.year.isin(range(2018, 2020 + 1, 1)) & (lt.dataset == "cdc")
 lt = lt.loc[~drop_sample_1, :]
-drop_sample_2 = lt.year.isin(range(1999, 2017 + 1, 1)) & (lt.dataset == "cdc_b")
+drop_sample_2 = lt.year.isin(range(1999, 2017 + 1, 1)) & (lt.region == -1) & (lt.dataset == "cdc_b")
 lt = lt.loc[~drop_sample_2, :]
 lt = lt.drop("dataset", axis=1)
 

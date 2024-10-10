@@ -92,8 +92,11 @@ pop = pd.read_csv(os.path.join(pop_f_data, 'population.csv'))
 
 # Merge the data and calculate the incarceration rate
 df = pd.merge(df, pop)
+df = pd.concat([df, expand({'year': range(1990, 2020 + 1, 1), 'race': [-1]})], ignore_index=True)
+df.loc[df.race == -1, 'incarcerated'] = df.loc[df.race != -1, :].groupby('year').apply(lambda x: x.incarcerated.sum()).values
+df.loc[df.race == -1, 'population'] = df.loc[df.race != -1, :].groupby('year').apply(lambda x: x.population.sum()).values
 df.loc[:, 'incarceration_rate'] = df.loc[:, 'incarcerated'] / df.loc[:, 'population']
 df = df.drop(['incarcerated', 'population'], axis=1)
 
 # Save the data
-df.to_csv(os.path.join(incarceration_f_data, 'nps.csv'), index=False)
+df.to_csv(os.path.join(incarceration_f_data, 'incarceration.csv'), index=False)

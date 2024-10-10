@@ -64,8 +64,8 @@ df.loc[:, columns] = df.groupby(['year', 'race'], as_index=False)[columns].trans
 df_consumption = pd.concat([df_consumption, df], ignore_index=True)
 
 # Calculate CEX consumption statistics by year, race, region, and age
-df = cex.loc[cex.race.isin([1, 2]), :].groupby(['year', 'race', 'region', 'age'], as_index=False).apply(f_cex)
-df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'latin': [-1], 'region': [1, 2, 3, 4]}), df, how='left')
+df = cex.loc[cex.race.isin([1, 2]) & cex.region.isin([1, 2]), :].groupby(['year', 'race', 'region', 'age'], as_index=False).apply(f_cex)
+df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'latin': [-1], 'region': [1, 2]}), df, how='left')
 df.loc[:, columns] = df.groupby(['year', 'race', 'region'], as_index=False)[columns].transform(lambda x: filter(x, 1600)).values
 df_consumption = pd.concat([df_consumption, df], ignore_index=True)
 
@@ -115,8 +115,8 @@ df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
 df_leisure = pd.concat([df_leisure, df], ignore_index=True)
 
 # Calculate CPS leisure statistics by year, race, region, and age
-df = cps.loc[cps.race.isin([1, 2]), :].groupby(['year', 'race', 'region', 'age'], as_index=False).apply(f_cps)
-df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'latin': [-1], 'region': [1, 2, 3, 4]}), df, how='left')
+df = cps.loc[cps.race.isin([1, 2]) & cps.region.isin([1, 2]), :].groupby(['year', 'race', 'region', 'age'], as_index=False).apply(f_cps)
+df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'latin': [-1], 'region': [1, 2]}), df, how='left')
 df.loc[:, ['Ev_of_ell', 'ell_bar']] = df.groupby(['year', 'race', 'region'], as_index=False)[['Ev_of_ell', 'ell_bar']].transform(lambda x: filter(x, 100)).values
 df.loc[df.loc[:, 'Ev_of_ell'] > 0, 'Ev_of_ell'] = 0
 df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
