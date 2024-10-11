@@ -17,6 +17,11 @@ survival = pd.read_csv(os.path.join(cdc_f_data, 'survival.csv'))
 survival = survival.loc[survival.gender == -1, :].drop('gender', axis=1)
 survival = survival.loc[survival.year.isin(range(1984, 2022 + 1)), :]
 
+# Load the incarceration data
+incarceration = pd.read_csv(os.path.join(incarceration_f_data, 'incarceration.csv')).rename(columns={'incarceration_rate': 'I'})
+incarceration.loc[:, 'latin'] = -1
+incarceration.loc[:, 'region'] = -1
+
 # Load the CEX data
 cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
 cex = cex.loc[cex.year.isin(range(1984, 2022 + 1)), :]
@@ -145,7 +150,8 @@ df_leisure = pd.concat([df_leisure, df], ignore_index=True)
 ################################################################################
 
 # Merge the data frames
-dignity = pd.merge(survival, df_consumption, how='left')
+dignity = pd.merge(survival, incarceration, how='left')
+dignity = pd.merge(dignity, df_consumption, how='left')
 dignity = pd.merge(dignity, df_leisure, how='left')
 dignity = dignity.sort_values(by=['year', 'race', 'latin', 'region', 'age'])
 

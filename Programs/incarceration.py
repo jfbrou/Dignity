@@ -77,11 +77,13 @@ for year in list(range(1985, 1987 + 1, 1)) + list(range(1989, 1992 + 1, 1)) + li
 
 # Merge the NPS and ASJ data
 df = pd.merge(nps, asj)
-df = df.loc[df.year.isin(range(1990, 2020 + 1, 1)), :]
+df = df.loc[df.year.isin(range(1984, 2022 + 1, 1)), :]
 
 # Interpolate the missing values in the ASJ
 df.loc[df.race == 1, 'incarcerated_asj'] = df.loc[df.race == 1, 'incarcerated_asj'].interpolate().values
 df.loc[df.race == 2, 'incarcerated_asj'] = df.loc[df.race == 2, 'incarcerated_asj'].interpolate().values
+df.loc[(df.year == 1984) & (df.race == 1), 'incarcerated_asj'] = df.loc[(df.year == 1985) & (df.race == 1), 'incarcerated_asj'].values * df.loc[(df.year == 1984) & (df.race == 1), 'incarcerated_nps'].values / df.loc[(df.year == 1985) & (df.race == 1), 'incarcerated_nps'].values
+df.loc[(df.year == 1984) & (df.race == 2), 'incarcerated_asj'] = df.loc[(df.year == 1985) & (df.race == 1), 'incarcerated_asj'].values * df.loc[(df.year == 1984) & (df.race == 2), 'incarcerated_nps'].values / df.loc[(df.year == 1985) & (df.race == 2), 'incarcerated_nps'].values
 
 # Calculate the total number of incarcerated individuals
 df.loc[:, 'incarcerated'] = df.loc[:, 'incarcerated_nps'] + df.loc[:, 'incarcerated_asj']
@@ -92,11 +94,13 @@ pop = pd.read_csv(os.path.join(pop_f_data, 'population.csv'))
 
 # Merge the data and calculate the incarceration rate
 df = pd.merge(df, pop)
-df = pd.concat([df, expand({'year': range(1990, 2020 + 1, 1), 'race': [-1]})], ignore_index=True)
+df = pd.concat([df, expand({'year': range(1984, 2022 + 1, 1), 'race': [-1]})], ignore_index=True)
 df.loc[df.race == -1, 'incarcerated'] = df.loc[df.race != -1, :].groupby('year').apply(lambda x: x.incarcerated.sum()).values
 df.loc[df.race == -1, 'population'] = df.loc[df.race != -1, :].groupby('year').apply(lambda x: x.population.sum()).values
 df.loc[:, 'incarceration_rate'] = df.loc[:, 'incarcerated'] / df.loc[:, 'population']
 df = df.drop(['incarcerated', 'population'], axis=1)
+df = pd.merge(expand({'year': range(1984, 2022 + 1, 1), 'race': [-1, 1, 2], 'age': range(101)}), df).reset_index(drop=True)
+df.loc[(df.age < 18) | (df.age >= 85), 'incarceration_rate'] = 0
 
 # Save the data
 df.to_csv(os.path.join(incarceration_f_data, 'incarceration.csv'), index=False)

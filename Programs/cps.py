@@ -14,121 +14,131 @@ from directories import *
 bea = beapy.BEA(key=bea_api_key)
 
 # Define variable columns
-columns = ['YEAR',
-		   'SERIAL',
-           'ASECWT',
-		   'AGE',
-		   'SEX',
-		   'RACE',
-		   'FAMSIZE',
-           'FAMUNIT',
-           'HISPAN',
-		   'EMPSTAT',
-		   'LABFORCE',
-		   'AHRSWORKT',
-		   'WKSTAT',
-           'EDUC',
-           'WKSWORK1',
-           'UHRSWORKLY',
-		   'WANTJOB',
-		   'INCTOT',
-		   'INCWAGE',
-		   'INCBUS',
-		   'INCFARM',
-		   'FEDTAX',
-		   'STATETAX',
-           'REGION']
+columns = [
+    'YEAR',
+	'SERIAL',
+	'ASECWT',
+	'AGE',
+	'SEX',
+	'RACE',
+	'FAMSIZE',
+	'FAMUNIT',
+	'HISPAN',
+	'EMPSTAT',
+	'LABFORCE',
+	'AHRSWORKT',
+	'WKSTAT',
+	'EDUC',
+	'WKSWORK1',
+	'UHRSWORKLY',
+	'WANTJOB',
+	'INCTOT',
+	'INCWAGE',
+	'INCBUS',
+	'INCFARM',
+	'FEDTAX',
+	'STATETAX',
+	'REGION'
+]
 
 # Define variable types
-types = {'YEAR':       'int',
-		 'SERIAL':     'int',
-         'ASECWT':     'float',
-		 'AGE': 	   'int',
-		 'SEX': 	   'int',
-		 'RACE':       'int',
-		 'FAMSIZE':    'float',
-		 'FAMUNIT':    'int',
-         'HISPAN':     'float',
-		 'EMPSTAT':    'int',
-		 'LABFORCE':   'int',
-		 'AHRSWORKT':  'float',
-		 'WKSTAT':     'int',
-         'EDUC':       'float',
-         'WKSWORK1':   'float',
-         'UHRSWORKLY': 'float',
-		 'WANTJOB':    'int',
-		 'INCTOT':     'float',
-		 'INCWAGE':    'float',
-		 'INCBUS':     'float',
-		 'INCFARM':    'float',
-		 'FEDTAX':     'float',
-		 'STATETAX':   'float',
-         'REGION':     'int'}
+types = {
+    'YEAR':       'int',
+	'SERIAL':     'int',
+	'ASECWT':     'float',
+	'AGE': 	      'int',
+	'SEX': 	      'int',
+	'RACE':       'int',
+	'FAMSIZE':    'float',
+	'FAMUNIT':    'int',
+	'HISPAN':     'float',
+	'EMPSTAT':    'int',
+	'LABFORCE':   'int',
+	'AHRSWORKT':  'float',
+	'WKSTAT':     'int',
+	'EDUC':       'float',
+	'WKSWORK1':   'float',
+	'UHRSWORKLY': 'float',
+	'WANTJOB':    'int',
+	'INCTOT':     'float',
+	'INCWAGE':    'float',
+	'INCBUS':     'float',
+	'INCFARM':    'float',
+	'FEDTAX':     'float',
+	'STATETAX':   'float',
+	'REGION':     'int'
+}
 
 # Define a race encoding
-race_map = {100: 1,      # White
-            200: 2,      # Black/Negro
-            300: 3,      # American Indian/Aleut/Eskimo
-            650: 4,      # Asian or Pacific Islander
-		    651: 4,      # Asian only
-		    652: 4,      # Hawaiian/Pacific Islander only
-		    700: np.nan, # Other (single) race, n.e.c.
-		    801: 12,     # White and Black
-		    802: 13,     # White and American Indian
-		    803: 14,     # White and Asian
-		    804: 14,     # White and Hawaiian/Pacific Islander
-		    805: 23,     # Black and American Indian
-		    806: 24,     # Black and Asian
-		    807: 24,     # Black and Hawaiian/Pacific Islander
-		    808: 34,     # American Indian and Asian
-		    809: 4,      # Asian and Hawaiian/Pacific Islander
-		    810: 123,    # White, Black and American Indian
-		    811: 124,    # White, Black and Asian
-		    812: 134,    # White, American Indian and Asian
-		    813: 14,     # White, Asian and Hawaiian/Pacific Islander
-		    814: 1234,   # White, Black, American Indian and Asian
-		    815: 34,     # American Indian and Hawaiian/Pacific Islander
-		    816: 124,    # White, Black and Hawaiian/Pacific Islander
-		    817: 134,    # White, American Indian and Hawaiian/Pacific Islander
-		    818: 234,    # Black, American Indian and Asian
-		    819: 134,    # White, American Indian, Asian and Hawaiian/Pacific Islander
-		    820: np.nan, # Two or three races (unspecified)
-		    830: np.nan, # Four or five races (unspecified)
-		    999: np.nan} # Unknown
+race_map = {
+    100: 1,      # White
+	200: 2,      # Black/Negro
+	300: 3,      # American Indian/Aleut/Eskimo
+	650: 4,      # Asian or Pacific Islander
+	651: 4,      # Asian only
+	652: 4,      # Hawaiian/Pacific Islander only
+	700: np.nan, # Other (single) race, n.e.c.
+	801: 12,     # White and Black
+	802: 13,     # White and American Indian
+	803: 14,     # White and Asian
+	804: 14,     # White and Hawaiian/Pacific Islander
+	805: 23,     # Black and American Indian
+	806: 24,     # Black and Asian
+	807: 24,     # Black and Hawaiian/Pacific Islander
+	808: 34,     # American Indian and Asian
+	809: 4,      # Asian and Hawaiian/Pacific Islander
+	810: 123,    # White, Black and American Indian
+	811: 124,    # White, Black and Asian
+	812: 134,    # White, American Indian and Asian
+	813: 14,     # White, Asian and Hawaiian/Pacific Islander
+	814: 1234,   # White, Black, American Indian and Asian
+	815: 34,     # American Indian and Hawaiian/Pacific Islander
+	816: 124,    # White, Black and Hawaiian/Pacific Islander
+	817: 134,    # White, American Indian and Hawaiian/Pacific Islander
+	818: 234,    # Black, American Indian and Asian
+	819: 134,    # White, American Indian, Asian and Hawaiian/Pacific Islander
+	820: np.nan, # Two or three races (unspecified)
+	830: np.nan, # Four or five races (unspecified)
+	999: np.nan  # Unknown
+}
 
 # Define a latin encoding
-latin_map = {0:   0,	  # Not Hispanic
-			 100: 1,      # Mexican
-			 102: 1,      # Mexican American
-			 103: 1,      # Mexicano/Mexicana
-			 104: 1,      # Chicano/Chicana
-			 108: 1,      # Mexican
-			 109: 1,      # Mexicano/Chicano
-			 200: 1,      # Puerto Rican
-			 300: 1,      # Cuban
-			 400: 1,      # Dominican
-			 500: 1,      # Salvadoran
-			 600: 1,      # Other Hispanic
-			 610: 1,      # Central or South American
-			 611: 1,      # Central American (excluding Salvadoran)
-			 612: 1,      # South American
-			 901: np.nan, # Do not know
-			 902: np.nan} # Unknown
+latin_map = {
+    0:   0,	     # Not Hispanic
+	100: 1,      # Mexican
+	102: 1,      # Mexican American
+	103: 1,      # Mexicano/Mexicana
+	104: 1,      # Chicano/Chicana
+	108: 1,      # Mexican
+	109: 1,      # Mexicano/Chicano
+	200: 1,      # Puerto Rican
+	300: 1,      # Cuban
+	400: 1,      # Dominican
+	500: 1,      # Salvadoran
+	600: 1,      # Other Hispanic
+	610: 1,      # Central or South American
+	611: 1,      # Central American (excluding Salvadoran)
+	612: 1,      # South American
+	901: np.nan, # Do not know
+	902: np.nan  # Unknown
+} 
 
 # Define an education encoding
-education_map = {0:  1, # Not in universe or no schooling
-				 1:  1, # Grades 1 to 4
-				 2:  1, # Grades 5 to 6
-				 3:  1, # Grades 7 to 8
-				 4:  1, # Grade 9
-				 5:  1, # Grade 10
-				 6:  1, # Grade 11
-				 7:  1, # Grade 12
-				 8:  2, # 1 year of college
-				 9:  2, # 2 years of college
-				 10: 2, # 3 years of college
-				 11: 3, # 4 years of college
-				 12: 3} # 5+ years of college
+education_map = {
+    0:  1, # Not in universe or no schooling
+	1:  1, # Grades 1 to 4
+	2:  1, # Grades 5 to 6
+	3:  1, # Grades 7 to 8
+	4:  1, # Grade 9
+	5:  1, # Grade 10
+	6:  1, # Grade 11
+	7:  1, # Grade 12
+	8:  2, # 1 year of college
+	9:  2, # 2 years of college
+	10: 2, # 3 years of college
+	11: 3, # 4 years of college
+	12: 3  # 5+ years of college
+}
 
 # Load the ASEC CPS data
 cps = pd.read_csv(os.path.join(cps_r_data, 'cps.csv'), header=0, usecols=columns, dtype=types)
@@ -345,39 +355,48 @@ cps.loc[cps.status == 'unemployed', 'Δ_leisure'] = cps.weekly_leisure - cps.emp
 cps.loc[(cps.Δ_leisure < 0) | cps.Δ_leisure.isna(), 'Δ_leisure'] = 0
 cps = cps.drop('employed_leisure', axis=1)
 
+# Adjust the leisure variable for unemployment
+cps.loc[:, 'leisure'] = cps.leisure - cps.Δ_leisure
+cps.loc[:, 'leisure_half'] = cps.leisure - 0.5 * cps.Δ_leisure
+
 # Only keep the first digit of the REGION variable and recode it
 cps.loc[:, 'REGION'] = cps.REGION.apply(lambda x: int(str(x)[0]))
 cps.loc[:, 'REGION'] = cps.REGION.map({1: 1, 2: 1, 3: 2, 4: 1})
 
 # Rename variables
-cps = cps.rename(columns={'YEAR':     'year',
-						  'SEX':      'gender',
-						  'RACE':     'race',
-						  'HISPAN':   'latin',
-						  'EDUC':     'education',
-						  'AGE':      'age',
-						  'LABFORCE': 'laborforce',
-						  'WKSWORK1': 'weeks_worked',
-                          'REGION':   'region',
-						  'ASECWT':   'weight'})
+cps = cps.rename(columns={
+    'YEAR':     'year',
+	'SEX':      'gender',
+	'RACE':     'race',
+	'HISPAN':   'latin',
+	'EDUC':     'education',
+	'AGE':      'age',
+	'LABFORCE': 'laborforce',
+	'WKSWORK1': 'weeks_worked',
+	'REGION':   'region',
+	'ASECWT':   'weight'
+})
 
 # Define the variable types
-cps = cps.astype({'year':           'int',
-				  'gender':         'int',
-				  'race':           'int',
-				  'latin':          'float32',
-				  'education':      'float32',
-				  'age':            'int',
-				  'leisure':        'float',
-				  'weeks_worked':   'float',
-				  'weekly_leisure': 'float',
-				  'Δ_leisure':      'float',
-				  'earnings':       'float',
-				  'income':         'float',
-				  'status':         'str',
-				  'laborforce':     'float',
-                  'region':         'int',
-				  'weight':         'float'})
+cps = cps.astype({
+    'year':           'int',
+	'gender':         'int',
+	'race':           'int',
+	'latin':          'float32',
+	'education':      'float32',
+	'age':            'int',
+	'leisure':        'float',
+	'leisure_half':   'float',
+	'weeks_worked':   'float',
+	'weekly_leisure': 'float',
+	'Δ_leisure':      'float',
+	'earnings':       'float',
+	'income':         'float',
+	'status':         'str',
+	'laborforce':     'float',
+	'region':         'int',
+	'weight':         'float'
+})
 
 # Sort the data frame
 cps = cps.sort_values(by='year').reset_index(drop=True)
