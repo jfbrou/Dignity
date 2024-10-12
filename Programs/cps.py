@@ -356,8 +356,8 @@ cps.loc[(cps.Δ_leisure < 0) | cps.Δ_leisure.isna(), 'Δ_leisure'] = 0
 cps = cps.drop('employed_leisure', axis=1)
 
 # Adjust the leisure variable for unemployment
-cps.loc[:, 'leisure'] = cps.leisure - cps.Δ_leisure
 cps.loc[:, 'leisure_half'] = cps.leisure - 0.5 * cps.Δ_leisure
+cps.loc[:, 'leisure'] = cps.leisure - cps.Δ_leisure
 
 # Only keep the first digit of the REGION variable and recode it
 cps.loc[:, 'REGION'] = cps.REGION.apply(lambda x: int(str(x)[0]))

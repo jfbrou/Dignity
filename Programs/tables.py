@@ -36,7 +36,7 @@ population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006
 c_nominal = 1e6 * c_nominal / population
 
 # Instantiate an empty data frame
-df = expand({'year': years, 'case': ['benchmark', 'beta_and_g', 'age_min_1', 'age_min_5', 'CV', 'EV', 'sqrt', 'high_vsl', 'low_vsl', 'gamma', 'high_frisch', 'low_frisch'], 'lambda': [np.nan]})
+df = expand({'year': years, 'case': ['benchmark', 'beta_and_g', 'age_min_1', 'age_min_5', 'CV', 'EV', 'sqrt', 'high_vsl', 'low_vsl', 'gamma', 'high_frisch', 'low_frisch', 'incarceration', 'unemployment'], 'lambda': [np.nan]})
 
 # Calculate the benchmark consumption-equivalent welfare of Black relative to White Americans
 for year in years:
@@ -378,6 +378,141 @@ for year in years:
                                                                                        S_intercept=S_intercept, I_intercept=I_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
                                                                                        inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda'])
 
+# Load the CEX data
+cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
+cex = cex.loc[cex.year.isin(range(1984, 2022 + 1)), :]
+for column in [column for column in cex.columns if column.startswith('consumption')]:
+    cex.loc[:, column] = cex.loc[:, column] / np.average(cex.loc[cex.year == 2022, column], weights=cex.loc[cex.year == 2022, 'weight'])
+cex = cex.loc[cex.year.isin([1984, 2006, 2022]) & (cex.education == 1), :]
+
+# Define a function to perform the CEX aggregation
+def f_cex(x):
+    d = {}
+    columns = [column for column in x.columns if column.startswith('consumption')]
+    for column in columns:
+        d[column.replace('consumption', 'Elog_of_c_I')] = np.average(np.log(x.loc[:, column]), weights=x.weight)
+        d[column.replace('consumption', 'c_bar_I')] = np.average(x.loc[:, column], weights=x.weight)
+    return pd.Series(d, index=[key for key, value in d.items()])
+
+# Define a list of column names
+columns = [column.replace('consumption', 'Elog_of_c_I') for column in cex.columns if column.startswith('consumption')] + \
+          [column.replace('consumption', 'c_bar_I') for column in cex.columns if column.startswith('consumption')]
+
+# Calculate CEX consumption statistics by age for individuals with a high school education or less
+df_cex_intercept = cex.loc[cex.year == 2006, :].groupby('age', as_index=False).apply(f_cex)
+df_cex_intercept = pd.merge(expand({'age': range(101)}), df_cex_intercept, how='left')
+df_cex_intercept.loc[:, columns] = df_cex_intercept[columns].transform(lambda x: filter(x, 1600)).values
+df_cex = cex.loc[cex.year.isin([1984, 2022]), :].groupby(['year', 'age'], as_index=False).apply(f_cex)
+df_cex = pd.merge(expand({'year': [1984, 2022], 'age': range(101)}), df_cex, how='left')
+df_cex.loc[:, columns] = df_cex.groupby('year', as_index=False)[columns].transform(lambda x: filter(x, 1600)).values
+
+# Load the CPS data
+cps = pd.read_csv(os.path.join(cps_f_data, 'cps.csv'))
+cps = cps.loc[cps.year.isin(range(1985, 2023 + 1)), :]
+cps.loc[:, 'year'] = cps.year - 1
+cps = cps.loc[cps.year.isin([1984, 2006, 2022]) & (cps.education == 1), :]
+
+# Define a function to perform the CPS aggregation
+def f_cps(x):
+    d = {}
+    d['Ev_of_ell_I'] = np.average(v_of_ell(x.leisure), weights=x.weight)
+    d['ell_bar_I'] = np.average(x.leisure, weights=x.weight)
+    return pd.Series(d, index=[key for key, value in d.items()])
+
+# Calculate cps leisure statistics by age for individuals with a high school education or less
+df_cps_intercept = cps.loc[cps.year == 2006, :].groupby('age', as_index=False).apply(f_cps)
+df_cps_intercept = pd.merge(expand({'age': range(101)}), df_cps_intercept, how='left')
+df_cps_intercept.loc[:, ['Ev_of_ell_I', 'ell_bar_I']] = df_cps_intercept[['Ev_of_ell_I', 'ell_bar_I']].transform(lambda x: filter(x, 100)).values
+df_cps_intercept.loc[df_cps_intercept.loc[:, 'Ev_of_ell_I'] > 0, 'Ev_of_ell_I'] = 0
+df_cps_intercept.loc[df_cps_intercept.loc[:, 'ell_bar_I'] > 1, 'ell_bar_I'] = 1
+df_cps = cps.loc[cps.year.isin([1984, 2022]), :].groupby(['year', 'age'], as_index=False).apply(f_cps)
+df_cps = pd.merge(expand({'year': [1984, 2022], 'age': range(101)}), df_cps, how='left')
+df_cps.loc[:, ['Ev_of_ell_I', 'ell_bar_I']] = df_cps.groupby('year', as_index=False)[['Ev_of_ell_I', 'ell_bar_I']].transform(lambda x: filter(x, 100)).values
+df_cps.loc[df_cps.loc[:, 'Ev_of_ell_I'] > 0, 'Ev_of_ell_I'] = 0
+df_cps.loc[df_cps.loc[:, 'ell_bar_I'] > 1, 'ell_bar_I'] = 1
+
+# Calculate the consumption-equivalent welfare of Black relative to White Americans when incarceration is less costly
+for year in years:
+    S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
+    I_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'I'].values
+    I_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'I'].values
+    c_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_intercept.loc[:, 'S'].values
+    I_intercept = dignity_intercept.loc[:, 'I'].values
+    c_intercept = dignity_intercept.loc[:, 'c_bar'].values
+    c_intercept_I = df_cex_intercept.loc[:, 'c_bar_I'].values
+    ell_intercept = dignity_intercept.loc[:, 'ell_bar'].values
+    ell_intercept_I = df_cps_intercept.loc[:, 'ell_bar_I'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ell'].values
+    Elog_of_c_I = df_cex.loc[df_cex.year == year, 'Elog_of_c_I'].values
+    Ev_of_ell_I = df_cps.loc[df_cps.year == year, 'Ev_of_ell_I'].values
+    df.loc[(df.year == year) & (df.case == 'incarceration'), 'lambda'] = np.exp(cew_level_incarceration(S_i=S_i, S_j=S_j, I_i=I_i, I_j=I_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                                                      S_intercept=S_intercept, I_intercept=I_intercept, c_intercept=c_intercept, c_intercept_I=c_intercept_I, ell_intercept=ell_intercept, ell_intercept_I=ell_intercept_I, c_nominal=c_nominal,
+                                                                                      c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j,
+                                                                                      Elog_of_c_I=Elog_of_c_I, Ev_of_ell_I=Ev_of_ell_I, incarceration_parameter=0.5)['log_lambda'])
+
+# Load the CPS data
+cps = pd.read_csv(os.path.join(cps_f_data, 'cps.csv'))
+cps = cps.loc[cps.year.isin(range(1985, 2023 + 1)), :]
+cps.loc[:, 'year'] = cps.year - 1
+cps = cps.loc[cps.year.isin([1984, 2006, 2022]), :]
+
+# Define a function to perform the CPS aggregation
+def f_cps(x):
+    d = {}
+    d['Ev_of_ell'] = np.average(v_of_ell(x.leisure_half), weights=x.weight)
+    d['ell_bar'] = np.average(x.leisure_half, weights=x.weight)
+    return pd.Series(d, index=[key for key, value in d.items()])
+
+# Calculate cps leisure statistics by age for individuals with a high school education or less
+df_cps_intercept = cps.loc[cps.year == 2006, :].groupby('age', as_index=False).apply(f_cps)
+df_cps_intercept = pd.merge(expand({'age': range(101)}), df_cps_intercept, how='left')
+df_cps_intercept.loc[:, ['Ev_of_ell', 'ell_bar']] = df_cps_intercept[['Ev_of_ell', 'ell_bar']].transform(lambda x: filter(x, 100)).values
+df_cps_intercept.loc[df_cps_intercept.loc[:, 'Ev_of_ell'] > 0, 'Ev_of_ell'] = 0
+df_cps_intercept.loc[df_cps_intercept.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
+df_cps = cps.loc[cps.year.isin([1984, 2022]) & cps.race.isin([1 , 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(f_cps)
+df_cps = pd.merge(expand({'year': [1984, 2022], 'age': range(101), 'race': [1, 2]}), df_cps, how='left')
+df_cps.loc[:, ['Ev_of_ell', 'ell_bar']] = df_cps.groupby(['year', 'race'], as_index=False)[['Ev_of_ell', 'ell_bar']].transform(lambda x: filter(x, 100)).values
+df_cps.loc[df_cps.loc[:, 'Ev_of_ell'] > 0, 'Ev_of_ell'] = 0
+df_cps.loc[df_cps.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
+
+# Calculate the consumption-equivalent welfare of Black relative to White Americans when some unemployment time is considered as leisure
+for year in years:
+    S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
+    I_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'I'].values
+    I_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'I'].values
+    c_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
+    ell_i_bar = df_cps.loc[(df_cps.year == year) & (df_cps.race == 1), 'ell_bar'].values
+    ell_j_bar = df_cps.loc[(df_cps.year == year) & (df_cps.race == 2), 'ell_bar'].values
+    S_intercept = dignity_intercept.loc[:, 'S'].values
+    I_intercept = dignity_intercept.loc[:, 'I'].values
+    c_intercept = dignity_intercept.loc[:, 'c_bar'].values
+    ell_intercept = df_cps_intercept.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = df_cps.loc[(df_cps.year == year) & (df_cps.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = df_cps.loc[(df_cps.year == year) & (df_cps.race == 2), 'Ev_of_ell'].values
+    df.loc[(df.year == year) & (df.case == 'unemployment'), 'lambda'] = np.exp(cew_level(S_i=S_i, S_j=S_j, I_i=I_i, I_j=I_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                                                      S_intercept=S_intercept, I_intercept=I_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                                                      inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda'])
+
 # Write a table with the robustness results
 table = open(os.path.join(tables, 'Robustness.tex'), 'w')
 lines = [r'\begin{table}[ht]',
@@ -403,6 +538,8 @@ lines = [r'\begin{table}[ht]',
          r'Frisch elasticity = 2 & ' + '{:.1f}'.format(float(100 * df.loc[(df.case == 'high_frisch') & (df.year == 1984), 'lambda'].values[0])) + ' & ' + '{:.1f}'.format(float(100 * df.loc[(df.case == 'high_frisch') & (df.year == 2022), 'lambda'].values[0])) + r' \\',
          r'Value of life = \$5m & ' + '{:.1f}'.format(float(100 * df.loc[(df.case == 'low_vsl') & (df.year == 1984), 'lambda'].values[0])) + ' & ' + '{:.1f}'.format(float(100 * df.loc[(df.case == 'low_vsl') & (df.year == 2022), 'lambda'].values[0])) + r' \\',
          r'Value of life = \$10m & ' + '{:.1f}'.format(float(100 * df.loc[(df.case == 'high_vsl') & (df.year == 1984), 'lambda'].values[0])) + ' & ' + '{:.1f}'.format(float(100 * df.loc[(df.case == 'high_vsl') & (df.year == 2022), 'lambda'].values[0])) + r' \\',
+         r'Incarceration & ' + '{:.1f}'.format(float(100 * df.loc[(df.case == 'incarceration') & (df.year == 1984), 'lambda'].values[0])) + ' & ' + '{:.1f}'.format(float(100 * df.loc[(df.case == 'incarceration') & (df.year == 2022), 'lambda'].values[0])) + r' \\',
+         r'Unemployment & ' + '{:.1f}'.format(float(100 * df.loc[(df.case == 'unemployment') & (df.year == 1984), 'lambda'].values[0])) + ' & ' + '{:.1f}'.format(float(100 * df.loc[(df.case == 'unemployment') & (df.year == 2022), 'lambda'].values[0])) + r' \\',
          r'\hline',
          r'\hline',
          r'\end{tabular}',
