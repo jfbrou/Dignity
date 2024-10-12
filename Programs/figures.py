@@ -785,3 +785,60 @@ ax.spines['top'].set_visible(False)
 fig.tight_layout()
 fig.savefig(os.path.join(figures, 'Consumption to disposable income ratio.pdf'), format='pdf')
 plt.close()
+
+################################################################################
+#                                                                              #
+# This section of the script plots the consumption and earnings of Black and   #
+# White Americans from 1991 to 2022.                                           #
+#                                                                              #
+################################################################################
+
+# Define a list of years
+years = range(1991, 2022 + 1)
+
+# Compute average consumption by year and race
+cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
+cex = cex.loc[cex.year.isin(years) & cex.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption': np.average(x.consumption, weights=x.weight)}))
+cex = cex.groupby('year', as_index=False).agg({'consumption': lambda x: x.iloc[1] / x.iloc[0]})
+
+# Compute average earnings by year and race
+cps = pd.read_csv(os.path.join(cps_f_data, 'cps.csv'))
+cps.loc[:, 'year'] = cps.year - 1
+cps = cps.loc[cps.year.isin(years) & cps.race.isin([1, 2]), :].groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({
+    'earnings':         np.average(x.earnings, weights=x.weight),
+    'earnings_posttax': np.average(x.earnings_posttax, weights=x.weight)
+}))
+cps = cps.groupby('year', as_index=False).agg({
+    'earnings': lambda x: x.iloc[1] / x.iloc[0],
+    'earnings_posttax': lambda x: x.iloc[1] / x.iloc[0]
+})
+
+# Initialize the figure
+fig, ax = plt.subplots(figsize=(6, 4))
+
+# Plot the lines
+ax.plot(years, np.log(cex.consumption), color=colors[0], linewidth=2)
+ax.annotate('Consumption', xy=(2011, np.log(0.8)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
+ax.plot(years, np.log(cps.earnings), color=colors[1], linewidth=2)
+ax.annotate('Earnings', xy=(2010, np.log(0.66)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
+ax.plot(years, np.log(cps.earnings_posttax), color=colors[2], linewidth=2)
+ax.annotate('Post-tax earnings', xy=(1999, np.log(0.78)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
+
+# Set the horizontal axis
+ax.set_xlim(1991, 2022)
+ax.set_xticks(np.append(np.linspace(1995, 2020, 6), 2022))
+ax.set_xticklabels(np.append(range(1995, 2020 + 1, 5), ""))
+
+# Set the vertical axes
+ax.set_ylim(np.log(0.6), np.log(0.9))
+ax.set_yticks(np.log(np.linspace(0.6, 0.9, 4)))
+ax.set_yticklabels(np.round_(np.linspace(0.6, 0.9, 4), 1))
+
+# Remove the top and right axes
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+
+# Save and close the figure
+fig.tight_layout()
+fig.savefig(os.path.join(figures, 'Consumption and earnings.pdf'), format='pdf')
+plt.close()

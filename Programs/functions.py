@@ -11,7 +11,7 @@ def expand(d):
     return pd.DataFrame.from_records(rows, columns=d.keys())
 
 # Define the leisure utility function
-def v_of_ell(x, epsilon=1.0, theta=8.795358530547285):
+def v_of_ell(x, epsilon=1.0, theta=8.851015121158213):
     return -(theta * epsilon / (1 + epsilon)) * (1 - x)**((1 + epsilon) / epsilon)
 
 # Define the consumption and leisure interpolation/extrapolation function
@@ -32,7 +32,7 @@ def cew_level(S_i=None, S_j=None, I_i=None, I_j=None, c_i_bar=None, c_j_bar=None
     
     # Define the leisure utility function
     def v_of_ell(x, epsilon=frisch):
-        theta = 1.1443127394313553 * (1 - 0.353) / (1 - 0.7113406008484311)**(1 / epsilon + 1)
+        theta = 1.2397887161513956 * (1 - 0.353) / (1 - 0.6989563723839205)**(1 / epsilon + 1)
         return -(theta * epsilon / (1 + epsilon)) * (1 - x)**((1 + epsilon) / epsilon)
     
     # Restrict on selected ages
@@ -356,7 +356,7 @@ def cew_growth(S_i=None, S_j=None, I_i=None, I_j=None, c_i_bar=None, c_j_bar=Non
     return d
 
 # Define the level consumption-equivalent welfare calculation function
-def cew_level_gamma(S_i=None, S_j=None, I_i=None, I_j=None, Eu_of_c_and_ell_i=None, Eu_of_c_and_ell_j=None, age_min=0, age_max=100, gamma=2, epsilon=1, theta=8.795358530547285, # Standard parameters
+def cew_level_gamma(S_i=None, S_j=None, I_i=None, I_j=None, Eu_of_c_and_ell_i=None, Eu_of_c_and_ell_j=None, age_min=0, age_max=100, gamma=2, epsilon=1, theta=8.851015121158213, # Standard parameters
                     S_intercept=None, I_intercept=None, c_intercept=None, ell_intercept=None, vsl=7.4e6, c_nominal=None, ell_bar=None, age_min_intercept=40, age_max_intercept=100): # Intercept parameters
     # Restrict on selected ages
     S_i = S_i[age_min:age_max + 1] / S_i[age_min]
@@ -371,11 +371,11 @@ def cew_level_gamma(S_i=None, S_j=None, I_i=None, I_j=None, Eu_of_c_and_ell_i=No
     Eu_of_c_and_ell_j = Eu_of_c_and_ell_j[age_min:age_max + 1]
 
     # Define the flow utility function from consumption and leisure
-    def u(c, ell, gamma=gamma, epsilon=1, theta=8.795358530547285):
+    def u(c, ell, gamma=gamma, epsilon=1, theta=8.851015121158213):
         return c**(1 - gamma) * (1 + (gamma - 1) * theta * epsilon * (1 - ell)**((1 + epsilon) / epsilon) / (1 + epsilon))**gamma / (1 - gamma)
 
     # Define the marginal utility function from consumption
-    def du_dc(c, ell, gamma=gamma, epsilon=1, theta=8.795358530547285):
+    def du_dc(c, ell, gamma=gamma, epsilon=1, theta=8.851015121158213):
         return (1 + (gamma - 1) * theta * epsilon * (1 - ell)**((1 + epsilon) / epsilon) / (1 + epsilon))**gamma / c**gamma
 
     # Calculate the intercept

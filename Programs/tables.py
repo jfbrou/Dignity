@@ -281,7 +281,7 @@ c_nominal_gamma = c_nominal * np.average(cex.loc[cex.year == 2022, 'consumption'
 cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[cex.year == 2022, 'consumption'], weights=cex.loc[cex.year == 2022, 'weight'])
 
 # Define the flow utility function from consumption and leisure
-def u(c, ell, gamma=2, epsilon=1, theta=8.795358530547285):
+def u(c, ell, gamma=2, epsilon=1, theta=8.851015121158213):
     return c**(1 - gamma) * (1 + (gamma - 1) * theta * epsilon * (1 - ell)**((1 + epsilon) / epsilon) / (1 + epsilon))**gamma / (1 - gamma)
 
 # Calculate CEX consumption statistics by year, race and age
@@ -311,7 +311,7 @@ cps.loc[:, 'year'] = cps.year - 1
 
 # Define the leisure utility function
 def v_of_ell(x, epsilon=1.0):
-    theta = 1.1443127394313553 * (1 - 0.353) / (1 - 0.7113406008484311)**(1 / epsilon + 1)
+    theta = 1.2397887161513956 * (1 - 0.353) / (1 - 0.6989563723839205)**(1 / epsilon + 1)
     return -(theta * epsilon / (1 + epsilon)) * (1 - x)**((1 + epsilon) / epsilon)
 
 # Calculate CPS leisure statistics by year, race and age for the high Frisch elasticity of labor supply
@@ -520,8 +520,6 @@ lines = [r'\begin{table}[ht]',
          r'\caption{Robustness results}',
          r'\begin{threeparttable}',
          r'\begin{tabular}{l C{3.25cm} C{3.25cm}}',
-         r'\hline',
-         r'\hline',
          r'& \multicolumn{2}{c}{Consumption-equivalent welfare (\%)} \\',
          r'\cmidrule(lr){2-3}',
          r'& 1984 & 2022 \\',
@@ -540,7 +538,6 @@ lines = [r'\begin{table}[ht]',
          r'Value of life = \$10m & ' + '{:.1f}'.format(float(100 * df.loc[(df.case == 'high_vsl') & (df.year == 1984), 'lambda'].values[0])) + ' & ' + '{:.1f}'.format(float(100 * df.loc[(df.case == 'high_vsl') & (df.year == 2022), 'lambda'].values[0])) + r' \\',
          r'Incarceration & ' + '{:.1f}'.format(float(100 * df.loc[(df.case == 'incarceration') & (df.year == 1984), 'lambda'].values[0])) + ' & ' + '{:.1f}'.format(float(100 * df.loc[(df.case == 'incarceration') & (df.year == 2022), 'lambda'].values[0])) + r' \\',
          r'Unemployment & ' + '{:.1f}'.format(float(100 * df.loc[(df.case == 'unemployment') & (df.year == 1984), 'lambda'].values[0])) + ' & ' + '{:.1f}'.format(float(100 * df.loc[(df.case == 'unemployment') & (df.year == 2022), 'lambda'].values[0])) + r' \\',
-         r'\hline',
          r'\hline',
          r'\end{tabular}',
          r'\begin{tablenotes}[flushleft]',
@@ -617,8 +614,6 @@ lines = [r'\begin{table}[ht]',
          r'\begin{threeparttable}',
          r'\caption{Welfare decomposition}',
          r'\begin{tabular}{lcccccccc}',
-         r'\hline',
-         r'\hline',
          r'& & & \multicolumn{6}{c}{\textcolor{ChadBlue}{\it ------ Decomposition ------}} \\',
          r'& $\lambda$ & $\log\left(\lambda\right)$ & $LE$ & $I$ & $c$ & $\sigma\left(c\right)$ & $\ell$ & $\sigma\left(\ell\right)$ \\',
          r'\hline',
@@ -646,8 +641,6 @@ lines = [r'\begin{table}[ht]',
                     + '{:.2f}'.format(df.loc[df.year == 1984, 'CI'].values.squeeze()) + ' & ' \
                     + '{:.2f}'.format(df.loc[df.year == 1984, 'L'].values.squeeze()) + ' & ' \
                     + '{:.2f}'.format(df.loc[df.year == 1984, 'LI'].values.squeeze()) + r' \\',
-         r'\hline',
-         r'\hline',
          r'\end{tabular}',
          r'\begin{tablenotes}[flushleft]',
          r'\footnotesize',
@@ -720,8 +713,6 @@ lines = [r'\begin{table}[ht]',
          r'\begin{threeparttable}',
          r'\caption{Welfare growth between 1984 and 2022 (\%)}',
          r'\begin{tabular}{lccccccccc}',
-         r'\hline',
-         r'\hline',
          r'& & & & \multicolumn{6}{c}{\textcolor{ChadBlue}{\it ------ Decomposition ------}} \\',
          r'& Welfare & Earnings & & $LE$ & $I$ & $c$ & $\sigma\left(c\right)$ & $\ell$ & $\sigma\left(\ell\right)$ \\',
          r'\hline',
@@ -750,8 +741,6 @@ lines = [r'\begin{table}[ht]',
                    + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'CI']) - 100 * float(df.loc[df.race == 1, 'CI'])) + ' & ' \
                    + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'L']) - 100 * float(df.loc[df.race == 1, 'L'])) + ' & ' \
                    + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'LI']) - 100 * float(df.loc[df.race == 1, 'LI'])) + r' \\',
-         r'\hline',
-         r'\hline',
          r'\end{tabular}',
          r'\begin{tablenotes}[flushleft]',
          r'\footnotesize',

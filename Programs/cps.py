@@ -38,7 +38,18 @@ columns = [
 	'INCFARM',
 	'FEDTAX',
 	'STATETAX',
-	'REGION'
+	'REGION',
+    'INCSS',
+    'INCWELFR',
+    'INCGOV',
+    'INCSSI',
+    'INCUNEMP',
+    'INCWKCOM',
+    'INCVET',
+    'INCDISAB',
+    'ACTCCRD',
+    'EITCRED',
+    'FICA'
 ]
 
 # Define variable types
@@ -66,7 +77,18 @@ types = {
 	'INCFARM':    'float',
 	'FEDTAX':     'float',
 	'STATETAX':   'float',
-	'REGION':     'int'
+	'REGION':     'int',
+    'INCSS':      'float',
+	'INCWELFR':   'float',
+	'INCGOV':     'float',
+	'INCSSI':     'float',
+	'INCUNEMP':   'float',
+	'INCWKCOM':   'float',
+	'INCVET':     'float',
+	'INCDISAB':   'float',
+	'ACTCCRD':    'float',
+	'EITCRED':    'float',
+	'FICA':       'float'
 }
 
 # Define a race encoding
@@ -291,18 +313,56 @@ cps.loc[cps.INCFARM == 99999998, 'INCFARM'] = np.nan
 cps.loc[cps.INCTOT == 999999999, 'INCTOT'] = 0
 cps.loc[cps.FEDTAX == 99999999, 'FEDTAX'] = 0
 cps.loc[cps.STATETAX == 9999999, 'STATETAX'] = 0
+cps.loc[cps.INCSS == 999999, 'INCSS'] = 0
+cps.loc[cps.INCWELFR == 999999, 'INCWELFR'] = 0
+cps.loc[cps.INCGOV == 99999, 'INCGOV'] = 0
+cps.loc[cps.INCGOV.isna(), 'INCGOV'] = 0
+cps.loc[cps.INCSSI == 999999, 'INCSSI'] = 0
+cps.loc[cps.INCUNEMP == 999999, 'INCUNEMP'] = 0
+cps.loc[cps.INCUNEMP.isna(), 'INCUNEMP'] = 0
+cps.loc[cps.INCWKCOM == 999999, 'INCWKCOM'] = 0
+cps.loc[cps.INCWKCOM.isna(), 'INCWKCOM'] = 0
+cps.loc[cps.INCVET == 9999999, 'INCVET'] = 0
+cps.loc[cps.INCVET.isna(), 'INCVET'] = 0
+cps.loc[cps.INCDISAB == 9999999, 'INCDISAB'] = 0
+cps.loc[cps.INCDISAB.isna(), 'INCDISAB'] = 0
+cps.loc[cps.ACTCCRD == 99999, 'ACTCCRD'] = 0
+cps.loc[cps.EITCRED == 9999, 'EITCRED'] = 0
+cps.loc[cps.FICA == 99999, 'FICA'] = 0
 
 # Compute total earnings and income
 cps.loc[:, 'earnings'] = cps.INCWAGE.fillna(value=0) + cps.INCBUS.fillna(value=0) + cps.INCFARM.fillna(value=0)
-cps.loc[:, 'income'] = cps.INCTOT.fillna(value=0) - cps.FEDTAX.fillna(value=0) - cps.STATETAX.fillna(value=0)
+cps.loc[:, 'income'] = cps.INCTOT.fillna(value=0)
+cps.loc[:, 'earnings_posttax'] = cps.earnings - cps.FEDTAX - cps.STATETAX - cps.FICA + cps.ACTCCRD.fillna(value=0) + cps.EITCRED.fillna(value=0) + cps.INCSS + cps.INCWELFR + cps.INCGOV + cps.INCSSI + cps.INCUNEMP + cps.INCWKCOM + cps.INCVET + cps.INCDISAB
+cps.loc[:, 'income_posttax'] = cps.income - cps.FEDTAX - cps.STATETAX - cps.FICA + cps.ACTCCRD.fillna(value=0) + cps.EITCRED.fillna(value=0) + cps.INCSS + cps.INCWELFR + cps.INCGOV + cps.INCSSI + cps.INCUNEMP + cps.INCWKCOM + cps.INCVET + cps.INCDISAB
 
 # Compute family earnings and income as the sum of the family members' earnings and income
-cps = pd.merge(cps, cps.groupby(['YEAR', 'SERIAL'], as_index=False).agg({'earnings': 'sum', 'income': 'sum'}), how='left')
-cps = cps.drop(['INCWAGE', 'INCBUS', 'INCFARM', 'INCTOT', 'FEDTAX', 'STATETAX'], axis=1)
+cps = pd.merge(cps, cps.groupby(['YEAR', 'SERIAL'], as_index=False).agg({'earnings': 'sum', 'income': 'sum', 'earnings_posttax': 'sum', 'income_posttax': 'sum'}), how='left')
+cps = cps.drop([
+    'INCWAGE', 
+    'INCBUS', 
+    'INCFARM', 
+    'INCTOT', 
+    'FEDTAX', 
+    'STATETAX', 
+    'INCSS',
+    'INCWELFR',
+    'INCGOV',
+    'INCSSI',
+    'INCUNEMP',
+    'INCWKCOM',
+    'INCVET',
+    'INCDISAB',
+    'ACTCCRD',
+    'EITCRED',
+    'FICA'
+], axis=1)
 
 # Divide family earnings and income evenly among family members
 cps.loc[:, 'earnings'] = cps.earnings / cps.FAMSIZE
 cps.loc[:, 'income'] = cps.income / cps.FAMSIZE
+cps.loc[:, 'earnings_posttax'] = cps.earnings_posttax / cps.FAMSIZE
+cps.loc[:, 'income_posttax'] = cps.income_posttax / cps.FAMSIZE
 cps = cps.drop('FAMSIZE', axis=1)
 
 # Rescale earnings such that it aggregates to the NIPA personal earnings
@@ -379,23 +439,25 @@ cps = cps.rename(columns={
 
 # Define the variable types
 cps = cps.astype({
-    'year':           'int',
-	'gender':         'int',
-	'race':           'int',
-	'latin':          'float32',
-	'education':      'float32',
-	'age':            'int',
-	'leisure':        'float',
-	'leisure_half':   'float',
-	'weeks_worked':   'float',
-	'weekly_leisure': 'float',
-	'Δ_leisure':      'float',
-	'earnings':       'float',
-	'income':         'float',
-	'status':         'str',
-	'laborforce':     'float',
-	'region':         'int',
-	'weight':         'float'
+    'year':             'int',
+	'gender':           'int',
+	'race':             'int',
+	'latin':            'float32',
+	'education':        'float32',
+	'age':              'int',
+	'leisure':          'float',
+	'leisure_half':     'float',
+	'weeks_worked':     'float',
+	'weekly_leisure':   'float',
+	'Δ_leisure':        'float',
+	'earnings':         'float',
+	'income':           'float',
+	'earnings_posttax': 'float',
+	'income_posttax':   'float',
+	'status':           'str',
+	'laborforce':       'float',
+	'region':           'int',
+	'weight':           'float'
 })
 
 # Sort the data frame
