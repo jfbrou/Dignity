@@ -62,21 +62,21 @@ fig, ax = plt.subplots(figsize=(6, 4))
 # Plot the lines
 ax.plot(df.year.unique(), df.loc[df.race == 1, 'consumption'], color=colors[0], linewidth=2.5)
 ax.fill_between(df_bs.year.unique(), df_bs.loc[df_bs.race == 1, 'lb'], y2=df_bs.loc[df_bs.race == 1, 'ub'], color=colors[0], alpha=0.2, linewidth=0)
-ax.annotate('White', xy=(2022.25, df.loc[df.race == 1, 'consumption'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('White', xy=(2022.25, df.loc[df.race == 1, 'consumption'].iloc[-1]), color='k', fontsize=16, va='center', annotation_clip=False)
 ax.plot(df.year.unique(), df.loc[df.race == 2, 'consumption'], color=colors[1], linewidth=2.5)
 ax.fill_between(df_bs.year.unique(), df_bs.loc[df_bs.race == 2, 'lb'], y2=df_bs.loc[df_bs.race == 2, 'ub'], color=colors[1], alpha=0.2, linewidth=0)
-ax.annotate('Black', xy=(2022.25, df.loc[df.race == 2, 'consumption'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('Black', xy=(2022.25, df.loc[df.race == 2, 'consumption'].iloc[-1]), color='k', fontsize=16, va='center', annotation_clip=False)
 
 # Set the horizontal axis
 ax.set_xlim(1984, 2022)
 ax.set_xticks(np.append(np.linspace(1985, 2020, 8), 2022))
-ax.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""))
+ax.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""), fontsize=16)
 
 # Set the vertical axis
 ax.set_ylim(np.log(0.29), np.log(1))
 ax.set_yticks(np.log(np.linspace(0.3, 1, 8)))
-ax.set_yticklabels(np.linspace(30, 100, 8).astype('int'))
-ax.set_ylabel('$\%$', fontsize=12, rotation=0, ha='center', va='center')
+ax.set_yticklabels(np.linspace(30, 100, 8).astype('int'), fontsize=16)
+ax.set_ylabel('$\%$', fontsize=16, rotation=0, ha='center', va='center')
 ax.yaxis.set_label_coords(0, 1.1)
 
 # Remove the top and right axes
@@ -116,19 +116,20 @@ fig, ax = plt.subplots()
 # Plot the lines
 ax.plot(df.year.unique(), df.loc[df.race == 1, 'consumption_nd'], color=colors[0], linewidth=2.5)
 ax.fill_between(df_bs.year.unique(), df_bs.loc[df_bs.race == 1, 'lb'], y2=df_bs.loc[df_bs.race == 1, 'ub'], color=colors[0], alpha=0.2, linewidth=0)
-ax.annotate('White', xy=(2010, 0.585), color='k', fontsize=12, ha='center', va='center', annotation_clip=False)
+ax.annotate('White', xy=(2010, 0.585), color='k', fontsize=16, ha='center', va='center', annotation_clip=False)
 ax.plot(df.year.unique(), df.loc[df.race == 2, 'consumption_nd'], color=colors[1], linewidth=2.5)
 ax.fill_between(df_bs.year.unique(), df_bs.loc[df_bs.race == 2, 'lb'], y2=df_bs.loc[df_bs.race == 2, 'ub'], color=colors[1], alpha=0.2, linewidth=0)
-ax.annotate('Black', xy=(2012, 0.50), color='k', fontsize=12, ha='center', va='center', annotation_clip=False)
+ax.annotate('Black', xy=(2012, 0.50), color='k', fontsize=16, ha='center', va='center', annotation_clip=False)
 
 # Set the horizontal axis
 ax.set_xlim(1984, 2022)
 ax.set_xticks(np.append(np.linspace(1985, 2020, 8), 2022))
-ax.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""))
+ax.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""), fontsize=16)
 
 # Set the vertical axis
 ax.set_ylim(0.47, 0.65)
 ax.set_yticks(np.linspace(0.5, 0.65, 4))
+ax.set_yticklabels(['{:.2f}'.format(x) for x in np.linspace(0.5, 0.65, 4)], fontsize=16)
 
 # Remove the top and right axes
 ax.spines['right'].set_visible(False)
@@ -165,20 +166,21 @@ fig, ax = plt.subplots(figsize=(6, 4))
 # Plot the lines
 ax.plot(df.year.unique(), 100 * df.loc[df.race == 1, 'leisure'], color=colors[0], linewidth=2.5)
 ax.fill_between(df_bs.year.unique(), 100 * df_bs.loc[df_bs.race == 1, 'lb'], y2=100 * df_bs.loc[df_bs.race == 1, 'ub'], color=colors[0], alpha=0.2, linewidth=0)
-ax.annotate('White', xy=(2022.25, 100 * df.loc[df.race == 1, 'leisure'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('White', xy=(2022.25, 100 * df.loc[df.race == 1, 'leisure'].iloc[-1]), color='k', fontsize=16, va='center', annotation_clip=False)
 ax.plot(df.year.unique(), 100 * df.loc[df.race == 2, 'leisure'], color=colors[1], linewidth=2.5)
 ax.fill_between(df_bs.year.unique(), 100 * df_bs.loc[df_bs.race == 2, 'lb'], y2=100 * df_bs.loc[df_bs.race == 2, 'ub'], color=colors[1], alpha=0.2, linewidth=0)
-ax.annotate('Black', xy=(2022.25, 100 * df.loc[df.race == 2, 'leisure'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('Black', xy=(2022.25, 100 * df.loc[df.race == 2, 'leisure'].iloc[-1]), color='k', fontsize=16, va='center', annotation_clip=False)
 
 # Set the horizontal axis
 ax.set_xlim(1984, 2022)
 ax.set_xticks(np.append(np.linspace(1985, 2020, 8), 2022))
-ax.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""))
+ax.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""), fontsize=16)
 
 # Set the vertical axis
 ax.set_ylim(81, 86)
 ax.set_yticks(np.linspace(81, 86, 6))
-ax.set_ylabel('$\%$', fontsize=12, rotation=0, ha='center', va='center')
+ax.set_yticklabels(np.linspace(81, 86, 6).astype('int'), fontsize=16)
+ax.set_ylabel('$\%$', fontsize=16, rotation=0, ha='center', va='center')
 ax.yaxis.set_label_coords(0, 1.1)
 
 # Remove the top and right axes
@@ -216,19 +218,20 @@ fig, ax = plt.subplots()
 # Plot the lines
 ax.plot(df.year.unique(), df.loc[df.race == 1, 'leisure'], color=colors[0], linewidth=2.5)
 ax.fill_between(df_bs.year.unique(), df_bs.loc[df_bs.race == 1, 'lb'], y2=df_bs.loc[df_bs.race == 1, 'ub'], color=colors[0], alpha=0.2, linewidth=0)
-ax.annotate('White', xy=(2020, 0.169), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
+ax.annotate('White', xy=(2020, 0.169), color='k', fontsize=16, va='center', ha='center', annotation_clip=False)
 ax.plot(df.year.unique(), df.loc[df.race == 2, 'leisure'], color=colors[1], linewidth=2.5)
 ax.fill_between(df_bs.year.unique(), df_bs.loc[df_bs.race == 2, 'lb'], y2=df_bs.loc[df_bs.race == 2, 'ub'], color=colors[1], alpha=0.2, linewidth=0)
-ax.annotate('Black', xy=(2000, 0.183), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
+ax.annotate('Black', xy=(2000, 0.183), color='k', fontsize=16, va='center', ha='center', annotation_clip=False)
 
 # Set the horizontal axis
 ax.set_xlim(1984, 2022)
 ax.set_xticks(np.append(np.linspace(1985, 2020, 8), 2022))
-ax.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""))
+ax.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""), fontsize=16)
 
 # Set the vertical axis
 ax.set_ylim(0.16, 0.19)
 ax.set_yticks(np.linspace(0.16, 0.19, 4))
+ax.set_yticklabels(['{:.2f}'.format(x) for x in np.linspace(0.16, 0.19, 4)], fontsize=16)
 
 # Remove the top and right axes
 ax.spines['right'].set_visible(False)
@@ -261,18 +264,20 @@ fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
 ax.plot(df.year.unique(), 100 * df.loc[df.race == 1, 'unemployed'], color=colors[0], linewidth=2.5)
-ax.annotate('White', xy=(2022.25, 100 * df.loc[df.race == 1, 'unemployed'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('White', xy=(2022.25, 100 * df.loc[df.race == 1, 'unemployed'].iloc[-1]), color='k', fontsize=16, va='center', annotation_clip=False)
 ax.plot(df.year.unique(), 100 * df.loc[df.race == 2, 'unemployed'], color=colors[1], linewidth=2.5)
-ax.annotate('Black', xy=(2022.25, 100 * df.loc[df.race == 2, 'unemployed'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('Black', xy=(2022.25, 100 * df.loc[df.race == 2, 'unemployed'].iloc[-1]), color='k', fontsize=16, va='center', annotation_clip=False)
 
 # Set the horizontal axis
 ax.set_xlim(1984, 2022)
 ax.set_xticks(np.append(np.linspace(1985, 2020, 8), 2022))
-ax.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""))
+ax.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""), fontsize=16)
 
 # Set the vertical axis
 ax.set_ylim(5, 30)
-ax.set_ylabel('$\%$', fontsize=12, rotation=0, ha='center', va='center')
+ax.set_yticks(np.linspace(5, 30, 6))
+ax.set_yticklabels(np.linspace(5, 30, 6).astype('int'), fontsize=16)
+ax.set_ylabel('$\%$', fontsize=16, rotation=0, ha='center', va='center')
 ax.yaxis.set_label_coords(0, 1.1)
 
 # Remove the top and right axes
@@ -304,18 +309,20 @@ fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
 ax.plot(df.year.unique(), df.loc[df.race == 1, 'S'], color=colors[0], linewidth=2.5)
-ax.annotate('White', xy=(2022.25, df.loc[df.race == 1, 'S'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('White', xy=(2022.25, df.loc[df.race == 1, 'S'].iloc[-1]), color='k', fontsize=16, va='center', annotation_clip=False)
 ax.plot(df.year.unique(), df.loc[df.race == 2, 'S'], color=colors[1], linewidth=2.5)
-ax.annotate('Black', xy=(2022.25, df.loc[df.race == 2, 'S'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('Black', xy=(2022.25, df.loc[df.race == 2, 'S'].iloc[-1]), color='k', fontsize=16, va='center', annotation_clip=False)
 
 # Set the horizontal axis
 ax.set_xlim(1984, 2022)
 ax.set_xticks(np.append(np.linspace(1985, 2020, 8), 2022))
-ax.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""))
+ax.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""), fontsize=16)
 
 # Set the vertical axis
 ax.set_ylim(69, 80)
-ax.set_ylabel('Years', fontsize=12, rotation=0, ha='center', va='center')
+ax.set_yticks(np.linspace(70, 80, 6))
+ax.set_yticklabels(np.linspace(70, 80, 6).astype('int'), fontsize=16)
+ax.set_ylabel('Years', fontsize=16, rotation=0, ha='center', va='center')
 ax.yaxis.set_label_coords(0, 1.1)
 
 # Remove the top and right axes
@@ -343,18 +350,20 @@ fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
 ax.plot(df.year.unique(), 100 * df.loc[df.race == 1, 'incarceration_rate'], color=colors[0], linewidth=2.5)
-ax.annotate('White', xy=(2022.25, 100 * df.loc[df.race == 1, 'incarceration_rate'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('White', xy=(2022.25, 100 * df.loc[df.race == 1, 'incarceration_rate'].iloc[-1]), color='k', fontsize=16, va='center', annotation_clip=False)
 ax.plot(df.year.unique(), 100 * df.loc[df.race == 2, 'incarceration_rate'], color=colors[1], linewidth=2.5)
-ax.annotate('Black', xy=(2022.25, 100 * df.loc[df.race == 2, 'incarceration_rate'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('Black', xy=(2022.25, 100 * df.loc[df.race == 2, 'incarceration_rate'].iloc[-1]), color='k', fontsize=16, va='center', annotation_clip=False)
 
 # Set the horizontal axis
 ax.set_xlim(1984, 2022)
 ax.set_xticks(np.append(np.linspace(1985, 2020, 8), 2022))
-ax.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""))
+ax.set_xticklabels(np.append(range(1985, 2020 + 1, 5), ""), fontsize=16)
 
 # Set the vertical axis
 ax.set_ylim(0, 4)
-ax.set_ylabel(r'\%', fontsize=12, rotation=0, ha='center', va='center')
+ax.set_yticks(np.linspace(0, 4, 5))
+ax.set_yticklabels(np.linspace(0, 4, 5).astype('int'), fontsize=16)
+ax.set_ylabel(r'\%', fontsize=16, rotation=0, ha='center', va='center')
 ax.yaxis.set_label_coords(0, 1.1)
 
 # Remove the top and right axes
@@ -822,7 +831,7 @@ ax.annotate('Consumption', xy=(2011, np.log(0.8)), color='k', fontsize=12, va='c
 ax.plot(years, np.log(cps.earnings), color=colors[1], linewidth=2)
 ax.annotate('Earnings', xy=(2010, np.log(0.66)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
 ax.plot(years, np.log(cps.earnings_posttax), color=colors[2], linewidth=2)
-ax.annotate('Post-tax earnings', xy=(1999, np.log(0.78)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
+ax.annotate('Post-tax-and-transfer earnings', xy=(1999, np.log(0.78)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
 
 # Set the horizontal axis
 ax.set_xlim(1991, 2022)
