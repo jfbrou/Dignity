@@ -174,6 +174,7 @@ state_to_abbreviation = {
 state_to_abbreviation = {k.lower(): v for k, v in state_to_abbreviation.items()}
 id_to_state = {
     1: 'AL',
+    2: 'AK',
     3: 'AZ',
     4: 'AR',
     5: 'CA',
@@ -378,13 +379,19 @@ df = df.drop(['incarcerated_nps', 'incarcerated_asj'], axis=1)
 pop = pd.read_csv(os.path.join(pop_f_data, 'population.csv'))
 
 # Merge the data and calculate the incarceration rate
-df = pd.merge(df, pop)
+df = pd.merge(df, pop.drop('total_population', axis=1))
 df = pd.merge(expand({'year': range(1984, 2022 + 1, 1), 'race': [-1, 1, 2], 'region': [-1, 1, 2]}), df, how='left')
-df.loc[df.race == -1, 'incarcerated'] = df.loc[df.race != -1, :].groupby('year').apply(lambda x: x.incarcerated.sum()).values
-df.loc[df.race == -1, 'population'] = df.loc[df.race != -1, :].groupby('year').apply(lambda x: x.population.sum()).values
-df.loc[:, 'incarceration_rate'] = df.loc[:, 'incarcerated'] / df.loc[:, 'population']
-df = df.drop(['incarcerated', 'population'], axis=1)
-df = pd.merge(expand({'year': range(1984, 2022 + 1, 1), 'race': [-1, 1, 2], 'age': range(101)}), df).reset_index(drop=True)
+df.loc[(df.race == -1) & (df.region == -1), 'incarcerated'] = df.loc[(df.race != -1) & (df.region != -1), :].groupby('year').apply(lambda x: x.incarcerated.sum()).values
+df.loc[(df.race == -1) & (df.region == -1), 'adult_population'] = df.loc[(df.race != -1) & (df.region != -1), :].groupby('year').apply(lambda x: x.adult_population.sum()).values
+for region in [1, 2]:
+    df.loc[(df.race == -1) & (df.region == region), 'incarcerated'] = df.loc[(df.race != -1) & (df.region == region), :].groupby('year').apply(lambda x: x.incarcerated.sum()).values
+    df.loc[(df.race == -1) & (df.region == region), 'adult_population'] = df.loc[(df.race != -1) & (df.region == region), :].groupby('year').apply(lambda x: x.adult_population.sum()).values
+for race in [1, 2]:
+    df.loc[(df.region == -1) & (df.race == race), 'incarcerated'] = df.loc[(df.region != -1) & (df.race == race), :].groupby('year').apply(lambda x: x.incarcerated.sum()).values
+    df.loc[(df.region == -1) & (df.race == race), 'adult_population'] = df.loc[(df.region != -1) & (df.race == race), :].groupby('year').apply(lambda x: x.adult_population.sum()).values
+df.loc[:, 'incarceration_rate'] = df.incarcerated / df.adult_population
+df = df.drop(['incarcerated', 'adult_population'], axis=1)
+df = pd.merge(expand({'year': range(1984, 2022 + 1, 1), 'race': [-1, 1, 2], 'region': [-1, 1, 2], 'age': range(101)}), df, how='left').reset_index(drop=True)
 df.loc[(df.age < 18) | (df.age >= 85), 'incarceration_rate'] = 0
 
 # Save the data

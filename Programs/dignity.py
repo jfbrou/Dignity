@@ -20,7 +20,6 @@ survival = survival.loc[survival.year.isin(range(1984, 2022 + 1)), :]
 # Load the incarceration data
 incarceration = pd.read_csv(os.path.join(incarceration_f_data, 'incarceration.csv')).rename(columns={'incarceration_rate': 'I'})
 incarceration.loc[:, 'latin'] = -1
-incarceration.loc[:, 'region'] = -1
 
 # Load the CEX data
 cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))

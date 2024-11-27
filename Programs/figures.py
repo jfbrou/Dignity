@@ -343,7 +343,7 @@ plt.close()
 
 # Load the incarceration data
 df = pd.read_csv(os.path.join(incarceration_f_data, 'incarceration.csv'))
-df = df.loc[df.age == 18, :].drop('age', axis=1)
+df = df.loc[(df.age == 18) & (df.region == -1), :].drop('age', axis=1)
 
 # Initialize the figure
 fig, ax = plt.subplots(figsize=(6, 4))
@@ -457,12 +457,12 @@ plt.close()
 ################################################################################
 #                                                                              #
 # This section of the script plots the consumption-equivalent welfare of Black #
-# relative to White Americans by region from 1999 to 2022.                     #
+# relative to White Americans by region from 1999 to 2019.                     #
 #                                                                              #
 ################################################################################
 
 # Define a list of years
-years = range(1999, 2022 + 1)
+years = range(1999, 2019 + 1)
 
 # Load the dignity data
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
@@ -481,14 +481,14 @@ for year in years:
     for region in [-1, 1, 2]:
         S_i = dignity.loc[(dignity.year == year) & (dignity.region == region) & (dignity.race == 1), 'S'].values
         S_j = dignity.loc[(dignity.year == year) & (dignity.region == region) & (dignity.race == 2), 'S'].values
-        I_i = np.zeros(101)
-        I_j = np.zeros(101)
+        I_i = dignity.loc[(dignity.year == year) & (dignity.region == region) & (dignity.race == 1), 'I'].values
+        I_j = dignity.loc[(dignity.year == year) & (dignity.region == region) & (dignity.race == 2), 'I'].values
         c_i_bar = dignity.loc[(dignity.year == year) & (dignity.region == region) & (dignity.race == 1), 'c_bar'].values
         c_j_bar = dignity.loc[(dignity.year == year) & (dignity.region == region) & (dignity.race == 2), 'c_bar'].values
         ell_i_bar = dignity.loc[(dignity.year == year) & (dignity.region == region) & (dignity.race == 1), 'ell_bar'].values
         ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.region == region) & (dignity.race == 2), 'ell_bar'].values
         S_intercept = dignity_intercept.loc[:, 'S'].values
-        I_intercept = np.zeros(101)
+        I_intercept = dignity_intercept.loc[:, 'I'].values
         c_intercept = dignity_intercept.loc[:, 'c_bar'].values
         ell_intercept = dignity_intercept.loc[:, 'ell_bar'].values
         c_i_bar_nd = dignity.loc[(dignity.year == year) & (dignity.region == region) & (dignity.race == 1), 'c_bar_nd'].values
@@ -508,21 +508,21 @@ fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
 ax.plot(years, df.loc[df.region == 1, 'log_lambda'], color=colors[0], linewidth=2.5)
-ax.annotate('Non-South', xy=(2021, np.log(0.55)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
-ax.annotate('{0:.2f}'.format(np.exp(df.loc[df.region == 1, 'log_lambda'].iloc[-1])), xy=(2022.25, df.loc[df.region == 1, 'log_lambda'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('Non-South', xy=(2016, np.log(0.55)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
+ax.annotate('{0:.2f}'.format(np.exp(df.loc[df.region == 1, 'log_lambda'].iloc[-1])), xy=(2019.25, df.loc[df.region == 1, 'log_lambda'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
 ax.plot(years, df.loc[df.region == 2, 'log_lambda'], color=colors[1], linewidth=2.5)
-ax.annotate('South', xy=(2012, np.log(0.705)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
-ax.annotate('{0:.2f}'.format(np.exp(df.loc[df.region == 2, 'log_lambda'].iloc[-1])), xy=(2022.25, df.loc[df.region == 2, 'log_lambda'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('South', xy=(2012, np.log(0.645)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
+ax.annotate('{0:.2f}'.format(np.exp(df.loc[df.region == 2, 'log_lambda'].iloc[-1])), xy=(2019.25, df.loc[df.region == 2, 'log_lambda'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
 
 # Set the horizontal axis
-ax.set_xlim(1999, 2022)
-ax.set_xticks(np.append(np.linspace(2000, 2020, 5), 2022))
-ax.set_xticklabels(np.append(range(2000, 2020 + 1, 5), ""))
+ax.set_xlim(1999, 2019)
+ax.set_xticks(np.append(np.linspace(2000, 2015, 4), 2019))
+ax.set_xticklabels(np.append(range(2000, 2015 + 1, 5), "2019"))
 
 # Set the vertical axis
-ax.set_ylim(np.log(0.45), np.log(0.8))
-ax.set_yticks(np.log(np.linspace(0.5, 0.8, 4)))
-ax.set_yticklabels(np.round_(np.linspace(0.5, 0.8, 4), 1))
+ax.set_ylim(np.log(0.4), np.log(0.7))
+ax.set_yticks(np.log(np.linspace(0.4, 0.7, 4)))
+ax.set_yticklabels(np.round_(np.linspace(0.4, 0.7, 4), 1))
 
 # Remove the top and right axes
 ax.spines['right'].set_visible(False)
