@@ -44,6 +44,10 @@ pop_f_data = os.path.join(f_data, "POP")
 # Identify the directory containing the incarceration rate data files
 incarceration_f_data = os.path.join(f_data, "Incarceration")
 
+# Identify the directory containing the population data files
+nhis_r_data = os.path.join(r_data, "NHIS")
+nhis_f_data = os.path.join(f_data, "NHIS")
+
 # Identify the directory containing all figures
 figures = os.path.join(path, "Figures")
 

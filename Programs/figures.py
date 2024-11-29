@@ -851,3 +851,341 @@ ax.spines['right'].set_visible(False)
 fig.tight_layout()
 fig.savefig(os.path.join(figures, 'Consumption and earnings.pdf'), format='pdf')
 plt.close()
+
+################################################################################
+#                                                                              #
+# This section of the script plots the consumption-equivalent welfare          #
+# health adjustment of Black relative to White Americans in 2018.              #
+#                                                                              #
+################################################################################
+
+# Load the NHIS data and calculate the average HALex by year, race, and age
+nhis = pd.read_csv(os.path.join(nhis_f_data, 'nhis.csv')).dropna(subset=['halex'])
+nhis_intercept = nhis.loc[nhis.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
+nhis = nhis.loc[(nhis.year == 2018) & nhis.race.isin([1, 2]), :].groupby(['race', 'age'], as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
+nhis_intercept = pd.merge(expand({'age': range(101)}), nhis_intercept, how='left')
+nhis = pd.merge(expand({'race': [1, 2], 'age': range(101)}), nhis, how='left')
+nhis_intercept.loc[:, 'halex'] = nhis_intercept.halex.transform(lambda x: filter(x, 100)).values
+nhis.loc[:, 'halex'] = nhis.groupby('race', as_index=False).halex.transform(lambda x: filter(x, 100)).values
+nhis_intercept.loc[nhis_intercept.halex < 0, 'halex'] = 0
+nhis_intercept.loc[nhis_intercept.halex > 1, 'halex'] = 1
+nhis.loc[nhis.halex < 0, 'halex'] = 0
+nhis.loc[nhis.halex > 1, 'halex'] = 1
+
+# Load the dignity data
+dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
+dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.latin == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
+dignity = dignity.loc[(dignity.race != -1) & (dignity.latin == -1) & (dignity.region == -1) & (dignity.year == 2018), :]
+dignity_intercept = pd.merge(dignity_intercept, nhis_intercept, how='left')
+dignity = pd.merge(dignity, nhis, how='left')
+
+# Retrieve nominal consumption per capita in 2006
+c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
+population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC
+c_nominal = 1e6 * c_nominal / population
+
+# Calculate the consumption-equivalent welfare of Black relative to White Americans without the morbidity adjustment
+S_i = dignity.loc[dignity.race == 1, 'S'].values
+S_j = dignity.loc[dignity.race == 2, 'S'].values
+I_i = dignity.loc[dignity.race == 1, 'I'].values
+I_j = dignity.loc[dignity.race == 2, 'I'].values
+c_i_bar = dignity.loc[dignity.race == 1, 'c_bar'].values
+c_j_bar = dignity.loc[dignity.race == 2, 'c_bar'].values
+ell_i_bar = dignity.loc[dignity.race == 1, 'ell_bar'].values
+ell_j_bar = dignity.loc[dignity.race == 2, 'ell_bar'].values
+S_intercept = dignity_intercept.loc[:, 'S'].values
+I_intercept = dignity_intercept.loc[:, 'I'].values
+c_intercept = dignity_intercept.loc[:, 'c_bar'].values
+ell_intercept = dignity_intercept.loc[:, 'ell_bar'].values
+c_i_bar_nd = dignity.loc[dignity.race == 1, 'c_bar_nd'].values
+c_j_bar_nd = dignity.loc[dignity.race == 2, 'c_bar_nd'].values
+Elog_of_c_i = dignity.loc[dignity.race == 1, 'Elog_of_c'].values
+Elog_of_c_j = dignity.loc[dignity.race == 2, 'Elog_of_c'].values
+Elog_of_c_i_nd = dignity.loc[dignity.race == 1, 'Elog_of_c_nd'].values
+Elog_of_c_j_nd = dignity.loc[dignity.race == 2, 'Elog_of_c_nd'].values
+Ev_of_ell_i = dignity.loc[dignity.race == 1, 'Ev_of_ell'].values
+Ev_of_ell_j = dignity.loc[dignity.race == 2, 'Ev_of_ell'].values
+log_lambda = cew_level(S_i=S_i, S_j=S_j, I_i=I_i, I_j=I_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                       S_intercept=S_intercept, I_intercept=I_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                       inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
+
+# Calculate the consumption-equivalent welfare of Black relative to White Americans with the morbidity adjustment
+df = pd.DataFrame({'parameter': np.linspace(0, 1, 101)})
+df.loc[:, 'log_lambda'] = np.nan
+for i in np.linspace(0, 1, 101):
+    S_i = dignity.loc[dignity.race == 1, 'S'].values
+    S_j = dignity.loc[dignity.race == 2, 'S'].values
+    I_i = dignity.loc[dignity.race == 1, 'I'].values
+    I_j = dignity.loc[dignity.race == 2, 'I'].values
+    H_i = dignity.loc[dignity.race == 1, 'halex'].values
+    H_j = dignity.loc[dignity.race == 2, 'halex'].values
+    c_i_bar = dignity.loc[dignity.race == 1, 'c_bar'].values
+    c_j_bar = dignity.loc[dignity.race == 2, 'c_bar'].values
+    ell_i_bar = dignity.loc[dignity.race == 1, 'ell_bar'].values
+    ell_j_bar = dignity.loc[dignity.race == 2, 'ell_bar'].values
+    S_intercept = dignity_intercept.loc[:, 'S'].values
+    I_intercept = dignity_intercept.loc[:, 'I'].values
+    H_intercept = dignity_intercept.loc[:, 'halex'].values
+    c_intercept = dignity_intercept.loc[:, 'c_bar'].values
+    ell_intercept = dignity_intercept.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[dignity.race == 1, 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[dignity.race == 2, 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[dignity.race == 1, 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[dignity.race == 2, 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[dignity.race == 1, 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[dignity.race == 2, 'Elog_of_c_nd'].values
+    Ev_of_ell_i = dignity.loc[dignity.race == 1, 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[dignity.race == 2, 'Ev_of_ell'].values
+    df.loc[df.parameter == i, 'log_lambda'] = cew_level_morbidity(S_i=S_i, S_j=S_j, I_i=I_i, I_j=I_j, H_i=H_i, H_j=H_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                                  S_intercept=S_intercept, I_intercept=I_intercept, H_intercept=H_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                                  c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j, morbidity_parameter=i)['log_lambda']
+
+# Initialize the figure
+fig, ax = plt.subplots(figsize=(6, 4))
+
+# Plot the lines
+ax.plot(np.linspace(0, 1, 101), df.log_lambda, color=colors[1], linewidth=2.5)
+ax.plot(0.1, float(df.loc[df.parameter == 0.1, 'log_lambda']), color=colors[1], marker='o', markersize=8)
+
+# Set the horizontal axis
+ax.set_xlim(0, 1)
+ax.set_xticks(np.linspace(0, 1, 11))
+ax.set_xticklabels(np.linspace(0, 100, 11).astype('int'))
+ax.set_xlabel(r'Worst morbidity (\%)', fontsize=12, rotation=0, ha='center')
+
+# Set the vertical axis
+ax.set_ylim(np.log(0.35), np.log(0.6))
+ax.set_yticks(np.log(np.linspace(0.35, 0.6, 6)))
+ax.set_yticklabels(list(map('{0:.2f}'.format, np.linspace(0.35, 0.6, 6))))
+
+# Remove the top and right axes
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+
+# Save and close the figure
+fig.tight_layout()
+fig.savefig(os.path.join(figures, 'Welfare and morbidity sensitivity.pdf'), format='pdf')
+plt.close()
+
+################################################################################
+#                                                                              #
+# This section of the script plots the consumption-equivalent welfare          #
+# decomposition of Black relative to White Americans from 1997 to 2018 with    #
+# the health adjustment.                                                       #
+#                                                                              #
+################################################################################
+
+# Define a list of years
+years = range(1997, 2018 + 1)
+
+# Load the NHIS data and calculate the average HALex by year, race and age
+nhis = pd.read_csv(os.path.join(nhis_f_data, 'nhis.csv')).dropna(subset=['halex'])
+nhis_intercept = nhis.loc[nhis.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
+nhis = nhis.loc[nhis.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
+nhis_intercept = pd.merge(expand({'age': range(101)}), nhis_intercept, how='left')
+nhis = pd.merge(expand({'year': years, 'race': nhis.race.unique(), 'age': range(101)}), nhis, how='left')
+nhis_intercept.loc[:, 'halex'] = nhis_intercept.halex.transform(lambda x: filter(x, 100)).values
+nhis.loc[:, 'halex'] = nhis.groupby(['year', 'race'], as_index=False).halex.transform(lambda x: filter(x, 100)).values
+nhis_intercept.loc[nhis_intercept.halex < 0, 'halex'] = 0
+nhis_intercept.loc[nhis_intercept.halex > 1, 'halex'] = 1
+nhis.loc[nhis.halex < 0, 'halex'] = 0
+nhis.loc[nhis.halex > 1, 'halex'] = 1
+
+# Load the dignity data
+dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
+dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.latin == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
+dignity = dignity.loc[(dignity.race != -1) & (dignity.latin == -1) & (dignity.region == -1) & dignity.year.isin(years), :]
+dignity_intercept = pd.merge(dignity_intercept, nhis_intercept, how='left')
+dignity = pd.merge(dignity, nhis, how='left')
+
+# Retrieve nominal consumption per capita in 2006
+c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
+population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC
+c_nominal = 1e6 * c_nominal / population
+
+# Create a data frame
+df = pd.DataFrame({
+    'year': years, 
+    'LE': np.zeros(len(years)),
+    'I': np.zeros(len(years)),
+    'M':  np.zeros(len(years)),
+    'C':  np.zeros(len(years)),
+    'CI': np.zeros(len(years)),
+    'L':  np.zeros(len(years)),
+    'LI': np.zeros(len(years))
+})
+
+# Calculate the consumption-equivalent welfare of Black relative to White Americans with the health adjustment
+for year in years:
+    S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
+    I_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'I'].values
+    I_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'I'].values
+    H_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'halex'].values
+    H_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'halex'].values
+    c_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_intercept.loc[:, 'S'].values
+    I_intercept = dignity_intercept.loc[:, 'I'].values
+    H_intercept = dignity_intercept.loc[:, 'halex'].values
+    c_intercept = dignity_intercept.loc[:, 'c_bar'].values
+    ell_intercept = dignity_intercept.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ell'].values
+    for i in ['LE', 'I', 'M', 'C', 'CI', 'L', 'LI']:
+        df.loc[df.year == year, i] = cew_level_morbidity(S_i=S_i, S_j=S_j, I_i=I_i, I_j=I_j, H_i=H_i, H_j=H_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                         S_intercept=S_intercept, I_intercept=I_intercept, H_intercept=H_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                         c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j, morbidity_parameter=0.1)[i]
+
+
+# Initialize the figure
+fig, ax = plt.subplots(figsize=(6, 4))
+newnewnewcolors = sns.color_palette('viridis', 6)
+
+# Plot the lines
+ax.stackplot(years, [df.LE, df.C, df.I, df.M], colors=newnewnewcolors[2:], edgecolor='Black', linewidth=0.75)
+ax.stackplot(years, [df.L, df.CI + df.LI], colors=[newnewnewcolors[1], newnewnewcolors[0]], edgecolor='Black', linewidth=0.75)
+ax.arrow(1999, np.log(1.01), 0, 0.09, linewidth=1, color='Black')
+ax.arrow(2013.5, np.log(0.49), 0, 0.09, linewidth=1, color='Black')
+
+# Set the horizontal axis
+ax.set_xlim(1997, 2018)
+ax.set_xticks(np.linspace(1998, 2018, 6))
+
+# Set the vertical axis
+ax.set_ylim(np.log(0.2), np.log(1.12))
+ax.set_yticks(np.log(np.linspace(0.2, 1, 9)))
+ax.set_yticklabels(list(map('{0:.1f}'.format, np.linspace(0.2, 1, 9))))
+
+# Remove the top and right axes
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+
+# Set the figure's text
+ax.text(1999, np.log(1.14), 'Leisure', fontsize=12, ha='center')
+ax.text(2011, np.log(1.11), 'Inequality', fontsize=12, ha='center')
+ax.text(2001, np.log(0.76), 'Life expectancy', fontsize=12, ha='center')
+ax.text(2001, np.log(0.53), 'Consumption', fontsize=12, ha='center')
+ax.text(2013.5, np.log(0.46), 'Incarceration', fontsize=12, ha='center')
+ax.text(2001, np.log(0.32), 'Morbidity', fontsize=12, ha='center')
+
+# Save and close the figure
+fig.tight_layout()
+fig.savefig(os.path.join(figures, 'Welfare and morbidity decomposition.pdf'), format='pdf')
+plt.close()
+
+################################################################################
+#                                                                              #
+# This section of the script plots the consumption-equivalent welfare          #
+# decomposition of Black relative to White Americans from 1997 to 2018 with    #
+# the health adjustment.                                                       #
+#                                                                              #
+################################################################################
+
+# Define a list of years
+years = range(1997, 2018 + 1)
+
+# Load the NHIS data and calculate the average HALex by year, race and age
+nhis = pd.read_csv(os.path.join(nhis_f_data, 'nhis.csv')).dropna(subset=['halex'])
+nhis_intercept = nhis.loc[nhis.year == 2006, :].groupby('age', as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
+nhis = nhis.loc[nhis.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(lambda x: pd.Series({'halex': np.average(x.halex, weights=x.weight)}))
+nhis_intercept = pd.merge(expand({'age': range(101)}), nhis_intercept, how='left')
+nhis = pd.merge(expand({'year': years, 'race': nhis.race.unique(), 'age': range(101)}), nhis, how='left')
+nhis_intercept.loc[:, 'halex'] = nhis_intercept.halex.transform(lambda x: filter(x, 100)).values
+nhis.loc[:, 'halex'] = nhis.groupby(['year', 'race'], as_index=False).halex.transform(lambda x: filter(x, 100)).values
+nhis_intercept.loc[nhis_intercept.halex < 0, 'halex'] = 0
+nhis_intercept.loc[nhis_intercept.halex > 1, 'halex'] = 1
+nhis.loc[nhis.halex < 0, 'halex'] = 0
+nhis.loc[nhis.halex > 1, 'halex'] = 1
+
+# Load the dignity data
+dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
+dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.latin == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
+dignity = dignity.loc[(dignity.race != -1) & (dignity.latin == -1) & (dignity.region == -1) & dignity.year.isin(years), :]
+dignity_intercept = pd.merge(dignity_intercept, nhis_intercept, how='left')
+dignity = pd.merge(dignity, nhis, how='left')
+
+# Retrieve nominal consumption per capita in 2006
+c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
+population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC
+c_nominal = 1e6 * c_nominal / population
+
+# Create a data frame
+df = pd.DataFrame({
+    'year':                 years, 
+    'log_lambda':           np.zeros(len(years)), 
+    'log_lambda_morbidity': np.zeros(len(years))
+})
+
+# Calculate the consumption-equivalent welfare of Black relative to White Americans with the health adjustment
+for year in years:
+    S_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'S'].values
+    S_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'S'].values
+    I_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'I'].values
+    I_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'I'].values
+    H_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'halex'].values
+    H_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'halex'].values
+    c_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar'].values
+    c_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar'].values
+    ell_i_bar = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'ell_bar'].values
+    ell_j_bar = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'ell_bar'].values
+    S_intercept = dignity_intercept.loc[:, 'S'].values
+    I_intercept = dignity_intercept.loc[:, 'I'].values
+    H_intercept = dignity_intercept.loc[:, 'halex'].values
+    c_intercept = dignity_intercept.loc[:, 'c_bar'].values
+    ell_intercept = dignity_intercept.loc[:, 'ell_bar'].values
+    c_i_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'c_bar_nd'].values
+    c_j_bar_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'c_bar_nd'].values
+    Elog_of_c_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c'].values
+    Elog_of_c_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c'].values
+    Elog_of_c_i_nd = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Elog_of_c_nd'].values
+    Elog_of_c_j_nd = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Elog_of_c_nd'].values
+    Ev_of_ell_i = dignity.loc[(dignity.year == year) & (dignity.race == 1), 'Ev_of_ell'].values
+    Ev_of_ell_j = dignity.loc[(dignity.year == year) & (dignity.race == 2), 'Ev_of_ell'].values
+    df.loc[df.year == year, 'log_lambda'] = cew_level_morbidity(S_i=S_i, S_j=S_j, I_i=I_i, I_j=I_j, H_i=H_i, H_j=H_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                                S_intercept=S_intercept, I_intercept=I_intercept, H_intercept=H_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                                c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j, morbidity_parameter=1)['log_lambda']
+    df.loc[df.year == year, 'log_lambda_morbidity'] = cew_level_morbidity(S_i=S_i, S_j=S_j, I_i=I_i, I_j=I_j, H_i=H_i, H_j=H_j, c_i_bar=c_i_bar, c_j_bar=c_j_bar, ell_i_bar=ell_i_bar, ell_j_bar=ell_j_bar,
+                                                                          S_intercept=S_intercept, I_intercept=I_intercept, H_intercept=H_intercept, c_intercept=c_intercept, ell_intercept=ell_intercept, c_nominal=c_nominal,
+                                                                          c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j, morbidity_parameter=0.1)['log_lambda']
+
+# Initialize the figure
+fig, ax = plt.subplots(figsize=(6, 4))
+
+# Plot the lines
+ax.plot(years, df.log_lambda, color=colors[1], linewidth=2.5)
+ax.plot(years, df.log_lambda_morbidity, color=colors[1], linewidth=2.5, alpha=0.2)
+ax.annotate('{0:.2f}'.format(np.exp(df.log_lambda.iloc[-1])), xy=(2018.25, df.log_lambda.iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('{0:.2f}'.format(np.exp(df.log_lambda.iloc[0])), xy=(1995.5, df.log_lambda.iloc[0]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('{0:.2f}'.format(np.exp(df.log_lambda_morbidity.iloc[-1])), xy=(2018.25, df.log_lambda_morbidity.iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
+ax.annotate('{0:.2f}'.format(np.exp(df.log_lambda_morbidity.iloc[0])), xy=(1995.5, df.log_lambda_morbidity.iloc[0]), color='k', fontsize=12, va='center', annotation_clip=False)
+
+# Add annotations for the "baseline" and "morbidity" labels
+ax.text(2004, np.log(0.4), 'Baseline', fontsize=12, color='k', va='center', ha='center')
+ax.text(2005, np.log(0.26), 'Morbidity-adjusted', fontsize=12, color='k', va='center', ha='center')
+
+# Set the horizontal axis
+ax.set_xlim(1997, 2018)
+ax.set_xticks(np.linspace(1998, 2018, 6))
+
+# Set the vertical axis
+ax.set_ylim(np.log(0.2), np.log(0.6))
+ax.set_yticks(np.log(np.linspace(0.2, 0.6, 5)))
+ax.set_yticklabels(np.round_(np.linspace(0.2, 0.6, 5), 1))
+
+# Remove the top and right axes
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+
+# Save and close the figure
+fig.tight_layout()
+fig.savefig(os.path.join(figures, 'Welfare and morbidity.pdf'), format='pdf')
+plt.close()
