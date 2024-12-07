@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 #SBATCH --job-name=bootstrap_cex
-#SBATCH --error=/home/jfbrou/Dignity/Programs/Data programs/Error files/errors_%x_%j.err
-#SBATCH --output=/home/jfbrou/Dignity/Programs/Data programs/Output files/output_%x_%j.out
+#SBATCH --error=/home/jfbrou/Dignity/Programs/Data programs/Bash/Error files/errors_%x_%j.err
+#SBATCH --output=/home/jfbrou/Dignity/Programs/Data programs/Bash/Output files/output_%x_%j.out
 #SBATCH --time=1-00:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
