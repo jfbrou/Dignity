@@ -11,7 +11,7 @@ idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
 from functions import *
 
 # Set the Sherlock data directory
-data = '/scratch/users/jfbrou/Dignity'
+data = '/scratch/jfbrou/Dignity'
 
 # Define a function to calculate CPS leisure statistics across bootstrap samples
 def bootstrap(b):

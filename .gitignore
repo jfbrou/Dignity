@@ -3,8 +3,8 @@ Programs/__pycache__/
 Programs/*.DS_Store
 Programs/Data programs/__pycache__/
 Programs/Data programs/*.DS_Store
-Programs/Data programs/Error files/
-Programs/Data programs/Output files/
+Programs/Data programs/Error files/*
+Programs/Data programs/Output files/*
 Programs/Analysis programs/__pycache__/
 Programs/Analysis programs/*.DS_Store
 Programs/notebook.ipynb

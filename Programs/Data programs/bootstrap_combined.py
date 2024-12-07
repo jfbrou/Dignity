@@ -6,7 +6,7 @@ import statsmodels.formula.api as smf
 import os
 
 # Set the Sherlock data directory
-data = '/scratch/users/jfbrou/Dignity'
+data = '/scratch/jfbrou/Dignity'
 
 # Append all bootstrap samples in a single data frame
 cew_bootstrap = pd.DataFrame()

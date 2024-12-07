@@ -8,7 +8,7 @@ import os
 from functions import *
 
 # Set the Sherlock data directory
-data = '/scratch/users/jfbrou/Dignity'
+data = '/scratch/jfbrou/Dignity'
 
 # Append all bootstrap samples in a single data frame
 dignity_cex_bootstrap = pd.DataFrame()

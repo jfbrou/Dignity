@@ -11,7 +11,7 @@ idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
 from functions import *
 
 # Set the Sherlock data directory
-data = '/scratch/users/jfbrou/Dignity'
+data = '/scratch/jfbrou/Dignity'
 
 # Perform the consumption-equivalent welfare calculations on each bootstrap sample
 dignity = pd.read_csv(os.path.join(data, 'dignity.csv'))
