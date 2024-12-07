@@ -56,7 +56,7 @@ This replication package contains two Python programs. The program `data.py`, pr
 >1. **Click on the links provided above**:  
 >Scroll down and agree to abide by the terms of data use.
 >2. **Organize table layout**:  
->In section 1 named "organize table layout", select to group results by "Census Region", "Single-Year Ages", "Race" (or "Single Race 6" for the 2018-2022 data), and "Year".
+>In section 1 named "organize table layout", select to group results by "Census Region", "Single-Year Ages", "Hispanic Origin", "Race" (or "Single Race 6" for the 2018-2022 data), and "Year".
 >3. **Select demographics**:  
 >In the "Race" (or "Single Race 6" for the 2018-2022 data) tab of section 3 named "select demographics", click on "Black or African American" and "White".
 >4. **Other options**:

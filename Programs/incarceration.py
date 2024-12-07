@@ -395,4 +395,5 @@ df = pd.merge(expand({'year': range(1984, 2022 + 1, 1), 'race': [-1, 1, 2], 'reg
 df.loc[(df.age < 18) | (df.age >= 85), 'incarceration_rate'] = 0
 
 # Save the data
+df.loc[:, 'incarceration_rate'] = df.groupby(['race', 'region', 'age'], as_index=False)['incarceration_rate'].transform(lambda x: sm.tsa.filters.hpfilter(x, 6.25)[1])
 df.to_csv(os.path.join(incarceration_f_data, 'incarceration.csv'), index=False)

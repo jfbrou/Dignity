@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.getcwd()), '.env'))
 
 # Identify the storage directory
-path = os.getenv('path')
+path = os.getenv('mypath')
 
 # Identify the data directory
 r_data = os.path.join(path, "Data/Raw")

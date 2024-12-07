@@ -236,46 +236,51 @@ for year in range(1990, 2000):
     df_year = pd.merge(df_year_total, df_year_adult)
     df_1990_1999 = pd.concat([df_1990_1999, df_year], ignore_index=True)
 
-# Process the data from 1990 to 2020
-df_1990_2020 = pd.read_csv(os.path.join(pop_r_data, 'population_1990_2020.txt'), sep='\t')
-df_1990_2020 = df_1990_2020[['Age Group', 'Race', 'Region', 'Yearly July 1st Estimates', 'Population']].dropna()
-df_1990_2020.loc[:, 'adult'] = df_1990_2020['Age Group'].map(age_to_adult)
-df_1990_2020 = df_1990_2020.groupby(['Yearly July 1st Estimates', 'Race', 'Region', 'adult']).agg({'Population': 'sum'}).reset_index().rename(columns={'Yearly July 1st Estimates': 'year', 'Race': 'race', 'Region': 'region', 'Population': 'population'})
-df_1990_2020.loc[:, 'race'] = df_1990_2020.race.map({'White': 1, 'Black or African American': 2})
-df_1990_2020.loc[:, 'region'] = df_1990_2020.region.map({'Census Region 1: Northeast': 1, 'Census Region 2: Midwest': 1, 'Census Region 3: South': 2, 'Census Region 4: West': 1})
-df_1990_2020_adult = df_1990_2020.loc[df_1990_2020.adult == 1, :].groupby(['year', 'region', 'race'], as_index=False).agg({'population': 'sum'}).rename(columns={'population': 'adult_population'})
-df_1990_2020_total = df_1990_2020.groupby(['year', 'region', 'race'], as_index=False).agg({'population': 'sum'}).rename(columns={'population': 'total_population'})
-df_1990_2020 = pd.merge(df_1990_2020_total, df_1990_2020_adult)
+# Combine the data
+df_1984_1999 = pd.concat([df_1984_1989, df_1990_1999], ignore_index=True)
 
-# Process the data from 2018 to 2022
-df_2021_2022 = pd.read_csv(os.path.join(pop_r_data, 'population_2021_2022.txt'), sep='\t')
-df_2021_2022 = df_2021_2022[['Five-Year Age Groups', 'Single Race 6', 'Census Region', 'Year', 'Population']].dropna()
-df_2021_2022 = df_2021_2022.loc[df_2021_2022['Five-Year Age Groups'].isin(age_to_adult.keys()), :]
-df_2021_2022.loc[:, 'adult'] = df_2021_2022['Five-Year Age Groups'].map(age_to_adult)
-df_2021_2022 = df_2021_2022.loc[df_2021_2022.Population != 'Not Applicable', :]
-df_2021_2022 = df_2021_2022.astype({'Population': 'int32'})
-df_2021_2022 = df_2021_2022.groupby(['Year', 'Single Race 6', 'Census Region', 'adult']).agg({'Population': 'sum'}).reset_index().rename(columns={'Year': 'year', 'Single Race 6': 'race', 'Census Region': 'region', 'Population': 'population'})
-df_2021_2022.loc[:, 'race'] = df_2021_2022.race.map({'White': 1, 'Black or African American': 2})
-df_2021_2022.loc[:, 'region'] = df_2021_2022.region.map({'Census Region 1: Northeast': 1, 'Census Region 2: Midwest': 1, 'Census Region 3: South': 2, 'Census Region 4: West': 1})
-df_2021_2022_adult = df_2021_2022.loc[df_2021_2022.adult == 1, :].groupby(['year', 'region', 'race'], as_index=False).agg({'population': 'sum'}).rename(columns={'population': 'adult_population'})
-df_2021_2022_total = df_2021_2022.groupby(['year', 'region', 'race'], as_index=False).agg({'population': 'sum'}).rename(columns={'population': 'total_population'})
-df_2021_2022 = pd.merge(df_2021_2022_total, df_2021_2022_adult)
+# Process the data from 1999 to 2022
+columns_1999_2020 = ["Single-Year Ages Code", "Census Region", "Race", "Year", "Deaths", "Population", "Hispanic Origin"]
+columns_2018_2022 = ["Single-Year Ages Code", "Census Region", "Single Race 6", "Year", "Deaths", "Population", "Hispanic Origin"]
+names = ["age", "region", "race", "year", "deaths", "population"]
+df_1999_2020 = pd.read_csv(os.path.join(cdc_r_data, "Multiple Cause of Death, 1999-2020.txt"), delimiter="\t", header=0, usecols=columns_1999_2020).rename(columns=dict(zip(columns_1999_2020, names)))
+df_2018_2022 = pd.read_csv(os.path.join(cdc_r_data, "Multiple Cause of Death, 2018-2022, Single Race.txt"), delimiter="\t", header=0, usecols=columns_2018_2022).rename(columns=dict(zip(columns_2018_2022, names)))
+df_1999_2020 = df_1999_2020.dropna()
+df_2018_2022 = df_2018_2022.dropna()
+df_1999_2020 = df_1999_2020.loc[(df_1999_2020.age != "NS") & (df_1999_2020.population != "Not Applicable") & (df_1999_2020['Hispanic Origin'] == 'Not Hispanic or Latino'), :]
+df_2018_2022 = df_2018_2022.loc[(df_2018_2022.age != "NS") & (df_2018_2022.population != "Not Applicable") & (df_2018_2022['Hispanic Origin'] == 'Not Hispanic or Latino'), :]
+df_1999_2020.loc[:, "adult"] = (pd.to_numeric(df_1999_2020.age) >= 18)
+df_2018_2022.loc[:, "adult"] = (pd.to_numeric(df_2018_2022.age) >= 18)
+df_1999_2020.loc[:, "race"] = df_1999_2020.race.map({"White": 1, "Black or African American": 2})
+df_2018_2022.loc[:, "race"] = df_2018_2022.race.map({"White": 1, "Black or African American": 2})
+df_1999_2020.loc[:, "region"] = df_1999_2020.region.map({"Census Region 1: Northeast": 1, "Census Region 2: Midwest": 1, "Census Region 3: South": 2, "Census Region 4: West": 1})
+df_2018_2022.loc[:, "region"] = df_2018_2022.region.map({"Census Region 1: Northeast": 1, "Census Region 2: Midwest": 1, "Census Region 3: South": 2, "Census Region 4: West": 1})
+df_1999_2020 = df_1999_2020.astype({"year": "int", "race": "int", "region": "int", "population": "int"})
+df_2018_2022 = df_2018_2022.astype({"year": "int", "race": "int", "region": "int", "population": "int"})
+df_1999_2020_total = df_1999_2020.groupby(["year", "race", "region"], as_index=False).agg({"population": "sum"}).rename(columns={"population": "total_population"})
+df_2018_2022_total = df_2018_2022.groupby(["year", "race", "region"], as_index=False).agg({"population": "sum"}).rename(columns={"population": "total_population"})
+df_1999_2020_adult = df_1999_2020.loc[df_1999_2020.adult == True, :].groupby(["year", "race", "region"], as_index=False).agg({"population": "sum"}).rename(columns={"population": "adult_population"})
+df_2018_2022_adult = df_2018_2022.loc[df_2018_2022.adult == True, :].groupby(["year", "race", "region"], as_index=False).agg({"population": "sum"}).rename(columns={"population": "adult_population"})
+df_1999_2020 = pd.merge(df_1999_2020_total, df_1999_2020_adult)
+df_2018_2022 = pd.merge(df_2018_2022_total, df_2018_2022_adult)
 
-# Adjust the data from 1984 to 1989 using the data from 1990 to 1999
+# Adjust the data from 1984 to 1998 using the overlaping data from 1999
 for race in [1, 2]:
     for region in [1, 2]:
         for age in ['total', 'adult']:
-            adjustment = np.mean(df_1990_2020.loc[df_1990_2020.year.isin(range(1990, 2000)) & (df_1990_2020.race == race) & (df_1990_2020.region == region), age + '_population'].values / df_1990_1999.loc[df_1990_1999.year.isin(range(1990, 2000)) & (df_1990_1999.race == race) & (df_1990_1999.region == region), age + '_population'].values)
-            df_1984_1989.loc[(df_1984_1989.race == race) & (df_1984_1989.region == region), age + '_population'] = df_1984_1989.loc[(df_1984_1989.race == race) & (df_1984_1989.region == region), age + '_population'] * adjustment
+            adjustment = df_1999_2020.loc[(df_1999_2020.year == 1999) & (df_1999_2020.race == race) & (df_1999_2020.region == region), age + '_population'].values[0] / df_1984_1999.loc[(df_1984_1999.year == 1999) & (df_1984_1999.race == race) & (df_1984_1999.region == region), age + '_population'].values[0]
+            df_1984_1999.loc[(df_1984_1999.race == race) & (df_1984_1999.region == region), age + '_population'] = df_1984_1999.loc[(df_1984_1999.race == race) & (df_1984_1999.region == region), age + '_population'] * adjustment
+df_1984_1999 = df_1984_1999.loc[df_1984_1999.year.isin(range(1984, 1999)), :]
 
-# Adjust the data from 2021 to 2022 using the data from 2018 to 2020
+# Adjust the data from 2021 to 2022 using the overlaping data from 2018 to 2020
 for race in [1, 2]:
     for region in [1, 2]:
         for age in ['total', 'adult']:
-            adjustment = np.mean(df_1990_2020.loc[df_1990_2020.year.isin(range(2018, 2021)) & (df_1990_2020.race == race) & (df_1990_2020.region == region), age + '_population'].values / df_2021_2022.loc[df_2021_2022.year.isin(range(2018, 2021)) & (df_2021_2022.race == race) & (df_2021_2022.region == region), age + '_population'].values)
-            df_2021_2022.loc[(df_2021_2022.race == race) & (df_2021_2022.region == region), age + '_population'] = df_2021_2022.loc[(df_2021_2022.race == race) & (df_2021_2022.region == region), age + '_population'] * adjustment
-df_2021_2022 = df_2021_2022.loc[df_2021_2022.year.isin(range(2021, 2023)), :]
+            adjustment = np.mean(df_1999_2020.loc[df_1999_2020.year.isin(range(2018, 2021)) & (df_1999_2020.race == race) & (df_1999_2020.region == region), age + '_population'].values / df_2018_2022.loc[df_2018_2022.year.isin(range(2018, 2021)) & (df_2018_2022.race == race) & (df_2018_2022.region == region), age + '_population'].values)
+            df_2018_2022.loc[(df_2018_2022.race == race) & (df_2018_2022.region == region), age + '_population'] = df_2018_2022.loc[(df_2018_2022.race == race) & (df_2018_2022.region == region), age + '_population'] * adjustment
+df_2018_2022 = df_2018_2022.loc[df_2018_2022.year.isin(range(2021, 2023)), :]
 
 # Combine and save the data
-df = pd.concat([df_1984_1989, df_1990_2020, df_2021_2022], ignore_index=True)
+df = pd.concat([df_1984_1999, df_1999_2020, df_2018_2022], ignore_index=True)
+df.loc[:, ['adult_population', 'total_population']] = df.groupby(['race', 'region'], as_index=False)[['adult_population', 'total_population']].transform(lambda x: sm.tsa.filters.hpfilter(x, 6.25)[1])
 df.to_csv(os.path.join(pop_f_data, 'population.csv'), index=False)

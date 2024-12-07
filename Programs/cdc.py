@@ -9,8 +9,8 @@ from functions import *
 from directories import *
 
 # Define variable columns
-columns_1999_2020 = ["Single-Year Ages Code", "Census Region", "Race", "Year", "Deaths", "Population"]
-columns_2018_2022 = ["Single-Year Ages Code", "Census Region", "Single Race 6", "Year", "Deaths", "Population"]
+columns_1999_2020 = ["Single-Year Ages Code", "Census Region", "Race", "Year", "Deaths", "Population", "Hispanic Origin"]
+columns_2018_2022 = ["Single-Year Ages Code", "Census Region", "Single Race 6", "Year", "Deaths", "Population", "Hispanic Origin"]
 
 # Define variable names
 names = ["age", "region", "race", "year", "deaths", "population"]
