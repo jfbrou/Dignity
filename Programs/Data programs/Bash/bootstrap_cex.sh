@@ -1,6 +1,5 @@
 #!/bin/bash
 #
-#SBATCH -p hns
 #SBATCH --job-name=bootstrap_cex
 #SBATCH --error=/home/jfbrou/Dignity/Programs/Data programs/Error files/errors_%x_%j.err
 #SBATCH --output=/home/jfbrou/Dignity/Programs/Data programs/Output files/output_%x_%j.out
@@ -10,6 +9,7 @@
 #SBATCH --mem-per-cpu=10G
 #SBATCH --mail-type=begin
 #SBATCH --mail-type=end
+#SBATCH --mail-user=jean-felix.brouillette@hec.ca
 #SBATCH --array=1-200
 
 cd /home/jfbrou/Dignity/Programs/Data programs
