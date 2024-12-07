@@ -13,7 +13,7 @@ import sys
 from functions import *
 from directories import *
 
-# Load my API keys
+# Load my environment variables
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.getcwd()), '.env'))
 
 # Define my API keys

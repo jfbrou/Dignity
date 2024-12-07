@@ -1,25 +1,27 @@
 # Import libraries
+import os
+from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
 import beapy
-import os
 
 # Import functions and directories
 from functions import *
 from directories import *
 
-# Start the BEA client
-bea = beapy.BEA(key=bea_api_key)
+# Load my environment variables
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.getcwd()), '.env'))
+
+# Define my API keys
+bea = beapy.BEA(key=os.getenv('bea_api_key'))
 
 # Load the survival rates data
 survival = pd.read_csv(os.path.join(cdc_f_data, 'survival.csv'))
-survival = survival.loc[survival.gender == -1, :].drop('gender', axis=1)
 survival = survival.loc[survival.year.isin(range(1984, 2022 + 1)), :]
 
 # Load the incarceration data
 incarceration = pd.read_csv(os.path.join(incarceration_f_data, 'incarceration.csv')).rename(columns={'incarceration_rate': 'I'})
-incarceration.loc[:, 'latin'] = -1
 
 # Load the CEX data
 cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
@@ -57,32 +59,20 @@ columns = [column.replace('consumption', 'Elog_of_c') for column in cex.columns 
 
 # Calculate CEX consumption statistics by year and age
 df = cex.groupby(['year', 'age'], as_index=False).apply(f_cex)
-df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [-1], 'latin': [-1], 'region': [-1]}), df, how='left')
+df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [-1], 'region': [-1]}), df, how='left')
 df.loc[:, columns] = df.groupby('year', as_index=False)[columns].transform(lambda x: filter(x, 1600)).values
 df_consumption = pd.concat([df_consumption, df], ignore_index=True)
 
 # Calculate CEX consumption statistics by year, race, and age
 df = cex.loc[cex.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(f_cex)
-df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'latin': [-1], 'region': [-1]}), df, how='left')
+df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'region': [-1]}), df, how='left')
 df.loc[:, columns] = df.groupby(['year', 'race'], as_index=False)[columns].transform(lambda x: filter(x, 1600)).values
 df_consumption = pd.concat([df_consumption, df], ignore_index=True)
 
 # Calculate CEX consumption statistics by year, race, region, and age
 df = cex.loc[cex.race.isin([1, 2]) & cex.region.isin([1, 2]), :].groupby(['year', 'race', 'region', 'age'], as_index=False).apply(f_cex)
-df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'latin': [-1], 'region': [1, 2]}), df, how='left')
+df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'region': [1, 2]}), df, how='left')
 df.loc[:, columns] = df.groupby(['year', 'race', 'region'], as_index=False)[columns].transform(lambda x: filter(x, 1600)).values
-df_consumption = pd.concat([df_consumption, df], ignore_index=True)
-
-# Calculate CEX consumption statistics by year and age for Latinos
-df = cex.loc[(cex.latin == 1) & (cex.year >= 2006), :].groupby(['year', 'age'], as_index=False).apply(f_cex)
-df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [-1], 'latin': [1], 'region': [-1]}), df, how='left')
-df.loc[:, columns] = df.groupby('year', as_index=False)[columns].transform(lambda x: filter(x, 1600)).values
-df_consumption = pd.concat([df_consumption, df], ignore_index=True)
-
-# Calculate CEX consumption statistics by year, race, and age for non-Latinos
-df = cex.loc[cex.race.isin([1, 2]) & (cex.latin == 0) & (cex.year >= 2006), :].groupby(['year', 'race', 'age'], as_index=False).apply(f_cex)
-df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'latin': [0], 'region': [-1]}), df, how='left')
-df.loc[:, columns] = df.groupby(['year', 'race'], as_index=False)[columns].transform(lambda x: filter(x, 1600)).values
 df_consumption = pd.concat([df_consumption, df], ignore_index=True)
 
 ################################################################################
@@ -104,7 +94,7 @@ def f_cps(x):
 
 # Calculate CPS leisure statistics by year and age
 df = cps.groupby(['year', 'age'], as_index=False).apply(f_cps)
-df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [-1], 'latin': [-1], 'region': [-1]}), df, how='left')
+df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [-1], 'region': [-1]}), df, how='left')
 df.loc[:, ['Ev_of_ell', 'ell_bar']] = df.groupby('year', as_index=False)[['Ev_of_ell', 'ell_bar']].transform(lambda x: filter(x, 100)).values
 df.loc[df.loc[:, 'Ev_of_ell'] > 0, 'Ev_of_ell'] = 0
 df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
@@ -112,7 +102,7 @@ df_leisure = pd.concat([df_leisure, df], ignore_index=True)
 
 # Calculate CPS leisure statistics by year, race, and age
 df = cps.loc[cps.race.isin([1, 2]), :].groupby(['year', 'race', 'age'], as_index=False).apply(f_cps)
-df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'latin': [-1], 'region': [-1]}), df, how='left')
+df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'region': [-1]}), df, how='left')
 df.loc[:, ['Ev_of_ell', 'ell_bar']] = df.groupby(['year', 'race'], as_index=False)[['Ev_of_ell', 'ell_bar']].transform(lambda x: filter(x, 100)).values
 df.loc[df.loc[:, 'Ev_of_ell'] > 0, 'Ev_of_ell'] = 0
 df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
@@ -120,24 +110,8 @@ df_leisure = pd.concat([df_leisure, df], ignore_index=True)
 
 # Calculate CPS leisure statistics by year, race, region, and age
 df = cps.loc[cps.race.isin([1, 2]) & cps.region.isin([1, 2]), :].groupby(['year', 'race', 'region', 'age'], as_index=False).apply(f_cps)
-df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'latin': [-1], 'region': [1, 2]}), df, how='left')
+df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'region': [1, 2]}), df, how='left')
 df.loc[:, ['Ev_of_ell', 'ell_bar']] = df.groupby(['year', 'race', 'region'], as_index=False)[['Ev_of_ell', 'ell_bar']].transform(lambda x: filter(x, 100)).values
-df.loc[df.loc[:, 'Ev_of_ell'] > 0, 'Ev_of_ell'] = 0
-df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
-df_leisure = pd.concat([df_leisure, df], ignore_index=True)
-
-# Calculate CPS leisure statistics by year and age for Latinos
-df = cps.loc[(cps.latin == 1) & (cps.year >= 2006), :].groupby(['year', 'age'], as_index=False).apply(f_cps)
-df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [-1], 'latin': [1], 'region': [-1]}), df, how='left')
-df.loc[:, ['Ev_of_ell', 'ell_bar']] = df.groupby('year', as_index=False)[['Ev_of_ell', 'ell_bar']].transform(lambda x: filter(x, 100)).values
-df.loc[df.loc[:, 'Ev_of_ell'] > 0, 'Ev_of_ell'] = 0
-df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
-df_leisure = pd.concat([df_leisure, df], ignore_index=True)
-
-# Calculate CPS leisure statistics by year, race, and age for non-Latinos
-df = cps.loc[cps.race.isin([1, 2]) & (cps.latin == 0) & (cps.year >= 2006), :].groupby(['year', 'race', 'age'], as_index=False).apply(f_cps)
-df = pd.merge(expand({'year': df.year.unique(), 'age': range(101), 'race': [1, 2], 'latin': [0], 'region': [-1]}), df, how='left')
-df.loc[:, ['Ev_of_ell', 'ell_bar']] = df.groupby(['year', 'race'], as_index=False)[['Ev_of_ell', 'ell_bar']].transform(lambda x: filter(x, 100)).values
 df.loc[df.loc[:, 'Ev_of_ell'] > 0, 'Ev_of_ell'] = 0
 df.loc[df.loc[:, 'ell_bar'] > 1, 'ell_bar'] = 1
 df_leisure = pd.concat([df_leisure, df], ignore_index=True)
@@ -152,7 +126,7 @@ df_leisure = pd.concat([df_leisure, df], ignore_index=True)
 dignity = pd.merge(survival, incarceration, how='left')
 dignity = pd.merge(dignity, df_consumption, how='left')
 dignity = pd.merge(dignity, df_leisure, how='left')
-dignity = dignity.sort_values(by=['year', 'race', 'latin', 'region', 'age'])
+dignity = dignity.sort_values(by=['year', 'race', 'region', 'age'])
 
 # Save the data
 dignity.to_csv(os.path.join(f_data, 'dignity.csv'), index=False)

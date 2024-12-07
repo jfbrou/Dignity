@@ -1,127 +1,172 @@
 # Import libraries
+import os
+from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
-import os
+import ipumspy
+import sys
 
 # Import functions and directories
 from functions import *
 from directories import *
 
+# Load my environment variables
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.getcwd()), '.env'))
+
+# Define my API keys
+ipums = ipumspy.IpumsApiClient(os.getenv('ipums_api_key'))
+
 # Define variable columns
-columns = ['YEAR',
-		   'PERWEIGHT',
-		   'AGE',
-		   'SEX',
-		   'RACEA',
-		   'HISPETH',
-		   'EDUCREC1',
-		   'HEALTH',
-		   'LANY',
-		   'LADL',
-		   'LAIADL',
-		   'LANOWORK',
-		   'LAMTWRK']
+variables = [
+    'YEAR',
+    'PERWEIGHT',
+    'AGE',
+    'SEX',
+    'RACEA',
+    'HISPETH',
+    'EDUCREC1',
+    'HEALTH',
+    'LANY',
+    'LADL',
+    'LAIADL',
+    'LANOWORK',
+    'LAMTWRK'
+]
 
 # Define a race encoding
-race_map = {100: 1,      # White
-		    200: 2,      # Black
-		    300: 3,      # Aleut, Alaskan Native, or Native American
-		    310: 3,      # Alaskan Native or Native American
-		    411: 4,      # Chinese
-		    412: 4,      # Filipino
-		    416: 4,      # Asian Indian
-		    433: 4,      # Other Asian or Pacific Islander (1997-1998)
-		    434: 4,      # Other Asian (1999 forward)
-		    560: np.nan, # Other Race (1997-1998)
-		    570: np.nan, # Other Race (1999-2002)
-		    580: np.nan, # Primary Race not releasable
-		    600: np.nan, # Multiple Race
-		    970: np.nan, # Refused
-		    980: np.nan, # Not ascertained
-		    990: np.nan} # Unknown
+race_map = {
+    100: 1,       # White
+    200: 2,       # Black
+    300: 3,       # Aleut, Alaskan Native, or Native American
+    310: 3,       # Alaskan Native or Native American
+    411: 4,       # Chinese
+    412: 4,       # Filipino
+    416: 4,       # Asian Indian
+    433: 4,       # Other Asian or Pacific Islander (1997-1998)
+    434: 4,       # Other Asian (1999 forward)
+    560: np.nan,  # Other Race (1997-1998)
+    570: np.nan,  # Other Race (1999-2002)
+    580: np.nan,  # Primary Race not releasable
+    600: np.nan,  # Multiple Race
+    970: np.nan,  # Refused
+    980: np.nan,  # Not ascertained
+    990: np.nan   # Unknown
+}
 
-# Define a latin origin encoding
-latin_map = {10: 0, # Not latin
-			 20: 1, # Mexican
-			 21: 1, # Mexicano
-			 23: 1, # Mexican-American
-			 30: 1, # Puerto Rican
-			 40: 1, # Cuban
-			 50: 1, # Dominican
-			 61: 1, # Central or South American
-			 62: 1, # Other latin
-			 63: 1, # Other Spanish
-			 64: 1, # Latin non-specific type
-			 65: 1, # Latin type refused
-			 66: 1, # Latin type not ascertained
-			 67: 1, # Latin type unknown
-			 70: 1} # Multiple latin origins
+# Define a Latin origin encoding
+latin_map = {
+    10: 0, # Not Latin
+    20: 1, # Mexican
+    21: 1, # Mexicano
+    23: 1, # Mexican-American
+    30: 1, # Puerto Rican
+    40: 1, # Cuban
+    50: 1, # Dominican
+    61: 1, # Central or South American
+    62: 1, # Other Latin
+    63: 1, # Other Spanish
+    64: 1, # Latin non-specific type
+    65: 1, # Latin type refused
+    66: 1, # Latin type not ascertained
+    67: 1, # Latin type unknown
+    70: 1  # Multiple Latin origins
+}
 
 # Define an education encoding
-education_map = {0:  1,      # NIU
-				 1:  1,      # Never attended or kindergarten only
-				 2:  1,      # Grade 1
-				 3:  1,      # Grade 2
-				 4:  1,      # Grade 3
-				 5:  1,      # Grade 4
-				 6:  1,      # Grade 5
-				 7:  1,      # Grade 6
-				 8:  1,      # Grade 7
-				 9:  1,      # Grade 8
-				 10: 1,      # Grade 9
-				 11: 1,      # Grade 10
-				 12: 1,      # Grade 11
-				 13: 1,      # Grade 12
-				 14: 2,      # 1 to 3 years of college
-				 15: 3,      # 4 years college
-				 16: 3,      # 5+ years of college
-				 97: np.nan, # Refused
-				 98: np.nan, # Not ascertained
-				 99: np.nan} # Unknown
+education_map = {
+     0: 1,       # NIU
+     1: 1,       # Never attended or kindergarten only
+     2: 1,       # Grade 1
+     3: 1,       # Grade 2
+     4: 1,       # Grade 3
+     5: 1,       # Grade 4
+     6: 1,       # Grade 5
+     7: 1,       # Grade 6
+     8: 1,       # Grade 7
+     9: 1,       # Grade 8
+    10: 1,       # Grade 9
+    11: 1,       # Grade 10
+    12: 1,       # Grade 11
+    13: 1,       # Grade 12
+    14: 2,       # 1 to 3 years of college
+    15: 3,       # 4 years college
+    16: 3,       # 5+ years of college
+    97: np.nan,  # Refused
+    98: np.nan,  # Not ascertained
+    99: np.nan   # Unknown
+}
 
 # Define health and limitation encodings
-health_map = {0: np.nan,
-			  1: 1,
-			  2: 2,
-			  3: 3,
-			  4: 4,
-			  5: 5,
-			  7: np.nan,
-			  8: np.nan,
-			  9: np.nan}
-ADL_map = {0: 0,
-		   1: 0,
-		   2: 1,
-		   7: np.nan,
-		   8: np.nan,
-		   9: np.nan}
-IADL_map = {0: 0,
-		    1: 0,
-		    2: 1,
-		    7: np.nan,
-		    8: np.nan,
-		    9: np.nan}
-unable_work_map = {0: 0,
-				   1: 0,
-				   2: 1,
-				   7: np.nan,
-				   8: np.nan,
-				   9: np.nan}
-limited_work_map = {0: 0,
-				    1: 0,
-				    2: 1,
-				    3: 1,
-				    7: np.nan,
-				    8: np.nan,
-				    9: np.nan}
-limited_any_map = {10: 1,
-				   20: 0,
-				   21: 0,
-				   22: np.nan}
+health_map = {
+    0: np.nan,
+    1: 1,
+    2: 2,
+    3: 3,
+    4: 4,
+    5: 5,
+    7: np.nan,
+    8: np.nan,
+    9: np.nan
+}
+
+ADL_map = {
+    0: 0,
+    1: 0,
+    2: 1,
+    7: np.nan,
+    8: np.nan,
+    9: np.nan
+}
+
+IADL_map = {
+    0: 0,
+    1: 0,
+    2: 1,
+    7: np.nan,
+    8: np.nan,
+    9: np.nan
+}
+
+unable_work_map = {
+    0: 0,
+    1: 0,
+    2: 1,
+    7: np.nan,
+    8: np.nan,
+    9: np.nan
+}
+
+limited_work_map = {
+    0: 0,
+    1: 0,
+    2: 1,
+    3: 1,
+    7: np.nan,
+    8: np.nan,
+    9: np.nan
+}
+
+limited_any_map = {
+    10: 1,
+    20: 0,
+    21: 0,
+    22: np.nan
+}
+
+# Submit and download the IPUMS NHIS extract
+if not any([file.endswith('.csv.gz') for file in os.listdir(nhis_r_data)]):
+	samples = ['ih' + str(year) for year in range(1997, 2022 + 1, 1)]
+	extract = ipumspy.MicrodataExtract(samples=samples, variables=variables, collection="nhis", data_format="csv")
+	ipums.submit_extract(extract)
+	ipums.extract_status(extract)
+	ipums.wait_for_extract(extract)
+	print(f"{extract.collection} number {extract.extract_id} is complete!")
+	ipums.download_extract(extract, download_dir=nhis_r_data)
 
 # Load the NHIS data
-nhis = pd.read_csv(os.path.join(nhis_r_data, 'nhis.csv'), header=0, usecols=columns)
+file_name = [file for file in os.listdir(nhis_r_data) if file.endswith('.csv.gz')][0]
+nhis = pd.read_csv(os.path.join(nhis_r_data, file_name), header=0, usecols=variables, compression='gzip')
 
 # Drop observations with not sampling weights
 nhis = nhis.dropna(subset=['PERWEIGHT'])

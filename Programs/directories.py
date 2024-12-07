@@ -1,8 +1,12 @@
 # Import libraries
 import os
+from dotenv import load_dotenv
+
+# Load my environment variables
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.getcwd()), '.env'))
 
 # Identify the storage directory
-path = "/Users/jfbrou/Library/CloudStorage/Dropbox/GitHub/Dignity"
+path = os.getenv('path')
 
 # Identify the data directory
 r_data = os.path.join(path, "Data/Raw")

@@ -27,8 +27,8 @@ years = [1984, 2022]
 
 # Load the dignity data
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
-dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.latin == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
-dignity = dignity.loc[(dignity.race != -1) & (dignity.latin == -1) & (dignity.region == -1), :]
+dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
+dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1), :]
 
 # Retrieve nominal consumption per capita in 2006
 c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
@@ -562,8 +562,8 @@ years = range(1984, 2022 + 1)
 
 # Load the dignity data
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
-dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.latin == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
-dignity = dignity.loc[(dignity.race != -1) & (dignity.latin == -1) & (dignity.region == -1), :]
+dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
+dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1), :]
 
 # Retrieve nominal consumption per capita in 2006
 c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
@@ -661,8 +661,8 @@ table.close()
 
 # Load the dignity data
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
-dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.latin == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
-dignity = dignity.loc[(dignity.race != -1) & (dignity.latin == -1) & (dignity.region == -1), :]
+dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
+dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1), :]
 
 # Retrieve nominal consumption per capita in 2006
 c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC

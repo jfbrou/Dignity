@@ -13,7 +13,7 @@ import calendar
 from functions import *
 from directories import *
 
-# Load my API keys
+# Load my environment variables
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.getcwd()), '.env'))
 
 # Define my API keys
@@ -940,44 +940,3 @@ cex = cex.astype({
 # Sort and save the data
 cex = cex.sort_values(by='year')
 cex.to_csv(os.path.join(cex_f_data, 'cex.csv'), index=False)
-
-# Keep the imputation sample
-df = cex.loc[cex.complete == 1, :]
-
-# Create race binary variables
-df = pd.concat([df, pd.get_dummies(df.race.astype('int'), prefix='race')], axis=1)
-
-# Create education binary variables
-df.loc[df.education.isna() | (df.age < 30), 'education'] = 4
-df = pd.concat([df, pd.get_dummies(df.education.astype('int'), prefix='education')], axis=1)
-
-# Recode the gender variable
-df.loc[:, 'gender'] = df.gender.replace({1: 1, 2: 0})
-
-# Define a function to calculate the average of consumption, income, and demographics by year
-def f(x):
-    d = {}
-    columns = ['consumption', 'earnings', 'salary'] + ['race_' + str(i) for i in range(1, 4 + 1)] \
-                                                    + ['education_' + str(i) for i in range(1, 4 + 1)] \
-                                                    + ['family_size', 'latin', 'gender', 'age']
-    for column in columns:
-        d[column + '_average'] = np.average(x.loc[:, column], weights=x.weight)
-    return pd.Series(d, index=[key for key, value in d.items()])
-
-# Calculate the average of consumption, income, and demographics by year
-df = pd.merge(df, df.groupby('year', as_index=False).apply(f), how='left')
-
-# Calculate the percentage deviation of consumption, income and demographics from their annual average
-columns = ['consumption', 'earnings', 'salary'] + ['race_' + str(i) for i in range(1, 4 + 1)] \
-                                                + ['education_' + str(i) for i in range(1, 4 + 1)] \
-                                                + ['family_size', 'latin', 'gender', 'age']
-for column in columns:
-    df.loc[:, column + '_deviation'] = df.loc[:, column] / df.loc[:, column + '_average'] - 1
-
-# Fit and save the OLS models for consumption
-earnings_formula = 'consumption_deviation ~ ' + ' + '.join([column for column in df.columns if column.endswith('deviation') and not column.startswith('consumption') and not column.startswith('salary')])
-salary_formula = 'consumption_deviation ~ ' + ' + '.join([column for column in df.columns if column.endswith('deviation') and not column.startswith('consumption') and not column.startswith('earnings')])
-earnings_model = smf.wls(formula=earnings_formula, data=df, weights=df.weight.to_numpy()).fit()
-salary_model = smf.wls(formula=salary_formula, data=df, weights=df.weight.to_numpy()).fit()
-earnings_model.save(os.path.join(cex_f_data, 'earnings.pickle'))
-salary_model.save(os.path.join(cex_f_data, 'salary.pickle'))

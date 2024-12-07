@@ -18,8 +18,8 @@ def gompertz(x, data=None):
     return np.append(x.iloc[:20], np.exp(model.intercept_ + model.coef_ * range(85, 100)))
 
 # Create a cdc data frame
-cdc_df = pd.DataFrame()
-cdc_b_df = pd.DataFrame()
+cdc_1999_2020 = pd.DataFrame()
+cdc_2018_2022 = pd.DataFrame()
 
 ################################################################################
 #                                                                              #
@@ -27,55 +27,37 @@ cdc_b_df = pd.DataFrame()
 #                                                                              #
 ################################################################################
 
-# Load the cdc data from 2018 to 2022
-df = pd.read_csv(os.path.join(cdc_f_data, "cdc.csv"))
+# Load the cdc data
+df_1999_2020 = pd.read_csv(os.path.join(cdc_f_data, "cdc_1999_2020.csv"))
+df_2018_2022 = pd.read_csv(os.path.join(cdc_f_data, "cdc_2018_2022.csv"))
 
 # Aggregate deaths and population by year and age
-df = df.groupby(["year", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
+df_1999_2020 = df_1999_2020.groupby(["year", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
+df_2018_2022 = df_2018_2022.groupby(["year", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [-1], "latin": [-1], "gender": [-1], "region": [-1]}), df, how="left")
+df_1999_2020 = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [-1], "region": [-1]}), df_1999_2020, how="left")
+df_2018_2022 = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [-1], "region": [-1]}), df_2018_2022, how="left")
 
 # Compute mortality rates
-df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
-df.loc[df.M.isna() & (df.age < 85), "M"] = 0
+df_1999_2020.loc[:, "M"] = df_1999_2020.deaths / (df_1999_2020.population + df_1999_2020.deaths / 2)
+df_1999_2020.loc[df_1999_2020.M.isna() & (df_1999_2020.age < 85), "M"] = 0
+df_2018_2022.loc[:, "M"] = df_2018_2022.deaths / (df_2018_2022.population + df_2018_2022.deaths / 2)
+df_2018_2022.loc[df_2018_2022.M.isna() & (df_2018_2022.age < 85), "M"] = 0
 
 # Calculate the survival rates
-df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby("year", as_index=False).M.transform(gompertz).values
-df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
-df.loc[:, "S"] = df.groupby("year", as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
+df_1999_2020.loc[df_1999_2020.age.isin(range(65, 100)), "S"] = 1 - df_1999_2020.loc[df_1999_2020.age.isin(range(65, 100)), :].groupby("year", as_index=False).M.transform(gompertz).values
+df_1999_2020.loc[~df_1999_2020.age.isin(range(65, 100)), "S"] = 1 - df_1999_2020.loc[~df_1999_2020.age.isin(range(65, 100)), "M"]
+df_1999_2020.loc[:, "S"] = df_1999_2020.groupby("year", as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
+df_2018_2022.loc[df_2018_2022.age.isin(range(65, 100)), "S"] = 1 - df_2018_2022.loc[df_2018_2022.age.isin(range(65, 100)), :].groupby("year", as_index=False).M.transform(gompertz).values
+df_2018_2022.loc[~df_2018_2022.age.isin(range(65, 100)), "S"] = 1 - df_2018_2022.loc[~df_2018_2022.age.isin(range(65, 100)), "M"]
+df_2018_2022.loc[:, "S"] = df_2018_2022.groupby("year", as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
 
 # Append the CDC data frame
-df = df.drop(["deaths", "population", "M"], axis=1)
-cdc_df = pd.concat([cdc_df, df], ignore_index=True)
-
-################################################################################
-#                                                                              #
-# This section of the script computes survival rates by gender.                #
-#                                                                              #
-################################################################################
-
-# Load the cdc data from 2018 to 2022
-df = pd.read_csv(os.path.join(cdc_f_data, "cdc.csv"))
-
-# Aggregate mortality by year, gender, and age
-df = df.groupby(["year", "gender", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
-
-# Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [-1], "latin": [-1], "gender": [1, 2], "region": [-1]}), df, how="left")
-
-# Compute mortality rates
-df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
-df.loc[df.M.isna() & (df.age < 85), "M"] = 0
-
-# Calculate the survival rates
-df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "gender"], as_index=False).M.transform(gompertz).values
-df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
-df.loc[:, "S"] = df.groupby(["year", "gender"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
-
-# Append the CDC data frame
-df = df.drop(["deaths", "population", "M"], axis=1)
-cdc_df = pd.concat([cdc_df, df], ignore_index=True)
+df_1999_2020 = df_1999_2020.drop(["deaths", "population", "M"], axis=1)
+cdc_1999_2020 = pd.concat([cdc_1999_2020, df_1999_2020], ignore_index=True)
+df_2018_2022 = df_2018_2022.drop(["deaths", "population", "M"], axis=1)
+cdc_2018_2022 = pd.concat([cdc_2018_2022, df_2018_2022], ignore_index=True)
 
 ################################################################################
 #                                                                              #
@@ -83,172 +65,37 @@ cdc_df = pd.concat([cdc_df, df], ignore_index=True)
 #                                                                              #
 ################################################################################
 
-# Load the cdc data from 2018 to 2022
-df = pd.read_csv(os.path.join(cdc_f_data, "cdc.csv"))
+# Load the cdc data
+df_1999_2020 = pd.read_csv(os.path.join(cdc_f_data, "cdc_1999_2020.csv"))
+df_2018_2022 = pd.read_csv(os.path.join(cdc_f_data, "cdc_2018_2022.csv"))
 
-# Aggregate mortality by year, race and age
-df = df.groupby(["year", "race", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
-
-# Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [-1], "region": [-1]}), df, how="left")
-
-# Compute mortality rates
-df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
-df.loc[df.M.isna() & (df.age < 85), "M"] = 0
-
-# Calculate the survival rates
-df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race"], as_index=False).M.transform(gompertz).values
-df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
-df.loc[:, "S"] = df.groupby(["year", "race"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
-
-# Append the CDC data frame
-df = df.drop(["deaths", "population", "M"], axis=1)
-cdc_df = pd.concat([cdc_df, df], ignore_index=True)
-
-################################################################################
-#                                                                              #
-# This section of the script computes survival rates by race and gender.       #
-#                                                                              #
-################################################################################
-
-# Load the cdc data from 2018 to 2022
-df = pd.read_csv(os.path.join(cdc_f_data, "cdc.csv"))
-
-# Aggregate mortality by year, race, gender and age
-df = df.groupby(["year", "race", "gender", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
+# Aggregate mortality by year, race, and age
+df_1999_2020 = df_1999_2020.groupby(["year", "race", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
+df_2018_2022 = df_2018_2022.groupby(["year", "race", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [1, 2], "region": [-1]}), df, how="left")
+df_1999_2020 = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [1, 2], "region": [-1]}), df_1999_2020, how="left")
+df_2018_2022 = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [1, 2], "region": [-1]}), df_2018_2022, how="left")
 
 # Compute mortality rates
-df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
-df.loc[df.M.isna() & (df.age < 85), "M"] = 0
+df_1999_2020.loc[:, "M"] = df_1999_2020.deaths / (df_1999_2020.population + df_1999_2020.deaths / 2)
+df_1999_2020.loc[df_1999_2020.M.isna() & (df_1999_2020.age < 85), "M"] = 0
+df_2018_2022.loc[:, "M"] = df_2018_2022.deaths / (df_2018_2022.population + df_2018_2022.deaths / 2)
+df_2018_2022.loc[df_2018_2022.M.isna() & (df_2018_2022.age < 85), "M"] = 0
 
 # Calculate the survival rates
-df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race", "gender"], as_index=False).M.transform(gompertz).values
-df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
-df.loc[:, "S"] = df.groupby(["year", "race", "gender"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
+df_1999_2020.loc[df_1999_2020.age.isin(range(65, 100)), "S"] = 1 - df_1999_2020.loc[df_1999_2020.age.isin(range(65, 100)), :].groupby(["year", "race"], as_index=False).M.transform(gompertz).values
+df_1999_2020.loc[~df_1999_2020.age.isin(range(65, 100)), "S"] = 1 - df_1999_2020.loc[~df_1999_2020.age.isin(range(65, 100)), "M"]
+df_1999_2020.loc[:, "S"] = df_1999_2020.groupby(["year", "race"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
+df_2018_2022.loc[df_2018_2022.age.isin(range(65, 100)), "S"] = 1 - df_2018_2022.loc[df_2018_2022.age.isin(range(65, 100)), :].groupby(["year", "race"], as_index=False).M.transform(gompertz).values
+df_2018_2022.loc[~df_2018_2022.age.isin(range(65, 100)), "S"] = 1 - df_2018_2022.loc[~df_2018_2022.age.isin(range(65, 100)), "M"]
+df_2018_2022.loc[:, "S"] = df_2018_2022.groupby(["year", "race"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
 
 # Append the CDC data frame
-df = df.drop(["deaths", "population", "M"], axis=1)
-cdc_df = pd.concat([cdc_df, df], ignore_index=True)
-
-################################################################################
-#                                                                              #
-# This section of the script computes survival rates for Latinos.              #
-#                                                                              #
-################################################################################
-
-# Load the cdc data from 2018 to 2022
-df = pd.read_csv(os.path.join(cdc_f_data, "cdc.csv"))
-df = df.loc[df.latin == 1, :]
-
-# Aggregate mortality by year and age
-df = df.groupby(["year", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
-
-# Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [-1], "latin": [1], "gender": [-1], "region": [-1]}), df, how="left")
-
-# Compute mortality rates
-df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
-df.loc[df.M.isna() & (df.age < 85), "M"] = 0
-
-# Calculate the survival rates
-df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby("year", as_index=False).M.transform(gompertz).values
-df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
-df.loc[:, "S"] = df.groupby("year", as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
-
-# Append the CDC data frame
-df = df.drop(["deaths", "population", "M"], axis=1)
-cdc_df = pd.concat([cdc_df, df], ignore_index=True)
-
-################################################################################
-#                                                                              #
-# This section of the script computes survival rates by gender for Latinos.    #
-#                                                                              #
-################################################################################
-
-# Load the cdc data from 2018 to 2022
-df = pd.read_csv(os.path.join(cdc_f_data, "cdc.csv"))
-df = df.loc[df.latin == 1, :]
-
-# Aggregate mortality by year, gender and age
-df = df.groupby(["year", "gender", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
-
-# Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [-1], "latin": [1], "gender": [1, 2], "region": [-1]}), df, how="left")
-
-# Compute mortality rates
-df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
-df.loc[df.M.isna() & (df.age < 85), "M"] = 0
-
-# Calculate the survival rates
-df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "gender"], as_index=False).M.transform(gompertz).values
-df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
-df.loc[:, "S"] = df.groupby(["year", "gender"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
-
-# Append the CDC data frame
-df = df.drop(["deaths", "population", "M"], axis=1)
-cdc_df = pd.concat([cdc_df, df], ignore_index=True)
-
-################################################################################
-#                                                                              #
-# This section of the script computes survival rates for non-Latinos by race.  #
-#                                                                              #
-################################################################################
-
-# Load the cdc data from 2018 to 2022
-df = pd.read_csv(os.path.join(cdc_f_data, "cdc.csv"))
-df = df.loc[df.latin == 0, :]
-
-# Aggregate mortality by year, race and age
-df = df.groupby(["year", "race", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
-
-# Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [1, 2], "latin": [0], "gender": [-1], "region": [-1]}), df, how="left")
-
-# Compute mortality rates
-df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
-df.loc[df.M.isna() & (df.age < 85), "M"] = 0
-
-# Calculate the survival rates
-df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race"], as_index=False).M.transform(gompertz).values
-df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
-df.loc[:, "S"] = df.groupby(["year", "race"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
-
-# Append the CDC data frame
-df = df.drop(["deaths", "population", "M"], axis=1)
-cdc_df = pd.concat([cdc_df, df], ignore_index=True)
-
-################################################################################
-#                                                                              #
-# This section of the script computes survival rates for non-Latinos by race   #
-# and gender.                                                                  #
-#                                                                              #
-################################################################################
-
-# Load the cdc data from 2018 to 2022
-df = pd.read_csv(os.path.join(cdc_f_data, "cdc.csv"))
-df = df.loc[df.latin == 0, :]
-
-# Aggregate mortality by year, race, gender and age
-df = df.groupby(["year", "race", "gender", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
-
-# Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [1, 2], "latin": [0], "gender": [1, 2], "region": [-1]}), df, how="left")
-
-# Compute mortality rates
-df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
-df.loc[df.M.isna() & (df.age < 85), "M"] = 0
-
-# Calculate the survival rates
-df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race", "gender"], as_index=False).M.transform(gompertz).values
-df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
-df.loc[:, "S"] = df.groupby(["year", "race", "gender"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
-
-# Append the CDC data frame
-df = df.drop(["deaths", "population", "M"], axis=1)
-cdc_df = pd.concat([cdc_df, df], ignore_index=True)
+df_1999_2020 = df_1999_2020.drop(["deaths", "population", "M"], axis=1)
+cdc_1999_2020 = pd.concat([cdc_1999_2020, df_1999_2020], ignore_index=True)
+df_2018_2022 = df_2018_2022.drop(["deaths", "population", "M"], axis=1)
+cdc_2018_2022 = pd.concat([cdc_2018_2022, df_2018_2022], ignore_index=True)
 
 ################################################################################
 #                                                                              #
@@ -256,284 +103,37 @@ cdc_df = pd.concat([cdc_df, df], ignore_index=True)
 #                                                                              #
 ################################################################################
 
-# Load the cdc data from 2018 to 2022
-df = pd.read_csv(os.path.join(cdc_f_data, "cdc_region.csv"))
+# Load the cdc data
+df_1999_2020 = pd.read_csv(os.path.join(cdc_f_data, "cdc_1999_2020.csv"))
+df_2018_2022 = pd.read_csv(os.path.join(cdc_f_data, "cdc_2018_2022.csv"))
 
 # Aggregate mortality by year, race, region, and age
-df = df.groupby(["year", "race", "region", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
+df_1999_2020 = df_1999_2020.groupby(["year", "race", "region", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
+df_2018_2022 = df_2018_2022.groupby(["year", "race", "region", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
 
 # Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [-1], "region": [1, 2]}), df, how="left")
+df_1999_2020 = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [1, 2], "region": [1, 2]}), df_1999_2020, how="left")
+df_2018_2022 = pd.merge(expand({"year": range(2018, 2022 + 1, 1), "age": range(101), "race": [1, 2], "region": [1, 2]}), df_2018_2022, how="left")
 
 # Compute mortality rates
-df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
-df.loc[df.M.isna() & (df.age < 85), "M"] = 0
+df_1999_2020.loc[:, "M"] = df_1999_2020.deaths / (df_1999_2020.population + df_1999_2020.deaths / 2)
+df_1999_2020.loc[df_1999_2020.M.isna() & (df_1999_2020.age < 85), "M"] = 0
+df_2018_2022.loc[:, "M"] = df_2018_2022.deaths / (df_2018_2022.population + df_2018_2022.deaths / 2)
+df_2018_2022.loc[df_2018_2022.M.isna() & (df_2018_2022.age < 85), "M"] = 0
 
 # Calculate the survival rates
-df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race", "region"], as_index=False).M.transform(gompertz).values
-df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
-df.loc[:, "S"] = df.groupby(["year", "race", "region"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
+df_1999_2020.loc[df_1999_2020.age.isin(range(65, 100)), "S"] = 1 - df_1999_2020.loc[df_1999_2020.age.isin(range(65, 100)), :].groupby(["year", "race", "region"], as_index=False).M.transform(gompertz).values
+df_1999_2020.loc[~df_1999_2020.age.isin(range(65, 100)), "S"] = 1 - df_1999_2020.loc[~df_1999_2020.age.isin(range(65, 100)), "M"]
+df_1999_2020.loc[:, "S"] = df_1999_2020.groupby(["year", "race", "region"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
+df_2018_2022.loc[df_2018_2022.age.isin(range(65, 100)), "S"] = 1 - df_2018_2022.loc[df_2018_2022.age.isin(range(65, 100)), :].groupby(["year", "race", "region"], as_index=False).M.transform(gompertz).values
+df_2018_2022.loc[~df_2018_2022.age.isin(range(65, 100)), "S"] = 1 - df_2018_2022.loc[~df_2018_2022.age.isin(range(65, 100)), "M"]
+df_2018_2022.loc[:, "S"] = df_2018_2022.groupby(["year", "race", "region"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
 
 # Append the CDC data frame
-df = df.drop(["deaths", "population", "M"], axis=1)
-cdc_df = pd.concat([cdc_df, df], ignore_index=True)
-
-################################################################################
-#                                                                              #
-# This section of the script computes survival rates for all individuals.      #
-#                                                                              #
-################################################################################
-
-# Load the cdc data from 1999 to 2020
-df = pd.read_csv(os.path.join(cdc_f_data, "cdc_b.csv"))
-
-# Aggregate deaths and population by year and age
-df = df.groupby(["year", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
-
-# Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [-1], "latin": [-1], "gender": [-1], "region": [-1]}), df, how="left")
-
-# Compute mortality rates
-df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
-df.loc[df.M.isna() & (df.age < 85), "M"] = 0
-
-# Calculate the survival rates
-df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby("year", as_index=False).M.transform(gompertz).values
-df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
-df.loc[:, "S"] = df.groupby("year", as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
-
-# Append the CDC data frame
-df = df.drop(["deaths", "population", "M"], axis=1)
-cdc_b_df = pd.concat([cdc_b_df, df], ignore_index=True)
-
-################################################################################
-#                                                                              #
-# This section of the script computes survival rates by gender.                #
-#                                                                              #
-################################################################################
-
-# Load the cdc data from 1999 to 2020
-df = pd.read_csv(os.path.join(cdc_f_data, "cdc_b.csv"))
-
-# Aggregate mortality by year, gender, and age
-df = df.groupby(["year", "gender", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
-
-# Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [-1], "latin": [-1], "gender": [1, 2], "region": [-1]}), df, how="left")
-
-# Compute mortality rates
-df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
-df.loc[df.M.isna() & (df.age < 85), "M"] = 0
-
-# Calculate the survival rates
-df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "gender"], as_index=False).M.transform(gompertz).values
-df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
-df.loc[:, "S"] = df.groupby(["year", "gender"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
-
-# Append the CDC data frame
-df = df.drop(["deaths", "population", "M"], axis=1)
-cdc_b_df = pd.concat([cdc_b_df, df], ignore_index=True)
-
-################################################################################
-#                                                                              #
-# This section of the script computes survival rates by race.                  #
-#                                                                              #
-################################################################################
-
-# Load the cdc data from 1999 to 2020
-df = pd.read_csv(os.path.join(cdc_f_data, "cdc_b.csv"))
-
-# Aggregate mortality by year, race and age
-df = df.groupby(["year", "race", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
-
-# Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [-1], "region": [-1]}), df, how="left")
-
-# Compute mortality rates
-df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
-df.loc[df.M.isna() & (df.age < 85), "M"] = 0
-
-# Calculate the survival rates
-df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race"], as_index=False).M.transform(gompertz).values
-df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
-df.loc[:, "S"] = df.groupby(["year", "race"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
-
-# Append the CDC data frame
-df = df.drop(["deaths", "population", "M"], axis=1)
-cdc_b_df = pd.concat([cdc_b_df, df], ignore_index=True)
-
-################################################################################
-#                                                                              #
-# This section of the script computes survival rates by race and gender.       #
-#                                                                              #
-################################################################################
-
-# Load the cdc data from 1999 to 2020
-df = pd.read_csv(os.path.join(cdc_f_data, "cdc_b.csv"))
-
-# Aggregate mortality by year, race, gender and age
-df = df.groupby(["year", "race", "gender", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
-
-# Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [1, 2], "region": [-1]}), df, how="left")
-
-# Compute mortality rates
-df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
-df.loc[df.M.isna() & (df.age < 85), "M"] = 0
-
-# Calculate the survival rates
-df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race", "gender"], as_index=False).M.transform(gompertz).values
-df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
-df.loc[:, "S"] = df.groupby(["year", "race", "gender"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
-
-# Append the CDC data frame
-df = df.drop(["deaths", "population", "M"], axis=1)
-cdc_b_df = pd.concat([cdc_b_df, df], ignore_index=True)
-
-################################################################################
-#                                                                              #
-# This section of the script computes survival rates for Latinos.              #
-#                                                                              #
-################################################################################
-
-# Load the cdc data from 1999 to 2020
-df = pd.read_csv(os.path.join(cdc_f_data, "cdc_b.csv"))
-df = df.loc[df.latin == 1, :]
-
-# Aggregate mortality by year and age
-df = df.groupby(["year", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
-
-# Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [-1], "latin": [1], "gender": [-1], "region": [-1]}), df, how="left")
-
-# Compute mortality rates
-df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
-df.loc[df.M.isna() & (df.age < 85), "M"] = 0
-
-# Calculate the survival rates
-df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby("year", as_index=False).M.transform(gompertz).values
-df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
-df.loc[:, "S"] = df.groupby("year", as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
-
-# Append the CDC data frame
-df = df.drop(["deaths", "population", "M"], axis=1)
-cdc_b_df = pd.concat([cdc_b_df, df], ignore_index=True)
-
-################################################################################
-#                                                                              #
-# This section of the script computes survival rates by gender for Latinos.    #
-#                                                                              #
-################################################################################
-
-# Load the cdc data from 1999 to 2020
-df = pd.read_csv(os.path.join(cdc_f_data, "cdc_b.csv"))
-df = df.loc[df.latin == 1, :]
-
-# Aggregate mortality by year, gender and age
-df = df.groupby(["year", "gender", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
-
-# Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [-1], "latin": [1], "gender": [1, 2], "region": [-1]}), df, how="left")
-
-# Compute mortality rates
-df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
-df.loc[df.M.isna() & (df.age < 85), "M"] = 0
-
-# Calculate the survival rates
-df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "gender"], as_index=False).M.transform(gompertz).values
-df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
-df.loc[:, "S"] = df.groupby(["year", "gender"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
-
-# Append the CDC data frame
-df = df.drop(["deaths", "population", "M"], axis=1)
-cdc_b_df = pd.concat([cdc_b_df, df], ignore_index=True)
-
-################################################################################
-#                                                                              #
-# This section of the script computes survival rates for non-Latinos by race.  #
-#                                                                              #
-################################################################################
-
-# Load the cdc data from 1999 to 2020
-df = pd.read_csv(os.path.join(cdc_f_data, "cdc_b.csv"))
-df = df.loc[df.latin == 0, :]
-
-# Aggregate mortality by year, race and age
-df = df.groupby(["year", "race", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
-
-# Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [1, 2], "latin": [0], "gender": [-1], "region": [-1]}), df, how="left")
-
-# Compute mortality rates
-df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
-df.loc[df.M.isna() & (df.age < 85), "M"] = 0
-
-# Calculate the survival rates
-df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race"], as_index=False).M.transform(gompertz).values
-df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
-df.loc[:, "S"] = df.groupby(["year", "race"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
-
-# Append the CDC data frame
-df = df.drop(["deaths", "population", "M"], axis=1)
-cdc_b_df = pd.concat([cdc_b_df, df], ignore_index=True)
-
-################################################################################
-#                                                                              #
-# This section of the script computes survival rates for non-Latinos by race   #
-# and gender.                                                                  #
-#                                                                              #
-################################################################################
-
-# Load the cdc data from 1999 to 2020
-df = pd.read_csv(os.path.join(cdc_f_data, "cdc_b.csv"))
-df = df.loc[df.latin == 0, :]
-
-# Aggregate mortality by year, race, gender and age
-df = df.groupby(["year", "race", "gender", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
-
-# Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [1, 2], "latin": [0], "gender": [1, 2], "region": [-1]}), df, how="left")
-
-# Compute mortality rates
-df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
-df.loc[df.M.isna() & (df.age < 85), "M"] = 0
-
-# Calculate the survival rates
-df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race", "gender"], as_index=False).M.transform(gompertz).values
-df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
-df.loc[:, "S"] = df.groupby(["year", "race", "gender"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
-
-# Append the CDC data frame
-df = df.drop(["deaths", "population", "M"], axis=1)
-cdc_b_df = pd.concat([cdc_b_df, df], ignore_index=True)
-
-################################################################################
-#                                                                              #
-# This section of the script computes survival rates by race and region.       #
-#                                                                              #
-################################################################################
-
-# Load the cdc data from 1999 to 2020
-df = pd.read_csv(os.path.join(cdc_f_data, "cdc_b_region.csv"))
-
-# Aggregate mortality by year, race, region, and age
-df = df.groupby(["year", "race", "region", "age"], as_index=False).agg({"deaths": "sum", "population": "sum"})
-
-# Create a data frame with all levels of all variables
-df = pd.merge(expand({"year": range(1999, 2020 + 1, 1), "age": range(101), "race": [1, 2], "latin": [-1], "gender": [-1], "region": [1, 2]}), df, how="left")
-
-# Compute mortality rates
-df.loc[:, "M"] = df.deaths / (df.population + df.deaths / 2)
-df.loc[df.M.isna() & (df.age < 85), "M"] = 0
-
-# Calculate the survival rates
-df.loc[df.age.isin(range(65, 100)), "S"] = 1 - df.loc[df.age.isin(range(65, 100)), :].groupby(["year", "race", "region"], as_index=False).M.transform(gompertz).values
-df.loc[~df.age.isin(range(65, 100)), "S"] = 1 - df.loc[~df.age.isin(range(65, 100)), "M"]
-df.loc[:, "S"] = df.groupby(["year", "race", "region"], as_index=False).S.transform(lambda x: np.append(1, x.iloc[:-1].cumprod())).values
-
-# Append the CDC data frame
-df = df.drop(["deaths", "population", "M"], axis=1)
-cdc_b_df = pd.concat([cdc_b_df, df], ignore_index=True)
+df_1999_2020 = df_1999_2020.drop(["deaths", "population", "M"], axis=1)
+cdc_1999_2020 = pd.concat([cdc_1999_2020, df_1999_2020], ignore_index=True)
+df_2018_2022 = df_2018_2022.drop(["deaths", "population", "M"], axis=1)
+cdc_2018_2022 = pd.concat([cdc_2018_2022, df_2018_2022], ignore_index=True)
 
 ################################################################################
 #                                                                              #
@@ -564,80 +164,60 @@ lt.loc[(lt.year == 1960) & (lt.race == 5), "S"] = lt.loc[(lt.year == 1960) & (lt
 lt.loc[lt.race == 5, "race"] = 2
 
 # Append the life tables with the above data frames
+lt = lt.loc[(lt.gender == -1) & (lt.latin == -1) & lt.race.isin([-1, 1, 2]), :].drop(["latin", "gender"], axis=1)
 lt.loc[:, "dataset"] = "lt"
 lt.loc[:, "region"] = -1
-lt = pd.concat([lt, cdc_df], ignore_index=True)
-lt.loc[lt.dataset.isna(), "dataset"] = "cdc"
-lt = pd.concat([lt, cdc_b_df], ignore_index=True)
-lt.loc[lt.dataset.isna(), "dataset"] = "cdc_b"
+lt = pd.concat([lt, cdc_1999_2020], ignore_index=True)
+lt.loc[lt.dataset.isna(), "dataset"] = "cdc_1999_2020"
+lt = pd.concat([lt, cdc_2018_2022], ignore_index=True)
+lt.loc[lt.dataset.isna(), "dataset"] = "cdc_2018_2022"
 
 # Adjust the post-2020 survival rates
 for race in [1, 2]:
-    for latin in [-1, 0]:
-        for gender in [-1, 1, 2]:
-            adjustment_2018 = lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"].values
-            adjustment_2019 = lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"].values
-            adjustment_2020 = lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"].values
-            adjustment = (adjustment_2018 + adjustment_2019 + adjustment_2020) / 3
-            lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] * adjustment
-            lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] * adjustment
-for gender in [-1, 1, 2]:
-    adjustment_2018 = lt.loc[(lt.year == 2018) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2018) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"].values
-    adjustment_2019 = lt.loc[(lt.year == 2019) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2019) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"].values
-    adjustment_2020 = lt.loc[(lt.year == 2020) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2020) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"].values
+    adjustment_2018 = lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_1999_2020"), "S"].values / lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_2018_2022"), "S"].values
+    adjustment_2019 = lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_1999_2020"), "S"].values / lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_2018_2022"), "S"].values
+    adjustment_2020 = lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_1999_2020"), "S"].values / lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_2018_2022"), "S"].values
     adjustment = (adjustment_2018 + adjustment_2019 + adjustment_2020) / 3
-    lt.loc[(lt.year == 2021) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2021) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] * adjustment
-    lt.loc[(lt.year == 2022) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2022) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] * adjustment
+    lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_2018_2022"), "S"] = lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_2018_2022"), "S"] * adjustment
+    lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_2018_2022"), "S"] = lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_2018_2022"), "S"] * adjustment
 for race in [1, 2]:
     for region in [1, 2]:
-        adjustment_2018 = lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"].values
-        adjustment_2019 = lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"].values
-        adjustment_2020 = lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc_b"), "S"].values / lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"].values
+        adjustment_2018 = lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_1999_2020"), "S"].values / lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_2018_2022"), "S"].values
+        adjustment_2019 = lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_1999_2020"), "S"].values / lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_2018_2022"), "S"].values
+        adjustment_2020 = lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_1999_2020"), "S"].values / lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_2018_2022"), "S"].values
         adjustment = (adjustment_2018 + adjustment_2019 + adjustment_2020) / 3
-        lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"] * adjustment
-        lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"] * adjustment
+        lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_2018_2022"), "S"] = lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_2018_2022"), "S"] * adjustment
+        lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_2018_2022"), "S"] = lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_2018_2022"), "S"] * adjustment
 
 # Adjust the post 2018 survival rates
 for race in [1, 2]:
-    for latin in [-1, 0]:
-        for gender in [-1, 1, 2]:
-            adjustment_2015 = lt.loc[(lt.year == 2015) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2015) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values
-            adjustment_2016 = lt.loc[(lt.year == 2016) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2016) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values
-            adjustment_2017 = lt.loc[(lt.year == 2017) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2017) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values
-            adjustment = (adjustment_2015 + adjustment_2016 + adjustment_2017) / 3
-            lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] * adjustment
-            lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] * adjustment
-            lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] * adjustment
-            lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] * adjustment
-            lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.latin == latin) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] * adjustment
-for gender in [-1, 1, 2]:
-    adjustment_2015 = lt.loc[(lt.year == 2015) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2015) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values
-    adjustment_2016 = lt.loc[(lt.year == 2016) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2016) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values
-    adjustment_2017 = lt.loc[(lt.year == 2017) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2017) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values
+    adjustment_2015 = lt.loc[(lt.year == 2015) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2015) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_1999_2020"), "S"].values
+    adjustment_2016 = lt.loc[(lt.year == 2016) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2016) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_1999_2020"), "S"].values
+    adjustment_2017 = lt.loc[(lt.year == 2017) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2017) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_1999_2020"), "S"].values
     adjustment = (adjustment_2015 + adjustment_2016 + adjustment_2017) / 3
-    lt.loc[(lt.year == 2018) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2018) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] * adjustment
-    lt.loc[(lt.year == 2019) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2019) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] * adjustment
-    lt.loc[(lt.year == 2020) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2020) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"] * adjustment
-    lt.loc[(lt.year == 2021) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2021) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] * adjustment
-    lt.loc[(lt.year == 2022) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2022) & (lt.race == -1) & (lt.latin == 1) & (lt.gender == gender) & (lt.region == -1) & (lt.dataset == "cdc"), "S"] * adjustment
+    lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_1999_2020"), "S"] = lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_1999_2020"), "S"] * adjustment
+    lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_1999_2020"), "S"] = lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_1999_2020"), "S"] * adjustment
+    lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_1999_2020"), "S"] = lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_1999_2020"), "S"] * adjustment
+    lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_2018_2022"), "S"] = lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_2018_2022"), "S"] * adjustment
+    lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_2018_2022"), "S"] = lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_2018_2022"), "S"] * adjustment
 for race in [1, 2]:
     for region in [1, 2]:
-        adjustment_2015 = lt.loc[(lt.year == 2015) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2015) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values
-        adjustment_2016 = lt.loc[(lt.year == 2016) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2016) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values
-        adjustment_2017 = lt.loc[(lt.year == 2017) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2017) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == -1) & (lt.dataset == "cdc_b"), "S"].values
+        adjustment_2015 = lt.loc[(lt.year == 2015) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2015) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_1999_2020"), "S"].values
+        adjustment_2016 = lt.loc[(lt.year == 2016) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2016) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_1999_2020"), "S"].values
+        adjustment_2017 = lt.loc[(lt.year == 2017) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "lt"), "S"].values / lt.loc[(lt.year == 2017) & (lt.race == race) & (lt.region == -1) & (lt.dataset == "cdc_1999_2020"), "S"].values
         adjustment = (adjustment_2015 + adjustment_2016 + adjustment_2017) / 3
-        lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc_b"), "S"] * adjustment
-        lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc_b"), "S"] * adjustment
-        lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc_b"), "S"] = lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc_b"), "S"] * adjustment
-        lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"] * adjustment
-        lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"] = lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.latin == -1) & (lt.gender == -1) & (lt.region == region) & (lt.dataset == "cdc"), "S"] * adjustment
+        lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_1999_2020"), "S"] = lt.loc[(lt.year == 2018) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_1999_2020"), "S"] * adjustment
+        lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_1999_2020"), "S"] = lt.loc[(lt.year == 2019) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_1999_2020"), "S"] * adjustment
+        lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_1999_2020"), "S"] = lt.loc[(lt.year == 2020) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_1999_2020"), "S"] * adjustment
+        lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_2018_2022"), "S"] = lt.loc[(lt.year == 2021) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_2018_2022"), "S"] * adjustment
+        lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_2018_2022"), "S"] = lt.loc[(lt.year == 2022) & (lt.race == race) & (lt.region == region) & (lt.dataset == "cdc_2018_2022"), "S"] * adjustment
 
 # Drop the unused tables
-drop_sample_1 = lt.year.isin(range(2018, 2020 + 1, 1)) & (lt.dataset == "cdc")
+drop_sample_1 = lt.year.isin(range(2018, 2020 + 1, 1)) & (lt.dataset == "cdc_2018_2022")
 lt = lt.loc[~drop_sample_1, :]
-drop_sample_2 = lt.year.isin(range(1999, 2017 + 1, 1)) & (lt.region == -1) & (lt.dataset == "cdc_b")
+drop_sample_2 = lt.year.isin(range(1999, 2017 + 1, 1)) & (lt.region == -1) & (lt.dataset == "cdc_1999_2020")
 lt = lt.loc[~drop_sample_2, :]
 lt = lt.drop("dataset", axis=1)
 
 # Save the data
-lt.to_csv(os.path.join(cdc_f_data, "survival.csv"), index=False)
+lt.sort_values(by=["year", "race", "region", "age"]).to_csv(os.path.join(cdc_f_data, "survival.csv"), index=False)

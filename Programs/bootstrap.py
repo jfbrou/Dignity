@@ -16,14 +16,14 @@ data = '/scratch/users/jfbrou/Dignity'
 
 # Perform the consumption-equivalent welfare calculations on each bootstrap sample
 dignity = pd.read_csv(os.path.join(data, 'dignity.csv'))
-dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.latin == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
-dignity = dignity.loc[(dignity.race != -1) & (dignity.latin == -1) & (dignity.region == -1), :]
+dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
+dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1), :]
 dignity_bootstrap = pd.read_csv(os.path.join(data, 'dignity_bootstrap.csv'))
 c_nominal = 31046.442985362326
 def cew(b):
     # Use the data for the consumption-equivalent welfare of Black relative to White Americans calculation
     years = range(1984, 2022 + 1)
-    df_bootstrap = dignity_bootstrap.loc[dignity_bootstrap.year.isin(years) & (dignity_bootstrap.bootstrap == b) & (dignity_bootstrap.simple == False) & (dignity_bootstrap.race != -1) & (dignity_bootstrap.latin == -1), :]
+    df_bootstrap = dignity_bootstrap.loc[dignity_bootstrap.year.isin(years) & (dignity_bootstrap.bootstrap == b) & (dignity_bootstrap.simple == False) & (dignity_bootstrap.race != -1), :]
 
     # Calculate the consumption-equivalent welfare of Black relative to White Americans
     df = expand({'year': years, 'log_lambda': [np.nan], 'bootstrap': [b]})

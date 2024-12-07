@@ -52,7 +52,7 @@ cex.loc[:, 'consumption'] = cex.consumption / np.average(cex.loc[(cex.year == 20
 df = cex.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption': np.log(np.average(x.consumption, weights=x.weight))}))
 
 # Calculate the 95% confidence interval
-df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2022 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == -1) & (dignity_bs.simple == True), :]
+df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2022 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.simple == True), :]
 df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.025)}).rename(columns={'consumption_average': 'lb'}),
                  df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_average': lambda x: x.quantile(0.975)}).rename(columns={'consumption_average': 'ub'}), how='left')
 
@@ -106,7 +106,7 @@ cex.loc[:, 'consumption_nd'] = cex.consumption_nd / np.average(cex.loc[(cex.year
 df = cex.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'consumption_nd': np.sqrt(np.average((np.log(x.consumption_nd) - np.average(np.log(x.consumption_nd), weights=x.weight))**2, weights=x.weight))}))
 
 # Calculate the 95% confidence interval
-df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2022 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == -1) & (dignity_bs.simple == True), :]
+df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2022 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.simple == True), :]
 df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_sd': lambda x: x.quantile(0.025)}).rename(columns={'consumption_sd': 'lb'}),
                  df_bs.groupby(['year', 'race'], as_index=False).agg({'consumption_sd': lambda x: x.quantile(0.975)}).rename(columns={'consumption_sd': 'ub'}), how='left')
 
@@ -156,7 +156,7 @@ cps.loc[:, 'year'] = cps.year - 1
 df = cps.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'leisure': np.average(x.leisure, weights=x.weight)}))
 
 # Calculate the 95% confidence interval
-df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2022 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == -1) & (dignity_bs.simple == True), :]
+df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2022 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.simple == True), :]
 df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'leisure_average': lambda x: x.quantile(0.025)}).rename(columns={'leisure_average': 'lb'}),
                  df_bs.groupby(['year', 'race'], as_index=False).agg({'leisure_average': lambda x: x.quantile(0.975)}).rename(columns={'leisure_average': 'ub'}), how='left')
 
@@ -208,7 +208,7 @@ cps.loc[:, 'year'] = cps.year - 1
 df = cps.groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'leisure': np.sqrt(np.average((x.leisure - np.average(x.leisure, weights=x.weight))**2, weights=x.weight))}))
 
 # Calculate the 95% confidence interval
-df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2022 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.latin == -1) & (dignity_bs.simple == True), :]
+df_bs = dignity_bs.loc[dignity_bs.year.isin(range(1984, 2022 + 1)) & dignity_bs.race.isin([1, 2]) & (dignity_bs.simple == True), :]
 df_bs = pd.merge(df_bs.groupby(['year', 'race'], as_index=False).agg({'leisure_sd': lambda x: x.quantile(0.025)}).rename(columns={'leisure_sd': 'lb'}),
                  df_bs.groupby(['year', 'race'], as_index=False).agg({'leisure_sd': lambda x: x.quantile(0.975)}).rename(columns={'leisure_sd': 'ub'}), how='left')
 
@@ -299,7 +299,7 @@ plt.close()
 # Load the dignity data
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
 dignity = dignity.loc[dignity.year <= 2022, :]
-dignity = dignity.loc[(dignity.race != -1) & (dignity.latin == -1) & (dignity.region == -1), :]
+dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1), :]
 
 # Compute life expectancy by year and race
 df = dignity.groupby(['year', 'race'], as_index=False).agg({'S': 'sum'})
@@ -387,8 +387,8 @@ years = range(1984, 2022 + 1)
 
 # Load the dignity data
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
-dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.latin == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
-dignity = dignity.loc[(dignity.race != -1) & (dignity.latin == -1) & (dignity.region == -1), :]
+dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
+dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1), :]
 
 # Retrieve nominal consumption per capita in 2006
 c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
@@ -466,8 +466,8 @@ years = range(1999, 2019 + 1)
 
 # Load the dignity data
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
-dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.latin == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
-dignity = dignity.loc[(dignity.race != -1) & (dignity.latin == -1), :]
+dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
+dignity = dignity.loc[dignity.race != -1, :]
 
 # Retrieve nominal consumption per capita in 2006
 c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
@@ -546,8 +546,8 @@ years = range(1984, 2022 + 1)
 
 # Load the dignity data
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
-dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.latin == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
-dignity = dignity.loc[(dignity.race != -1) & (dignity.latin == -1) & (dignity.region == -1), :]
+dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
+dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1), :]
 
 # Retrieve nominal consumption per capita in 2006
 c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
@@ -668,8 +668,8 @@ years = range(1984, 2022 + 1)
 
 # Load the dignity data
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
-dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.latin == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
-dignity = dignity.loc[(dignity.race != -1) & (dignity.latin == -1) & (dignity.region == -1), :]
+dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
+dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1), :]
 
 # Retrieve nominal consumption per capita in 2006
 c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
@@ -874,8 +874,8 @@ nhis.loc[nhis.halex > 1, 'halex'] = 1
 
 # Load the dignity data
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
-dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.latin == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
-dignity = dignity.loc[(dignity.race != -1) & (dignity.latin == -1) & (dignity.region == -1) & (dignity.year == 2018), :]
+dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
+dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1) & (dignity.year == 2018), :]
 dignity_intercept = pd.merge(dignity_intercept, nhis_intercept, how='left')
 dignity = pd.merge(dignity, nhis, how='left')
 
@@ -993,8 +993,8 @@ nhis.loc[nhis.halex > 1, 'halex'] = 1
 
 # Load the dignity data
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
-dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.latin == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
-dignity = dignity.loc[(dignity.race != -1) & (dignity.latin == -1) & (dignity.region == -1) & dignity.year.isin(years), :]
+dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
+dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1) & dignity.year.isin(years), :]
 dignity_intercept = pd.merge(dignity_intercept, nhis_intercept, how='left')
 dignity = pd.merge(dignity, nhis, how='left')
 
@@ -1108,8 +1108,8 @@ nhis.loc[nhis.halex > 1, 'halex'] = 1
 
 # Load the dignity data
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
-dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.latin == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
-dignity = dignity.loc[(dignity.race != -1) & (dignity.latin == -1) & (dignity.region == -1) & dignity.year.isin(years), :]
+dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
+dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1) & dignity.year.isin(years), :]
 dignity_intercept = pd.merge(dignity_intercept, nhis_intercept, how='left')
 dignity = pd.merge(dignity, nhis, how='left')
 
