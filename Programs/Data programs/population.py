@@ -1,10 +1,12 @@
 # Import libraries
+import os
+import sys
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
-import os
 
 # Import functions and directories
+sys.path.append("..")
 from functions import *
 from directories import *
 

@@ -1,10 +1,10 @@
 # Import libraries
 import os
+import sys
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
 import ipumspy
-import sys
 
 # Import functions and directories
 from functions import *
@@ -211,16 +211,6 @@ nhis = nhis.drop(['LADL', 'LAIADL', 'LANOWORK', 'LAMTWRK', 'LANY', 'LNONE'], axi
 # Calculate the M_ij matrix as in Erickson, Wilson and Shannon (1995)
 nhis.loc[:, 'halex'] = 0.41 * (nhis.HEALTH + nhis.limitation) + 0.18 * nhis.HEALTH * nhis.limitation
 nhis = nhis.drop(['HEALTH', 'limitation'], axis=1)
-
-# Load the population data and calculate the average age above 85 years old
-df = pd.read_csv(os.path.join(population_f_data, 'population.csv'))
-df = df.loc[df.year.isin(nhis.YEAR.unique()) & (df.age >= 85), :].groupby(['year', 'race'], as_index=False).apply(lambda x: pd.Series({'age': np.average(x.age, weights=x.population)})).rename(columns={'year': 'YEAR', 'age': 'age_85', 'race': 'RACEA'})
-df.loc[:, 'age_85'] = np.round_(df.age_85).astype('int')
-
-# Merge the population data with the NHIS data and set the age of 85 year olds to the average age above 85 years old
-nhis = pd.merge(nhis, df, how='left')
-nhis.loc[nhis.AGE == 85, 'AGE'] = nhis.age_85
-nhis = nhis.drop('age_85', axis=1)
 
 # Rename variables
 nhis = nhis.rename(columns={'YEAR':      'year',

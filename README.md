@@ -12,6 +12,7 @@ contributors:
 This replication package contains three main Python programs:
 
 - **`Programs/directories.py`**: Contains the paths to the raw data files and the directories where the processed data will be saved.
+- **`Programs/functions.py`**: Contains the functions used in the data processing and analysis.
 - **`Programs/data.py`**: Prepares the datasets required for the analysis.
 - **`Programs/analysis.py`**: Generates the figures and tables presented in the paper.
 
@@ -51,25 +52,26 @@ To replicate the CPS extracts:
   1. **Create/Log into an ICPSR Account**:  
      Visit [ICPSR](https://login.icpsr.umich.edu) to sign in or register.
   2. **Download the Data**:  
-     Access [this page](https://www.icpsr.umich.edu/web/NACJD/studies/38871/datadocumentation#) and select "Delimited" format under "Download".
+     Access [this page](https://www.icpsr.umich.edu/web/NACJD/studies/38871/datadocumentation#) and select the "Delimited" format under "Download".
 
 #### 3. Bureau of Justice Statistics' Annual Survey of Jails (ASJ) [3]
 
-- Annual data files (`"year".tsv` or `.dta`) from 1985 to 2022 are available at [this link](https://www.icpsr.umich.edu/web/NACJD/series/7).
-- Copies are included in `Data/Raw/ASJ`.
+- Annual data files (`"year".tsv` or `"year".dta`) from 1985 to 2022 are available [here](https://www.icpsr.umich.edu/web/NACJD/series/7).
+- Copies are provided in `Data/Raw/ASJ`.
 - To download:
   1. **Create/Log into an ICPSR Account**:  
      Visit [ICPSR](https://login.icpsr.umich.edu) to sign in or register.
-  2. **Select the Year and Download**:  
-     From [here](https://www.icpsr.umich.edu/web/NACJD/series/7), choose a survey year and select "Delimited" format.
+  2. **Download the Data**:  
+     Access [this page](https://www.icpsr.umich.edu/web/NACJD/series/7), select the relevant survey year, and select the "Delimited" format under "Download".
 
 #### 4. CDC/NCHS Mortality and Life Tables Data [4], [5], [6]
 
-- For 1984–2017, life table data are from PDF files available [here](https://www.cdc.gov/nchs/products/life_tables.htm). A cleaned `.csv` file (`lifetables.csv`) created by the authors is in `Data/Raw/CDC/`.
+- For 1984–2017, life table data are from PDF files available [here](https://www.cdc.gov/nchs/products/life_tables.htm). A cleaned `.csv` file (`lifetables.csv`) created by the authors is provided in `Data/Raw/CDC/`.
 - For 2018–2020, data come from [CDC WONDER](https://wonder.cdc.gov/mcd-icd10.html).
+   - A copy is provided in `Data/Raw/CDC`.
 - For 2021–2022, data come from [CDC WONDER](https://wonder.cdc.gov/mcd-icd10-expanded.html).
-- Copies of processed `.txt` files are in `Data/Raw/CDC`.
-- To replicate these extracts:
+   - A copy is provided in `Data/Raw/CDC`.
+- To replicate these last two extracts:
   1. Visit the provided CDC WONDER links, agree to terms.
   2. Under "Organize Table Layout", select grouping by "Census Region", "Single-Year Ages", "Hispanic Origin", "Race"/"Single Race 6" (as appropriate), and "Year".
   3. In the "Race" section, select "Black or African American" and "White".
@@ -79,13 +81,13 @@ To replicate the CPS extracts:
 
 - Data in `.csv` format is available [here](https://www.bls.gov/cex/pumd_data.htm#csv) with documentation [here](https://www.bls.gov/cex/pumd_doc.htm).
 - A codebook (created by the authors) linking expenditure categories to UCC codes and other details is in each `Data/Raw/CEX/intrvw"yy"` directory.
-- Data for all relevant years (1984–2022) are included in `Data/Raw/CEX`.
+- Copies are provided in `Data/Raw/CEX`.
 
 #### 6. U.S. Census Bureau's Population Estimates Program (PEP) [8]
 
-- Data for 1984–1989: [.txt](https://www2.census.gov/programs-surveys/popest/datasets/1980-1990/state/asrh/st_int_asrh.txt) and documentation [.txt](https://www2.census.gov/programs-surveys/popest/technical-documentation/file-layouts/1980-1990/st_int_asrh_doc.txt).
-- Data for 1990–1999: [.txt](https://www.census.gov/data/datasets/time-series/demo/popest/intercensal-1990-2000-state-and-county-characteristics.html) and documentation [.txt](https://www2.census.gov/programs-surveys/popest/technical-documentation/file-layouts/1990-2000/stch-intercensal_layout.txt).
-- All files are stored in `Data/Raw/POP`.
+- Data for 1984–1989 is available [here](https://www2.census.gov/programs-surveys/popest/datasets/1980-1990/state/asrh/st_int_asrh.txt) and documentation is available [here](https://www2.census.gov/programs-surveys/popest/technical-documentation/file-layouts/1980-1990/st_int_asrh_doc.txt).
+- Data for 1990–1999 is available [here](https://www.census.gov/data/datasets/time-series/demo/popest/intercensal-1990-2000-state-and-county-characteristics.html) and documentation is available [here](https://www2.census.gov/programs-surveys/popest/technical-documentation/file-layouts/1990-2000/stch-intercensal_layout.txt).
+- Copies are provided in `Data/Raw/POP`.
 
 #### 7. CDC/NCHS National Health Interview Survey (NHIS) [9]
 

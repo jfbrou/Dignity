@@ -6,7 +6,6 @@ pd.options.mode.chained_assignment = None
 import beapy
 import calendar
 import ipumspy
-import sys
 
 # Import functions and directories
 from functions import *

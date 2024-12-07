@@ -1,8 +1,8 @@
 # Import libraries
+import os
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
-import os
 
 # Set the job index
 idx = int(os.environ["SLURM_ARRAY_TASK_ID"])

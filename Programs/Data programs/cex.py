@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
 import beapy
-import statsmodels.formula.api as smf
 from scipy.stats.mstats import winsorize
 import calendar
 

@@ -1,9 +1,9 @@
 # Import libraries
+import os
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
 from sklearn.linear_model import LinearRegression
-import os
 
 # Import functions and directories
 from functions import *
