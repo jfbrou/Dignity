@@ -1,4 +1,5 @@
 # Import libraries
+import os
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
@@ -6,11 +7,13 @@ import beapy
 import matplotlib.pyplot as plt
 from matplotlib import rc
 import seaborn as sns
-import os
 
 # Import functions and directories
 from functions import *
 from directories import *
+
+# Start the BEA API
+bea = beapy.BEA(key=bea_api_key)
 
 # Set the font for the plots
 rc('font', **{'family':'serif', 'serif':['Palatino']})
@@ -27,9 +30,6 @@ newcolors = sns.color_palette('viridis', 5)
 
 # Set the third color palette
 newnewcolors = sns.color_palette('viridis', 5)
-
-# Start the BEA client
-bea = beapy.BEA(key=bea_api_key)
 
 # Load the bootstrap data from the CEX and CPS
 dignity_bs = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap.csv'))

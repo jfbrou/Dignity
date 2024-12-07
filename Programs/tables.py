@@ -11,7 +11,7 @@ import os
 from functions import *
 from directories import *
 
-# Start the BEA client
+# Start the BEA API
 bea = beapy.BEA(key=bea_api_key)
 
 ################################################################################

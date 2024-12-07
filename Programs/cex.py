@@ -1,6 +1,5 @@
 # Import libraries
 import os
-from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
@@ -13,11 +12,8 @@ import calendar
 from functions import *
 from directories import *
 
-# Load my environment variables
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.getcwd()), '.env'))
-
-# Define my API keys
-bea = beapy.BEA(key=os.getenv('bea_api_key'))
+# Start the BEA API
+bea = beapy.BEA(key=bea_api_key)
 
 # Define a list of years
 years = range(1984, 2022 + 1)

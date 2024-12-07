@@ -1,20 +1,12 @@
 # Import libraries
 import os
-from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
-import beapy
 
 # Import functions and directories
 from functions import *
 from directories import *
-
-# Load my environment variables
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.getcwd()), '.env'))
-
-# Define my API keys
-bea = beapy.BEA(key=os.getenv('bea_api_key'))
 
 # Load the survival rates data
 survival = pd.read_csv(os.path.join(cdc_f_data, 'survival.csv'))

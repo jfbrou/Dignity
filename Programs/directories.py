@@ -5,6 +5,10 @@ from dotenv import load_dotenv
 # Load my environment variables
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.getcwd()), '.env'))
 
+# Define my API keys
+ipums_api_key = os.getenv('ipums_api_key')
+bea_api_key = os.getenv('bea_api_key')
+
 # Identify the storage directory
 path = os.getenv('mypath')
 
