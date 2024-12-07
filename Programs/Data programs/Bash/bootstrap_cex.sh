@@ -13,5 +13,5 @@
 #SBATCH --array=1-200
 
 cd /home/jfbrou/Dignity/Programs/Data programs
-ml python/3.10.0
+ml python/3.9.0
 python3 bootstrap_cex.py
