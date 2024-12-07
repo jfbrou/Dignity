@@ -1,19 +1,23 @@
 # Import libraries
+import os
+from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
 import beapy
 import statsmodels.formula.api as smf
 from scipy.stats.mstats import winsorize
-import os
 import calendar
 
 # Import functions and directories
 from functions import *
 from directories import *
 
-# Start the BEA client
-bea = beapy.BEA(key=bea_api_key)
+# Load my API keys
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.getcwd()), '.env'))
+
+# Define my API keys
+bea = beapy.BEA(key=os.getenv('bea_api_key'))
 
 # Define a list of years
 years = range(1984, 2022 + 1)

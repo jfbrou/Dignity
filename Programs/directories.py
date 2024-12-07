@@ -4,13 +4,6 @@ import os
 # Identify the storage directory
 path = "/Users/jfbrou/Library/CloudStorage/Dropbox/GitHub/Dignity"
 
-# Define the BEA API key
-bea_api_key = "59DDFDFD-09EB-4529-B4DB-08880867FAEB"
-
-# Define the CDC API keys
-cdc_api_key = "e6wdrl8voxmffwf07k3g4qfb2"
-cdc_api_key_secret = "d532p6ylwb6c6k5i5g9ojnjulxhi4kk024a7wl0a9cdtl8n9x"
-
 # Identify the data directory
 r_data = os.path.join(path, "Data/Raw")
 f_data = os.path.join(path, "Data/Final")

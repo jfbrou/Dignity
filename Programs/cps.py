@@ -1,20 +1,27 @@
 # Import libraries
+import os
+from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
 import beapy
-import os
 import calendar
+import ipumspy
+import sys
 
 # Import functions and directories
 from functions import *
 from directories import *
 
-# Start the BEA client
-bea = beapy.BEA(key=bea_api_key)
+# Load my API keys
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.getcwd()), '.env'))
 
-# Define variable columns
-columns = [
+# Define my API keys
+ipums = ipumspy.IpumsApiClient(os.getenv('ipums_api_key'))
+bea = beapy.BEA(key=os.getenv('bea_api_key'))
+
+# Define CPS variable columns
+variables = [
     'YEAR',
 	'SERIAL',
 	'ASECWT',
@@ -52,7 +59,7 @@ columns = [
     'FICA'
 ]
 
-# Define variable types
+# Define CPS variable types
 types = {
     'YEAR':       'int',
 	'SERIAL':     'int',
@@ -124,7 +131,7 @@ race_map = {
 	999: np.nan  # Unknown
 }
 
-# Define a latin encoding
+# Define a latin origin encoding
 latin_map = {
     0:   0,	     # Not Hispanic
 	100: 1,      # Mexican
@@ -162,8 +169,19 @@ education_map = {
 	12: 3  # 5+ years of college
 }
 
+# Submit and download the IPUMS CPS extract
+if not any([file.endswith('.csv.gz') for file in os.listdir(cps_r_data)]):
+	samples = ['cps' + str(year) + '_03s' for year in range(1983, 2023 + 1, 1)]
+	extract = ipumspy.MicrodataExtract(samples=samples, variables=variables, collection="cps", data_format="csv")
+	ipums.submit_extract(extract)
+	ipums.extract_status(extract)
+	ipums.wait_for_extract(extract)
+	print(f"{extract.collection} number {extract.extract_id} is complete!")
+	ipums.download_extract(extract, download_dir=cps_r_data)
+
 # Load the ASEC CPS data
-cps = pd.read_csv(os.path.join(cps_r_data, 'cps.csv'), header=0, usecols=columns, dtype=types)
+file_name = [file for file in os.listdir(cps_r_data) if file.endswith('.csv.gz')][0]
+cps = pd.read_csv(os.path.join(cps_r_data, file_name), header=0, usecols=variables, dtype=types, compression='gzip')
 
 # Define a list of years
 years = cps.YEAR.unique().tolist()
