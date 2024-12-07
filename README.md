@@ -9,10 +9,11 @@ contributors:
 
 ## Overview
 
-This replication package contains two main Python programs:
+This replication package contains three main Python programs:
 
-- **`data.py`**: Prepares the datasets required for the analysis.
-- **`analysis.py`**: Generates the figures and tables presented in the paper.
+- **`Programs/directories.py`**: Contains the paths to the raw data files and the directories where the processed data will be saved.
+- **`Programs/data.py`**: Prepares the datasets required for the analysis.
+- **`Programs/analysis.py`**: Generates the figures and tables presented in the paper.
 
 **Note:** Running these scripts end-to-end may take up to approximately two hours.
 
@@ -37,12 +38,10 @@ To replicate the CPS extracts:
 
 1. **Create/Log into an IPUMS Account**:  
    Visit [IPUMS CPS](https://cps.ipums.org/cps/) and sign in or register.
-
 2. **Obtain an API Key**:  
    Request an IPUMS API key [here](https://account.ipums.org/api_keys).
-
-3. **Update `directories.py`**:  
-   Open `directories.py` and paste your IPUMS API key at line 9, replacing `'ipums_api_key'`.
+3. **Update `Programs/directories.py`**:  
+     Insert your IPUMS API key at line 9, replacing `'ipums_api_key'`.
 
 #### 2. Bureau of Justice Statistics' National Prisoner Statistics [2]
 
@@ -66,9 +65,9 @@ To replicate the CPS extracts:
 
 #### 4. CDC/NCHS Mortality and Life Tables Data [4], [5], [6]
 
-- For 1984–1998, life table data are from PDF files available [here](https://www.cdc.gov/nchs/products/life_tables.htm). A cleaned `.csv` file (`lifetables.csv`) is in `Data/Raw/CDC/`.
-- For 1999–2020, data come from [CDC WONDER](https://wonder.cdc.gov/mcd-icd10.html).
-- For 2018–2022, data come from [CDC WONDER](https://wonder.cdc.gov/mcd-icd10-expanded.html).
+- For 1984–2017, life table data are from PDF files available [here](https://www.cdc.gov/nchs/products/life_tables.htm). A cleaned `.csv` file (`lifetables.csv`) created by the authors is in `Data/Raw/CDC/`.
+- For 2018–2020, data come from [CDC WONDER](https://wonder.cdc.gov/mcd-icd10.html).
+- For 2021–2022, data come from [CDC WONDER](https://wonder.cdc.gov/mcd-icd10-expanded.html).
 - Copies of processed `.txt` files are in `Data/Raw/CDC`.
 - To replicate these extracts:
   1. Visit the provided CDC WONDER links, agree to terms.
@@ -79,7 +78,7 @@ To replicate the CPS extracts:
 #### 5. Bureau of Labor Statistics' Consumer Expenditure Survey (CEX) [7]
 
 - Data in `.csv` format is available [here](https://www.bls.gov/cex/pumd_data.htm#csv) with documentation [here](https://www.bls.gov/cex/pumd_doc.htm).
-- A codebook linking expenditure categories to UCC codes and other details is in each `Data/Raw/CEX/intrvw"yy"` directory.
+- A codebook (created by the authors) linking expenditure categories to UCC codes and other details is in each `Data/Raw/CEX/intrvw"yy"` directory.
 - Data for all relevant years (1984–2022) are included in `Data/Raw/CEX`.
 
 #### 6. U.S. Census Bureau's Population Estimates Program (PEP) [8]
@@ -95,7 +94,7 @@ To replicate the CPS extracts:
      Visit [IPUMS NHIS](https://nhis.ipums.org/nhis/) and sign in or register.
   2. **Obtain an API Key**:  
      [Get an API key here](https://account.ipums.org/api_keys).
-  3. **Update `directories.py`**:  
+  3. **Update `Programs/directories.py`**:  
      Insert your IPUMS API key at line 9, replacing `'ipums_api_key'`.
 
 #### 8. Bureau of Economic Analysis' (BEA) NIPA Tables [10], [11], [12]
@@ -106,8 +105,37 @@ To replicate the CPS extracts:
      Sign up at [BEA](https://apps.bea.gov/API/signup/).
   2. **Obtain an API Key**:  
      Get a BEA API key [here](https://apps.bea.gov/API/signup/).
-  3. **Update `directories.py`**:  
+  3. **Update `Programs/directories.py`**:  
      Insert your BEA API key at line 10, replacing `'bea_api_key'`.
+
+### Dataset Summary Table
+
+| Dataset                                           | Source/Provider                | Provided in Package?        | Access Method                   | Format(s) Included      |
+|---------------------------------------------------|--------------------------------|-----------------------------|---------------------------------|-------------------------|
+| Current Population Survey (CPS)                   | U.S. Census Bureau / IPUMS CPS | Not directly (API required) | API via IPUMS                   | N/A (retrieved via API) |
+| National Prisoner Statistics (NPS)                | U.S. BJS / ICPSR               | Yes (in `Data/Raw/NPS`)     | Direct download via ICPSR       | TSV                     |
+| Annual Survey of Jails (ASJ)                      | U.S. BJS / ICPSR               | Yes (in `Data/Raw/ASJ`)     | Direct download via ICPSR       | TSV, DTA                |
+| CDC WONDER (Mortality, 1999–2020, 2018–2022)      | CDC / NCHS, WONDER database    | Yes (in `Data/Raw/CDC`)     | Direct download via WONDER      | TXT                     |
+| CDC NCHS Life Tables (1984–2017)                  | CDC / NCHS                     | Yes (in `Data/Raw/CDC`)     | PDF originals, processed CSV    | CSV                     |
+| Consumer Expenditure Survey (CEX)                 | U.S. BLS                       | Yes (in `Data/Raw/CEX`)     | Direct download via BLS         | CSV                     |
+| Population Estimates (1984–1999)                  | U.S. Census Bureau             | Yes (in `Data/Raw/POP`)     | Direct download via U.S. Census | TXT                     |
+| National Health Interview Survey (NHIS)           | CDC NCHS / IPUMS NHIS          | Not directly (API required) | API via IPUMS                   | N/A (retrieved via API) |
+| BEA NIPA Tables (2.4.5, 2.2.4, 2.1)               | U.S. BEA                       | Not directly (API required) | API via BEA                     | N/A (retrieved via API) |
+
+## Computational Requirements
+
+### Software Requirements
+
+- Python 3.10.9
+  - The file "`Programs/requirements.txt`" lists all dependencies, please run "`pip install -r requirements.txt`" as the first step.
+
+### Controlled Randomness
+
+- A random seed is set at line 8 of program `Programs/bootstrap.py`.
+- A random seed is set at line 8 of program `Programs/bootstrap_cps.py`.
+- A random seed is set at line 8 of program `Programs/bootstrap_cex.py`.
+
+### Memory, Runtime, Storage Requirements
 
 ### Preliminary Code
 
