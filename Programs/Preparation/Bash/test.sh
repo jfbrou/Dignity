@@ -1,11 +1,8 @@
 #!/bin/bash
 
-# Get absolute path to directory
-ABSOLUTE_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 # Source the .env file to get DB credentials
 set -a
-source ${ABSOLUTE_PATH}/../../../.env
+source ../../../.env
 set +a
 
 #SBATCH --job-name=test
