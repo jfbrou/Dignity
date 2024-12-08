@@ -14,7 +14,7 @@ set +a
 #SBATCH --mem-per-cpu=1G
 #SBATCH --mail-type=begin
 #SBATCH --mail-type=end
-#SBATCH --mail-user=${email}
+#SBATCH --mail-user=${MAIL_USER}
 
 cd ${home}Programs/Preparation
 ml python/3.10
