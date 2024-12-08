@@ -11,15 +11,13 @@ idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
 # Import functions
 sys.path.append(os.path.dirname(os.getcwd()))
 from functions import *
-
-# Set the Sherlock data directory
-data = '/scratch/jfbrou/Dignity'
+from directories import *
 
 # Perform the consumption-equivalent welfare calculations on each bootstrap sample
-dignity = pd.read_csv(os.path.join(data, 'dignity.csv'))
+dignity = pd.read_csv(os.path.join(scratch, 'dignity.csv'))
 dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
 dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1), :]
-dignity_bootstrap = pd.read_csv(os.path.join(data, 'dignity_bootstrap.csv'))
+dignity_bootstrap = pd.read_csv(os.path.join(scratch, 'dignity_bootstrap.csv'))
 c_nominal = 31046.442985362326
 def cew(b):
     # Use the data for the consumption-equivalent welfare of Black relative to White Americans calculation
@@ -54,7 +52,7 @@ def cew(b):
                                                           inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
 
     # Save the data
-    df.to_csv(os.path.join(data, 'cew_bootstrap_' + str(b) + '.csv'), index=False)
+    df.to_csv(os.path.join(scratch, 'cew_bootstrap_' + str(b) + '.csv'), index=False)
 
 # Calculate the consumption-equivalent welfare statistics across 1000 bootstrap samples
 samples = range((idx - 1) * 5 + 1, np.minimum(idx * 5, 1000) + 1, 1)

@@ -1,7 +1,6 @@
 # Import libraries
 import os
 import sys
-from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
@@ -12,17 +11,12 @@ idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
 # Import functions
 sys.path.append(os.path.dirname(os.getcwd()))
 from functions import *
-
-# Load my environment variables
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.getcwd()), '.env'))
-
-# Set the storage directory
-data = os.getenv('scratch')
+from directories import *
 
 # Define a function to calculate CEX consumption statistics across bootstrap samples
 def bootstrap(b):
     # Load the CEX data
-    cex = pd.read_csv(os.path.join(data, 'cex.csv'))
+    cex = pd.read_csv(os.path.join(scratch, 'cex.csv'))
     cex = cex.loc[cex.year.isin(range(1984, 2022 + 1)), :]
 
     # Sample from the data
@@ -73,7 +67,7 @@ def bootstrap(b):
     df_cex = pd.concat([df_cex, df], ignore_index=True)
 
     # Save the data frame
-    df_cex.to_csv(os.path.join(data, 'dignity_cex_bootstrap_' + str(b) + '.csv'), index=False)
+    df_cex.to_csv(os.path.join(scratch, 'dignity_cex_bootstrap_' + str(b) + '.csv'), index=False)
     del df_b, df_cex, df
 
 # Calculate CEX consumption statistics across 1000 bootstrap samples

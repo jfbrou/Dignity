@@ -11,14 +11,12 @@ idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
 # Import functions
 sys.path.append(os.path.dirname(os.getcwd()))
 from functions import *
-
-# Set the Sherlock data directory
-data = '/scratch/jfbrou/Dignity'
+from directories import *
 
 # Define a function to calculate CPS leisure statistics across bootstrap samples
 def bootstrap(b):
     # Load the CPS data
-    cps = pd.read_csv(os.path.join(data, 'cps.csv'), usecols=['year', 'weight', 'leisure', 'race', 'age'])
+    cps = pd.read_csv(os.path.join(scratch, 'cps.csv'), usecols=['year', 'weight', 'leisure', 'race', 'age'])
     cps = cps.loc[cps.year.isin(range(1985, 2023 + 1)), :]
     cps.loc[:, 'year'] = cps.year - 1
 
@@ -57,7 +55,7 @@ def bootstrap(b):
     df_cps = pd.concat([df_cps, df], ignore_index=True)
 
     # Save the data frame
-    df_cps.to_csv(os.path.join(data, 'dignity_cps_bootstrap_' + str(b) + '.csv'), index=False)
+    df_cps.to_csv(os.path.join(scratch, 'dignity_cps_bootstrap_' + str(b) + '.csv'), index=False)
     del df_b, df_cps, df
 
 # Calculate CEX consumption statistics across 1000 bootstrap samples
