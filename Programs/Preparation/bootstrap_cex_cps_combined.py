@@ -1,10 +1,12 @@
 # Import libraries
+import os
+import sys
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
-import os
 
 # Import functions
+sys.path.append(os.path.dirname(os.getcwd()))
 from functions import *
 
 # Set the Sherlock data directory

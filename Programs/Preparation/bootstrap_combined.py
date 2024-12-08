@@ -1,9 +1,9 @@
 # Import libraries
+import os
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
 import statsmodels.formula.api as smf
-import os
 
 # Set the Sherlock data directory
 data = '/scratch/jfbrou/Dignity'
