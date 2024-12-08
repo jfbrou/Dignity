@@ -12,6 +12,6 @@
 #SBATCH --mail-type=end
 #SBATCH --array=1-200
 
-cd /home/jfbrou/Dignity/Programs/Data programs
+cd /home/jfbrou/Dignity/Programs/Preparation
 ml python/3.10
 python3 bootstrap_cps.py

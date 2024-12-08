@@ -11,6 +11,6 @@
 #SBATCH --mail-type=begin
 #SBATCH --mail-type=end
 
-cd /home/jfbrou/Dignity/Programs/Data programs
+cd /home/jfbrou/Dignity/Programs/Preparation
 ml python/3.10
 python3 bootstrap_cex_cps_combined.py
