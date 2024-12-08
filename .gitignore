@@ -1,10 +1,10 @@
 Programs/.ipynb_checkpoints/
 Programs/__pycache__/
 Programs/*.DS_Store
-Programs/Data programs/__pycache__/
-Programs/Data programs/*.DS_Store
-Programs/Analysis programs/__pycache__/
-Programs/Analysis programs/*.DS_Store
+Programs/Preparation/__pycache__/
+Programs/Preparation/*.DS_Store
+Programs/Analysis/__pycache__/
+Programs/Analysis/*.DS_Store
 Programs/notebook.ipynb
 Programs/data_preparation.log
 Graveyard/
