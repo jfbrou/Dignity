@@ -45,14 +45,14 @@ def main():
     
     # Define the sequence of scripts to run with their paths relative to project_root
     scripts = [
-        os.path.join('Data programs', 'cdc.py'),
-        os.path.join('Data programs', 'population.py'),
-        os.path.join('Data programs', 'survival.py'),
-        os.path.join('Data programs', 'incarceration.py'),
-        os.path.join('Data programs', 'nhis.py'),
-        os.path.join('Data programs', 'cps.py'),
-        os.path.join('Data programs', 'cex.py'),
-        os.path.join('Data programs', 'dignity.py')
+        os.path.join('Data', 'cdc.py'),
+        os.path.join('Data', 'population.py'),
+        os.path.join('Data', 'survival.py'),
+        os.path.join('Data', 'incarceration.py'),
+        os.path.join('Data', 'nhis.py'),
+        os.path.join('Data', 'cps.py'),
+        os.path.join('Data', 'cex.py'),
+        os.path.join('Data', 'dignity.py')
     ]
 
     # Run each script with the project_root as the working directory
