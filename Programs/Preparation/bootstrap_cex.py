@@ -1,6 +1,7 @@
 # Import libraries
 import os
 import sys
+from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
@@ -12,8 +13,11 @@ idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
 sys.path.append(os.path.dirname(os.getcwd()))
 from functions import *
 
-# Set the Sherlock data directory
-data = '/scratch/jfbrou/Dignity'
+# Load my environment variables
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.getcwd()), '.env'))
+
+# Set the storage directory
+data = os.getenv('scratch')
 
 # Define a function to calculate CEX consumption statistics across bootstrap samples
 def bootstrap(b):
