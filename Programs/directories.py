@@ -11,7 +11,6 @@ bea_api_key = os.getenv('bea_api_key')
 
 # Identify the storage directories
 path = os.getenv('mypath')
-scratch = os.getenv('scratch')
 
 # Identify the data directories
 r_data = os.path.join(path, "Data/Raw")
