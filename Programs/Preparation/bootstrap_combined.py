@@ -1,15 +1,16 @@
 # Import libraries
 import os
-import sys
+from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
 import statsmodels.formula.api as smf
 
-# Import functions
-sys.path.append(os.path.dirname(os.getcwd()))
-from functions import *
-from directories import *
+# Load my environment variables
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.getcwd())), '.env'))
+
+# Identify the storage directory
+scratch = os.getenv('scratch')
 
 # Append all bootstrap samples in a single data frame
 cew_bootstrap = pd.DataFrame()

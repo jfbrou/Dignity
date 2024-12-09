@@ -1,13 +1,15 @@
 # Import libraries
 import os
-import sys
+from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
 
-# Import functions
-sys.path.append(os.path.dirname(os.getcwd()))
-from directories import *
+# Load my environment variables
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.getcwd())), '.env'))
+
+# Identify the storage directory
+scratch = os.getenv('scratch')
 
 # Append all bootstrap samples in a single data frame
 dignity_cex_bootstrap = pd.DataFrame()
