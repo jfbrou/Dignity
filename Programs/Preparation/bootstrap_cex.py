@@ -49,11 +49,6 @@ def bootstrap(b):
         d['consumption_average'] = np.log(np.average(x.consumption_simple, weights=x.weight))
         d['consumption_sd'] = np.sqrt(np.average((np.log(x.consumption_nd_simple) - np.average(np.log(x.consumption_nd_simple), weights=x.weight))**2, weights=x.weight))
         return pd.Series(d, index=[key for key, value in d.items()])
-    def f_simple_latin(x):
-        d = {}
-        d['consumption_average'] = np.log(np.average(x.consumption_simple_latin, weights=x.weight))
-        d['consumption_sd'] = np.sqrt(np.average((np.log(x.consumption_nd_simple_latin) - np.average(np.log(x.consumption_nd_simple_latin), weights=x.weight))**2, weights=x.weight))
-        return pd.Series(d, index=[key for key, value in d.items()])
 
     # Instantiate an empty data frame
     df_cex = pd.DataFrame()
