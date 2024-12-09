@@ -9,11 +9,11 @@ load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.getcwd()), '.env'))
 ipums_api_key = os.getenv('ipums_api_key')
 bea_api_key = os.getenv('bea_api_key')
 
-# Identify the storage directory
+# Identify the storage directories
 path = os.getenv('mypath')
 scratch = os.getenv('scratch')
 
-# Identify the data directory
+# Identify the data directories
 r_data = os.path.join(path, "Data/Raw")
 f_data = os.path.join(path, "Data/Final")
 

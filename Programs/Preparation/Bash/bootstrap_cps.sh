@@ -12,6 +12,6 @@
 #SBATCH --mail-user=jean-felix.brouillette@hec.ca
 #SBATCH --array=1-200
 
-cd /home/jfbrou/Dignity/Programs/Preparation
+cd /home/jfbrou/Dignity/Programs
 ml python/3.10
-python3 bootstrap_cps.py
+python3 Preparation/bootstrap_cps.py
