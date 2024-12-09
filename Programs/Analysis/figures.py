@@ -379,10 +379,10 @@ fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot the lines
 ax.plot(years, df.loc[df.region == 1, 'log_lambda'], color=colors[0], linewidth=2.5)
-ax.annotate('Non-South', xy=(2016, np.log(0.555)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
+ax.annotate('Non-South', xy=(2016, np.log(0.545)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
 ax.annotate('{0:.2f}'.format(np.exp(df.loc[df.region == 1, 'log_lambda'].iloc[-1])), xy=(2019.25, df.loc[df.region == 1, 'log_lambda'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
 ax.plot(years, df.loc[df.region == 2, 'log_lambda'], color=colors[1], linewidth=2.5)
-ax.annotate('South', xy=(2012, np.log(0.65)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
+ax.annotate('South', xy=(2012, np.log(0.645)), color='k', fontsize=12, va='center', ha='center', annotation_clip=False)
 ax.annotate('{0:.2f}'.format(np.exp(df.loc[df.region == 2, 'log_lambda'].iloc[-1])), xy=(2019.25, df.loc[df.region == 2, 'log_lambda'].iloc[-1]), color='k', fontsize=12, va='center', annotation_clip=False)
 
 # Set the horizontal axis
@@ -611,7 +611,7 @@ ax.text(1989, np.log(1.11), 'Leisure', fontsize=12, ha='center')
 ax.text(2011, np.log(1.1), 'Inequality', fontsize=12, ha='center')
 ax.text(1990, np.log(0.78), 'Life expectancy', fontsize=12, ha='center')
 ax.text(1990, np.log(0.49), 'Consumption', fontsize=12, ha='center')
-ax.text(2004, np.log(0.39), 'Incarceration', fontsize=12, ha='center')
+ax.text(2004, np.log(0.4), 'Incarceration', fontsize=12, ha='center')
 
 # Save and close the figure
 fig.tight_layout()
