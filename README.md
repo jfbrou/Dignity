@@ -14,7 +14,7 @@ This replication package contains two main Python programs:
 - **`Programs/data.py`**: Prepares the datasets required for the analysis.
 - **`Programs/analysis.py`**: Generates the figures and tables presented in the paper.
 
-**Note:** Running these scripts end-to-end may take up to approximately two hours.
+**Note:** Running the programs end-to-end may take up to approximately three hours.
 
 ## Data Availability Statement
 
@@ -131,13 +131,61 @@ To replicate the CPS extracts:
 
 ### Controlled Randomness
 
-- A random seed is set at line 9 of program `Programs/Preparation/bootstrap.py`.
-- A random seed is set at line 9 of program `Programs/Preparation/bootstrap_cps.py`.
-- A random seed is set at line 9 of program `Programs/Preparation/bootstrap_cex.py`.
+- A random seed is set at line 57 of program `Programs/Preparation/bootstrap.py`.
+- A random seed is set at line 59 of program `Programs/Preparation/bootstrap_cps.py`.
+- A random seed is set at line 66 of program `Programs/Preparation/bootstrap_cex.py`.
 
 ### Memory, Runtime, Storage Requirements
 
-## Description of programs/code
+#### Summary
+
+Approximate time needed to reproduce the analyses on a standard 2024 desktop machine:
+
+- 2 - 4 hours.
+
+Approximate storage space needed:
+
+- 15 GB - 25 GB.
+
+#### Details
+
+The programs were run on a **10-core Apple M2 Pro laptop with MacOS version 15.1.1, 16 GB of RAM, 100 GB of free space**.
+
+## Description of directory structure and programs
+
+Replication directory structure:
+
+   ```
+Directory
+├── Data
+│   ├── Final
+│   │   ├── CDC
+│   │   ├── CEX
+│   │   ├── CPS
+│   │   ├── Incarceration
+│   │   ├── NHIS
+│   │   ├── POP
+│   ├── Raw
+│       ├── ASJ
+│       ├── CDC
+│       ├── CEX
+│       ├── CPS
+│       ├── NHIS
+│       ├── NPS
+│       ├── POP
+├── Figures
+├── Programs
+│   ├── Analysis
+│   ├── Preparation
+│   ├── data.py
+│   ├── analysis.py
+│   ├── requirements.txt
+├── Tables
+├── .env
+├── README.md
+   ```
+
+Description of programs:
 
 - `Programs/data.py` prepares the datasets required for the analysis and runs the programs below:
   - `Programs/Preparation/directories.py` defines the necessary directories.
@@ -150,61 +198,59 @@ To replicate the CPS extracts:
   - `Programs/Preparation/cps.py` prepares the CPS data used to calculate leisure, earnings, and unemployment rates.
   - `Programs/Preparation/cex.py` prepares the CEX data used to calculate consumption.
   - `Programs/Preparation/dignity.py` combines the data prepared in the above programs to calculate the ingredients of our consumption-equivalent welfare metric.
+  - `Programs/Preparation/bootstrap_cps.py` calculates leisure statistics from the CPS data across 1000 bootstrap samples.
+  - `Programs/Preparation/bootstrap_cex.py` calculates consumption statistics from the CEX data across 1000 bootstrap samples.
+  - `Programs/Preparation/bootstrap.py` calculates the ingredients of our consumption-equivalent welfare metric across 1000 bootstrap samples.
 - `Programs/analysis.py` generates the figures and tables presented in the paper and runs the programs below:
   - `Programs/Analysis/directories.py` defines the necessary directories.
   - `Programs/Analysis/functions.py` contains functions used in the analysis programs.
   - `Programs/Analysis/figures.py` produces the figures in the paper and online appendix.
   - `Programs/Analysis/tables.py` produces the tables in the paper.
 
-## Instructions to Replicators
+## Instructions for Replicators
 
-> INSTRUCTIONS: The first two sections ensure that the data and software necessary to conduct the replication have been collected. This section then describes a human-readable instruction to conduct the replication. This may be simple, or may involve many complicated steps. It should be a simple list, no excess prose. Strict linear sequence. If more than 4-5 manual steps, please wrap a main program/Makefile around them, in logical sequences. Examples follow.
+1. **Install Conda:**  
+   Download and install [Anaconda](https://www.anaconda.com/) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html), as required.
 
-- Edit `programs/config.do` to adjust the default path
-- Run `programs/00_setup.do` once on a new system to set up the working environment. 
-- Download the data files referenced above. Each should be stored in the prepared subdirectories of `data/`, in the format that you download them in. Do not unzip. Scripts are provided in each directory to download the public-use files. Confidential data files requested as part of your FSRDC project will appear in the `/data` folder. No further action is needed on the replicator's part.
-- Run `programs/01_main.do` to run all steps in sequence.
+2. **Configure environment:**  
+   - Rename the `.env.template` file to `.env`.  
+   - Update the following fields in the `.env` file:
+     - `ipums_api_key` and `bea_api_key`: Enter your API keys.  
+     - `mypath`: Specify the absolute path to your replication directory.  
 
-### Details
+3. **Set the working directory:**  
+   Navigate to the `mypath/Programs/` directory in your terminal.
 
-- `programs/00_setup.do`: will create all output directories, install needed ado packages. 
-   - If wishing to update the ado packages used by this archive, change the parameter `update_ado` to `yes`. However, this is not needed to successfully reproduce the manuscript tables. 
-- `programs/01_dataprep`:  
-   - These programs were last run at various times in 2018. 
-   - Order does not matter, all programs can be run in parallel, if needed. 
-   - A `programs/01_dataprep/main.do` will run them all in sequence, which should take about 2 hours.
-- `programs/02_analysis/main.do`.
-   - If running programs individually, note that ORDER IS IMPORTANT. 
-   - The programs were last run top to bottom on July 4, 2019.
-- `programs/03_appendix/main-appendix.do`. The programs were last run top to bottom on July 4, 2019.
-- Figure 1: The figure can be reproduced using the data provided in the folder “2_data/data_map”, and ArcGIS Desktop (Version 10.7.1) by following these (manual) instructions:
-  - Create a new map document in ArcGIS ArcMap, browse to the folder
-“2_data/data_map” in the “Catalog”, with files  "provinceborders.shp", "lakes.shp", and "cities.shp". 
-  - Drop the files listed above onto the new map, creating three separate layers. Order them with "lakes" in the top layer and "cities" in the bottom layer.
-  - Right-click on the cities file, in properties choose the variable "health"... (more details)
+4. **Install dependencies:**  
+   Run the following command to install all required Python packages: `pip install -r requirements.txt`.
 
-## List of tables and programs
+5. **Prepare datasets:**  
+   Run the `data.py` program to prepare the necessary datasets: `python data.py`. This should take approximately 3 hours.
 
+6. **Generate outputs:**  
+   Run the `analysis.py` program to generate all figures and tables: `python analysis.py`. This should take approximately 5 minutes.
 
-> INSTRUCTIONS: Your programs should clearly identify the tables and figures as they appear in the manuscript, by number. Sometimes, this may be obvious, e.g. a program called "`table1.do`" generates a file called `table1.png`. Sometimes, mnemonics are used, and a mapping is necessary. In all circumstances, provide a list of tables and figures, identifying the program (and possibly the line number) where a figure is created.
->
-> NOTE: If the public repository is incomplete, because not all data can be provided, as described in the data section, then the list of tables should clearly indicate which tables, figures, and in-text numbers can be reproduced with the public material provided.
+## List of Tables and Programs
 
-The provided code reproduces:
+The provided programs reproduce all tables and figures in the paper and online appendix.
 
-- [ ] All numbers provided in text in the paper
-- [ ] All tables and figures in the paper
-- [ ] Selected tables and figures in the paper, as explained and justified below.
-
-| Figure/Table #    | Program                  | Line Number | Output file                      | Note                            |
-|-------------------|--------------------------|-------------|----------------------------------|---------------------------------|
-| Table 1           | 02_analysis/table1.do    |             | summarystats.csv                 ||
-| Table 2           | 02_analysis/table2and3.do| 15          | table2.csv                       ||
-| Table 3           | 02_analysis/table2and3.do| 145         | table3.csv                       ||
-| Figure 1          | n.a. (no data)           |             |                                  | Source: Herodus (2011)          |
-| Figure 2          | 02_analysis/fig2.do      |             | figure2.png                      ||
-| Figure 3          | 02_analysis/fig3.do      |             | figure-robustness.png            | Requires confidential data      |
-
+| Figure/Table # | Program                        | Line number | Output file                                              |
+|----------------|--------------------------------|-------------|----------------------------------------------------------|
+| Table 1        | `Programs/Analysis/tables.py`  | 650         | `Tables/Welfare growth.tex`                              |
+| Table 2        | `Programs/Analysis/tables.py`  | 550         | `Tables/Robustness.tex`                                  |
+| Figure 1.a     | `Programs/Analysis/figures.py` | 284         | `Figures/Life expectancy.pdf`                            |
+| Figure 1.b     | `Programs/Analysis/figures.py` | 88          | `Figures/Average consumption.pdf`                        |
+| Figure 1.c     | `Programs/Analysis/figures.py` | 140         | `Figures/Standard deviation of consumption.pdf`          |
+| Figure 1.d     | `Programs/Analysis/figures.py` | 192         | `Figures/Average leisure.pdf`                            |
+| Figure 1.e     | `Programs/Analysis/figures.py` | 325         | `Figures/Incarceration.pdf`                              |
+| Figure 1.f     | `Programs/Analysis/figures.py` | 239         | `Figures/Unemployment.pdf`                               |
+| Figure 2       | `Programs/Analysis/figures.py` | 527         | `Figures/Welfare, consumption, earnings, and wealth.pdf` |
+| Figure 3       | `Programs/Analysis/figures.py` | 618         | `Figures/Welfare decomposition.pdf`                      |
+| Figure A1      | `Programs/Analysis/figures.py` | 404         | `Figures/Welfare by region.pdf`                          |
+| Figure A2      | `Programs/Analysis/figures.py` | 790         | `Figures/Welfare and morbidity sensitivity.pdf`          |
+| Figure A3      | `Programs/Analysis/figures.py` | 905         | `Figures/Welfare and morbidity decomposition.pdf`        |
+| Figure A4      | `Programs/Analysis/figures.py` | 1013        | `Figures/Welfare and morbidity.pdf`                      |
+| Figure A5      | `Programs/Analysis/figures.py` | 675         | `Figures/Consumption and earnings.pdf`                   |
 
 ## References
 
