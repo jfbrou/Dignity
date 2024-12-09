@@ -1,29 +1,24 @@
 # Import libraries
 import os
-from dotenv import load_dotenv
+import sys
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
 
-# Set the job index
-idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
-
-# Load my environment variables
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.getcwd())), '.env'))
-
-# Identify the storage directory
-scratch = os.getenv('scratch')
-
-# Import functions
+# Import functions and directories
+sys.path.append(os.path.join(os.getcwd(), 'Preparation'))
 from functions import *
+from directories import *
 
 # Perform the consumption-equivalent welfare calculations on each bootstrap sample
-dignity = pd.read_csv(os.path.join(scratch, 'dignity.csv'))
+dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
 dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
 dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1), :]
-dignity_bootstrap = pd.read_csv(os.path.join(scratch, 'dignity_bootstrap.csv'))
+dignity_cex_bootstrap = pd.read_csv(os.path.join(cex_f_data, 'dignity_cex_bootstrap.csv'))
+dignity_cps_bootstrap = pd.read_csv(os.path.join(cps_f_data, 'dignity_cps_bootstrap.csv'))
+dignity_bootstrap = pd.merge(dignity_cex_bootstrap, dignity_cps_bootstrap)
 c_nominal = 31046.442985362326
-def cew(b):
+def cew(b, dignity, dignity_bootstrap):
     # Use the data for the consumption-equivalent welfare of Black relative to White Americans calculation
     years = range(1984, 2022 + 1)
     df_bootstrap = dignity_bootstrap.loc[dignity_bootstrap.year.isin(years) & (dignity_bootstrap.bootstrap == b) & (dignity_bootstrap.simple == False) & (dignity_bootstrap.race != -1), :]
@@ -56,9 +51,17 @@ def cew(b):
                                                           inequality=True, c_i_bar_nd=c_i_bar_nd, c_j_bar_nd=c_j_bar_nd, Elog_of_c_i=Elog_of_c_i, Elog_of_c_j=Elog_of_c_j, Elog_of_c_i_nd=Elog_of_c_i_nd, Elog_of_c_j_nd=Elog_of_c_j_nd, Ev_of_ell_i=Ev_of_ell_i, Ev_of_ell_j=Ev_of_ell_j)['log_lambda']
 
     # Save the data
-    df.to_csv(os.path.join(scratch, 'cew_bootstrap_' + str(b) + '.csv'), index=False)
+    df.to_csv(os.path.join(f_data, 'cew_bootstrap_' + str(b) + '.csv'), index=False)
 
 # Calculate the consumption-equivalent welfare statistics across 1000 bootstrap samples
-samples = range((idx - 1) * 5 + 1, np.minimum(idx * 5, 1000) + 1, 1)
-for sample in samples:
-    cew(sample)
+for b in range(1, 1000 + 1):
+    cew(b, dignity, dignity_bootstrap)
+
+# Append all bootstrap samples in a single data frame
+cew_bootstrap = pd.DataFrame()
+for b in range(1, 1000 + 1, 1):
+    df = pd.read_csv(os.path.join(f_data, 'cew_bootstrap_' + str(b) + '.csv'))
+    cew_bootstrap = pd.concat([cew_bootstrap, df], ignore_index=True)
+    os.remove(os.path.join(f_data, 'cew_bootstrap_' + str(b) + '.csv'))
+    del df
+cew_bootstrap.to_csv(os.path.join(f_data, 'cew_bootstrap.csv'), index=False)

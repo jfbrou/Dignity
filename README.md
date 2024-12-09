@@ -9,10 +9,8 @@ contributors:
 
 ## Overview
 
-This replication package contains three main Python programs:
+This replication package contains two main Python programs:
 
-- **`Programs/directories.py`**: Contains the paths to the raw data files and the directories where the processed data will be saved.
-- **`Programs/functions.py`**: Contains the functions used in the data processing and analysis.
 - **`Programs/data.py`**: Prepares the datasets required for the analysis.
 - **`Programs/analysis.py`**: Generates the figures and tables presented in the paper.
 
@@ -41,13 +39,13 @@ To replicate the CPS extracts:
    Visit [IPUMS CPS](https://cps.ipums.org/cps/) and sign in or register.
 2. **Obtain an API Key**:  
    Request an IPUMS API key [here](https://account.ipums.org/api_keys).
-3. **Update `Programs/directories.py`**:  
-     Insert your IPUMS API key at line 9, replacing `'ipums_api_key'`.
+3. **Update `.env`**:  
+     Insert your IPUMS API key at line 1, replacing the value of `ipums_api_key`.
 
 #### 2. Bureau of Justice Statistics' National Prisoner Statistics [2]
 
 - Data in `.tsv` format is available [here](https://www.icpsr.umich.edu/web/NACJD/studies/38871) along with documentation.
-- A copy of `nps.tsv` is provided in `Data/Raw/NPS`.
+- A copy is provided in `Data/Raw/NPS`.
 - To download directly:
   1. **Create/Log into an ICPSR Account**:  
      Visit [ICPSR](https://login.icpsr.umich.edu) to sign in or register.
@@ -56,17 +54,17 @@ To replicate the CPS extracts:
 
 #### 3. Bureau of Justice Statistics' Annual Survey of Jails (ASJ) [3]
 
-- Annual data files (`"year".tsv` or `"year".dta`) from 1985 to 2022 are available [here](https://www.icpsr.umich.edu/web/NACJD/series/7).
+- Annual data files (in `.tsv` or `.dta` format) from 1985 to 2022 are available [here](https://www.icpsr.umich.edu/web/NACJD/series/7).
 - Copies are provided in `Data/Raw/ASJ`.
-- To download:
+- To download directly:
   1. **Create/Log into an ICPSR Account**:  
      Visit [ICPSR](https://login.icpsr.umich.edu) to sign in or register.
   2. **Download the Data**:  
-     Access [this page](https://www.icpsr.umich.edu/web/NACJD/series/7), select the relevant survey year, and select the "Delimited" format under "Download".
+     Access [this page](https://www.icpsr.umich.edu/web/NACJD/series/7), select the relevant survey years, and select the "Delimited" format under "Download".
 
 #### 4. CDC/NCHS Mortality and Life Tables Data [4], [5], [6]
 
-- For 1984–2017, life table data are from PDF files available [here](https://www.cdc.gov/nchs/products/life_tables.htm). A cleaned `.csv` file (`lifetables.csv`) created by the authors is provided in `Data/Raw/CDC/`.
+- For 1984–2017, life table data are from PDF files available [here](https://www.cdc.gov/nchs/products/life_tables.htm). A cleaned `.csv` file (`lifetables.csv`) created by the authors is provided in `Data/Raw/CDC`.
 - For 2018–2020, data come from [CDC WONDER](https://wonder.cdc.gov/mcd-icd10.html).
    - A copy is provided in `Data/Raw/CDC`.
 - For 2021–2022, data come from [CDC WONDER](https://wonder.cdc.gov/mcd-icd10-expanded.html).
@@ -96,8 +94,8 @@ To replicate the CPS extracts:
      Visit [IPUMS NHIS](https://nhis.ipums.org/nhis/) and sign in or register.
   2. **Obtain an API Key**:  
      [Get an API key here](https://account.ipums.org/api_keys).
-  3. **Update `Programs/directories.py`**:  
-     Insert your IPUMS API key at line 9, replacing `'ipums_api_key'`.
+  3. **Update `.env`**:  
+     Insert your IPUMS API key at line 1, replacing the value of `ipums_api_key`.
 
 #### 8. Bureau of Economic Analysis' (BEA) NIPA Tables [10], [11], [12]
 
@@ -107,8 +105,8 @@ To replicate the CPS extracts:
      Sign up at [BEA](https://apps.bea.gov/API/signup/).
   2. **Obtain an API Key**:  
      Get a BEA API key [here](https://apps.bea.gov/API/signup/).
-  3. **Update `Programs/directories.py`**:  
-     Insert your BEA API key at line 10, replacing `'bea_api_key'`.
+  3. **Update `.env`**:  
+     Insert your BEA API key at line 2, replacing the value of `bea_api_key`.
 
 ### Dataset Summary Table
 
@@ -129,19 +127,84 @@ To replicate the CPS extracts:
 ### Software Requirements
 
 - Python 3.10.9
-  - The file "`Programs/requirements.txt`" lists all dependencies, please run "`pip install -r requirements.txt`" as the first step.
+  - The file "`Programs/requirements.txt`" lists all dependencies.
 
 ### Controlled Randomness
 
-- A random seed is set at line 8 of program `Programs/bootstrap.py`.
-- A random seed is set at line 8 of program `Programs/bootstrap_cps.py`.
-- A random seed is set at line 8 of program `Programs/bootstrap_cex.py`.
+- A random seed is set at line 9 of program `Programs/Preparation/bootstrap.py`.
+- A random seed is set at line 9 of program `Programs/Preparation/bootstrap_cps.py`.
+- A random seed is set at line 9 of program `Programs/Preparation/bootstrap_cex.py`.
 
 ### Memory, Runtime, Storage Requirements
 
-### Preliminary Code
+## Description of programs/code
 
-Preliminary data cleaning and analysis code is provided in this package. A version for review is available on [GitHub](https://github.com/jfbrou/Dignity). Once the paper is accepted, code will be uploaded to the [AEA Data and Code Repository](https://www.openicpsr.org/openicpsr/aea).
+- `Programs/data.py` prepares the datasets required for the analysis and runs the programs below:
+  - `Programs/Preparation/directories.py` defines the necessary directories.
+  - `Programs/Preparation/functions.py` contains functions used in the preparation programs.
+  - `Programs/Preparation/cdc.py` prepares the mortality data used to calculate survival rates.
+  - `Programs/Preparation/population.py` prepares the population data used to calculate incarceration rates.
+  - `Programs/Preparation/survival.py` calculates survival rates.
+  - `Programs/Preparation/incarceration.py` calculates incarceration rates.
+  - `Programs/Preparation/nhis.py` prepares the NHIS data used to calculate HALex scores.
+  - `Programs/Preparation/cps.py` prepares the CPS data used to calculate leisure, earnings, and unemployment rates.
+  - `Programs/Preparation/cex.py` prepares the CEX data used to calculate consumption.
+  - `Programs/Preparation/dignity.py` combines the data prepared in the above programs to calculate the ingredients of our consumption-equivalent welfare metric.
+- `Programs/analysis.py` generates the figures and tables presented in the paper and runs the programs below:
+  - `Programs/Analysis/directories.py` defines the necessary directories.
+  - `Programs/Analysis/functions.py` contains functions used in the analysis programs.
+  - `Programs/Analysis/figures.py` produces the figures in the paper and online appendix.
+  - `Programs/Analysis/tables.py` produces the tables in the paper.
+
+## Instructions to Replicators
+
+> INSTRUCTIONS: The first two sections ensure that the data and software necessary to conduct the replication have been collected. This section then describes a human-readable instruction to conduct the replication. This may be simple, or may involve many complicated steps. It should be a simple list, no excess prose. Strict linear sequence. If more than 4-5 manual steps, please wrap a main program/Makefile around them, in logical sequences. Examples follow.
+
+- Edit `programs/config.do` to adjust the default path
+- Run `programs/00_setup.do` once on a new system to set up the working environment. 
+- Download the data files referenced above. Each should be stored in the prepared subdirectories of `data/`, in the format that you download them in. Do not unzip. Scripts are provided in each directory to download the public-use files. Confidential data files requested as part of your FSRDC project will appear in the `/data` folder. No further action is needed on the replicator's part.
+- Run `programs/01_main.do` to run all steps in sequence.
+
+### Details
+
+- `programs/00_setup.do`: will create all output directories, install needed ado packages. 
+   - If wishing to update the ado packages used by this archive, change the parameter `update_ado` to `yes`. However, this is not needed to successfully reproduce the manuscript tables. 
+- `programs/01_dataprep`:  
+   - These programs were last run at various times in 2018. 
+   - Order does not matter, all programs can be run in parallel, if needed. 
+   - A `programs/01_dataprep/main.do` will run them all in sequence, which should take about 2 hours.
+- `programs/02_analysis/main.do`.
+   - If running programs individually, note that ORDER IS IMPORTANT. 
+   - The programs were last run top to bottom on July 4, 2019.
+- `programs/03_appendix/main-appendix.do`. The programs were last run top to bottom on July 4, 2019.
+- Figure 1: The figure can be reproduced using the data provided in the folder “2_data/data_map”, and ArcGIS Desktop (Version 10.7.1) by following these (manual) instructions:
+  - Create a new map document in ArcGIS ArcMap, browse to the folder
+“2_data/data_map” in the “Catalog”, with files  "provinceborders.shp", "lakes.shp", and "cities.shp". 
+  - Drop the files listed above onto the new map, creating three separate layers. Order them with "lakes" in the top layer and "cities" in the bottom layer.
+  - Right-click on the cities file, in properties choose the variable "health"... (more details)
+
+## List of tables and programs
+
+
+> INSTRUCTIONS: Your programs should clearly identify the tables and figures as they appear in the manuscript, by number. Sometimes, this may be obvious, e.g. a program called "`table1.do`" generates a file called `table1.png`. Sometimes, mnemonics are used, and a mapping is necessary. In all circumstances, provide a list of tables and figures, identifying the program (and possibly the line number) where a figure is created.
+>
+> NOTE: If the public repository is incomplete, because not all data can be provided, as described in the data section, then the list of tables should clearly indicate which tables, figures, and in-text numbers can be reproduced with the public material provided.
+
+The provided code reproduces:
+
+- [ ] All numbers provided in text in the paper
+- [ ] All tables and figures in the paper
+- [ ] Selected tables and figures in the paper, as explained and justified below.
+
+| Figure/Table #    | Program                  | Line Number | Output file                      | Note                            |
+|-------------------|--------------------------|-------------|----------------------------------|---------------------------------|
+| Table 1           | 02_analysis/table1.do    |             | summarystats.csv                 ||
+| Table 2           | 02_analysis/table2and3.do| 15          | table2.csv                       ||
+| Table 3           | 02_analysis/table2and3.do| 145         | table3.csv                       ||
+| Figure 1          | n.a. (no data)           |             |                                  | Source: Herodus (2011)          |
+| Figure 2          | 02_analysis/fig2.do      |             | figure2.png                      ||
+| Figure 3          | 02_analysis/fig3.do      |             | figure-robustness.png            | Requires confidential data      |
+
 
 ## References
 

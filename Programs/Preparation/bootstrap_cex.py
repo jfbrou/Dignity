@@ -1,28 +1,21 @@
 # Import libraries
 import os
-from dotenv import load_dotenv
+import sys
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
 
-# Set the job index
-idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
-
-# Load my environment variables
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.getcwd())), '.env'))
-
-# Identify the storage directory
-scratch = os.getenv('scratch')
-
-# Import functions
+# Import functions and directories
+sys.path.append(os.path.join(os.getcwd(), 'Preparation'))
 from functions import *
+from directories import *
+
+# Load the CEX data
+cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
+cex = cex.loc[cex.year.isin(range(1984, 2022 + 1)), :]
 
 # Define a function to calculate CEX consumption statistics across bootstrap samples
-def bootstrap(b):
-    # Load the CEX data
-    cex = pd.read_csv(os.path.join(scratch, 'cex.csv'))
-    cex = cex.loc[cex.year.isin(range(1984, 2022 + 1)), :]
-
+def bootstrap(b, cex):
     # Sample from the data
     df_b = pd.DataFrame()
     for year in range(1984, 2022 + 1):
@@ -66,10 +59,18 @@ def bootstrap(b):
     df_cex = pd.concat([df_cex, df], ignore_index=True)
 
     # Save the data frame
-    df_cex.to_csv(os.path.join(scratch, 'dignity_cex_bootstrap_' + str(b) + '.csv'), index=False)
+    df_cex.to_csv(os.path.join(cex_f_data, 'dignity_cex_bootstrap_' + str(b) + '.csv'), index=False)
     del df_b, df_cex, df
 
 # Calculate CEX consumption statistics across 1000 bootstrap samples
-samples = range((idx - 1) * 5 + 1, np.minimum(idx * 5, 1000) + 1, 1)
-for sample in samples:
-    bootstrap(sample)
+for b in range(1, 1000 + 1):
+    bootstrap(b, cex)
+
+# Append all bootstrap samples in a single data frame
+dignity_cex_bootstrap = pd.DataFrame()
+for b in range(1, 1000 + 1, 1):
+    df_cex = pd.read_csv(os.path.join(cex_f_data, 'dignity_cex_bootstrap_' + str(b) + '.csv'))
+    dignity_cex_bootstrap = pd.concat([dignity_cex_bootstrap, df_cex], ignore_index=True)
+    os.remove(os.path.join(cex_f_data, 'dignity_cex_bootstrap_' + str(b) + '.csv'))
+    del df_cex
+dignity_cex_bootstrap.to_csv(os.path.join(cex_f_data, 'dignity_cex_bootstrap.csv'), index=False)

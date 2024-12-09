@@ -1,29 +1,22 @@
 # Import libraries
 import os
-from dotenv import load_dotenv
+import sys
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
 
-# Set the job index
-idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
-
-# Load my environment variables
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.getcwd())), '.env'))
-
-# Identify the storage directory
-scratch = os.getenv('scratch')
-
-# Import functions
+# Import functions and directories
+sys.path.append(os.path.join(os.getcwd(), 'Preparation'))
 from functions import *
+from directories import *
+
+# Load the CPS data
+cps = pd.read_csv(os.path.join(cps_f_data, 'cps.csv'), usecols=['year', 'weight', 'leisure', 'race', 'age'])
+cps = cps.loc[cps.year.isin(range(1985, 2023 + 1)), :]
+cps.loc[:, 'year'] = cps.year - 1
 
 # Define a function to calculate CPS leisure statistics across bootstrap samples
-def bootstrap(b):
-    # Load the CPS data
-    cps = pd.read_csv(os.path.join(scratch, 'cps.csv'), usecols=['year', 'weight', 'leisure', 'race', 'age'])
-    cps = cps.loc[cps.year.isin(range(1985, 2023 + 1)), :]
-    cps.loc[:, 'year'] = cps.year - 1
-
+def bootstrap(b, cps):
     # Sample from the data
     df_b = pd.DataFrame()
     for year in range(1984, 2022 + 1):
@@ -59,10 +52,18 @@ def bootstrap(b):
     df_cps = pd.concat([df_cps, df], ignore_index=True)
 
     # Save the data frame
-    df_cps.to_csv(os.path.join(scratch, 'dignity_cps_bootstrap_' + str(b) + '.csv'), index=False)
+    df_cps.to_csv(os.path.join(cps_f_data, 'dignity_cps_bootstrap_' + str(b) + '.csv'), index=False)
     del df_b, df_cps, df
 
-# Calculate CEX consumption statistics across 1000 bootstrap samples
-samples = range((idx - 1) * 5 + 1, np.minimum(idx * 5, 1000) + 1, 1)
-for sample in samples:
-    bootstrap(sample)
+# Calculate CPS leisure statistics across 1000 bootstrap samples
+for b in range(1, 1000 + 1):
+    bootstrap(b, cps)
+
+# Append all bootstrap samples in a single data frame
+dignity_cps_bootstrap = pd.DataFrame()
+for b in range(1, 1000 + 1, 1):
+    df_cps = pd.read_csv(os.path.join(cps_f_data, 'dignity_cps_bootstrap_' + str(b) + '.csv'))
+    dignity_cps_bootstrap = pd.concat([dignity_cps_bootstrap, df_cps], ignore_index=True)
+    os.remove(os.path.join(cps_f_data, 'dignity_cps_bootstrap_' + str(b) + '.csv'))
+    del df_cps
+dignity_cps_bootstrap.to_csv(os.path.join(cps_f_data, 'dignity_cps_bootstrap.csv'), index=False)

@@ -52,7 +52,10 @@ def main():
         os.path.join('Preparation', 'nhis.py'),
         os.path.join('Preparation', 'cps.py'),
         os.path.join('Preparation', 'cex.py'),
-        os.path.join('Preparation', 'dignity.py')
+        os.path.join('Preparation', 'dignity.py'),
+        os.path.join('Preparation', 'bootstrap_cps.py'),
+        os.path.join('Preparation', 'bootstrap_cex.py'),
+        os.path.join('Preparation', 'bootstrap.py')
     ]
 
     # Run each script with the project_root as the working directory
