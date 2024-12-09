@@ -6,7 +6,7 @@ Programs/Preparation/*.DS_Store
 Programs/Analysis/__pycache__/
 Programs/Analysis/*.DS_Store
 Programs/notebook.ipynb
-Programs/data_preparation.log
+Programs/*.log
 Graveyard/
 Data/
 Figures/

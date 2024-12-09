@@ -9,7 +9,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("data_preparation.log"),
+        logging.FileHandler("analysis.log"),
         logging.StreamHandler(sys.stdout)
     ]
 )
@@ -45,8 +45,8 @@ def main():
     
     # Define the sequence of scripts to run with their paths relative to project_root
     scripts = [
-        os.path.join('Analysis programs', 'figures.py'),
-        os.path.join('Analysis programs', 'tables.py')
+        os.path.join('Analysis', 'figures.py'),
+        os.path.join('Analysis', 'tables.py')
     ]
 
     # Run each script with the project_root as the working directory
@@ -57,7 +57,7 @@ def main():
             sys.exit(1)
         run_script(script_full_path, project_root, project_root)
 
-    logging.info("All data preparation scripts executed successfully.")
+    logging.info("All analysis scripts executed successfully.")
 
 if __name__ == "__main__":
     main()
