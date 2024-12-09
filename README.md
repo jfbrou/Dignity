@@ -174,6 +174,7 @@ Directory
 │       ├── NPS
 │       ├── POP
 ├── Figures
+├── myenv
 ├── Programs
 │   ├── Analysis
 │   ├── Preparation
@@ -209,7 +210,7 @@ Description of programs:
 
 ## Instructions for Replicators
 
-1. **Install Conda:**  
+1. **Install Python:**  
    Download and install Python 3.10.9 from the [official website](https://www.python.org/downloads/).
 
 2. **Create a virtual environment:**
