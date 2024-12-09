@@ -210,19 +210,25 @@ Description of programs:
 ## Instructions for Replicators
 
 1. **Install Conda:**  
-   Download and install [Anaconda](https://www.anaconda.com/) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html), as required.
+   Download and install Python 3.10.9 from the [official website](https://www.python.org/downloads/).
 
-2. **Configure environment:**  
+2. **Create a virtual environment:**
+   - Open a terminal.
+   - Navigate to the replication directory.
+   - Run the following command to create a new virtual environment: `python -m venv myenv`.
+   - Activate the virtual environment:
+     - On Windows: `myenv\Scripts\activate`.
+     - On MacOS/Linux: `source myenv/bin/activate`.
+
+3. **Configure environment variables:**  
    - Rename the `.env.template` file to `.env`.  
    - Update the following fields in the `.env` file:
      - `ipums_api_key` and `bea_api_key`: Enter your API keys.  
      - `mypath`: Specify the absolute path to your replication directory.  
 
-3. **Set the working directory:**  
-   Navigate to the `mypath/Programs/` directory in your terminal.
-
 4. **Install dependencies:**  
-   Run the following command to install all required Python packages: `pip install -r requirements.txt`.
+   - Navigate to `Programs/`.
+   - Run the following command to install all required Python packages: `pip install -r requirements.txt`.
 
 5. **Prepare datasets:**  
    Run the `data.py` program to prepare the necessary datasets: `python data.py`. This should take approximately 3 hours.
@@ -234,7 +240,7 @@ Description of programs:
 
 The provided programs reproduce all tables and figures in the paper and online appendix.
 
-| Figure/Table # | Program                        | Line number | Output file                                              |
+| Figure/Table   | Program                        | Line        | Output                                                   |
 |----------------|--------------------------------|-------------|----------------------------------------------------------|
 | Table 1        | `Programs/Analysis/tables.py`  | 650         | `Tables/Welfare growth.tex`                              |
 | Table 2        | `Programs/Analysis/tables.py`  | 550         | `Tables/Robustness.tex`                                  |
