@@ -88,6 +88,11 @@ fig.tight_layout()
 fig.savefig(os.path.join(figures, 'Average consumption.pdf'), format='pdf')
 plt.close()
 
+# Save and close the figure
+fig.tight_layout()
+fig.savefig(os.path.join(figures, 'Average consumption.eps'), format='eps')
+plt.close()
+
 ################################################################################
 #                                                                              #
 # This section of the script plots the standard deviation of log nondurable    #
@@ -138,6 +143,11 @@ ax.spines['top'].set_visible(False)
 # Save and close the figure
 fig.tight_layout()
 fig.savefig(os.path.join(figures, 'Standard deviation of consumption.pdf'), format='pdf')
+plt.close()
+
+# Save and close the figure
+fig.tight_layout()
+fig.savefig(os.path.join(figures, 'Standard deviation of consumption.eps'), format='eps')
 plt.close()
 
 ################################################################################
@@ -192,6 +202,11 @@ fig.tight_layout()
 fig.savefig(os.path.join(figures, 'Average leisure.pdf'), format='pdf')
 plt.close()
 
+# Save and close the figure
+fig.tight_layout()
+fig.savefig(os.path.join(figures, 'Average leisure.eps'), format='eps')
+plt.close()
+
 ################################################################################
 #                                                                              #
 # This section of the script plots the unemployment+ rate of Black and White   #
@@ -239,6 +254,11 @@ fig.tight_layout()
 fig.savefig(os.path.join(figures, 'Unemployment.pdf'), format='pdf')
 plt.close()
 
+# Save and close the figure
+fig.tight_layout()
+fig.savefig(os.path.join(figures, 'Unemployment.eps'), format='eps')
+plt.close()
+
 ################################################################################
 #                                                                              #
 # This section of the script plots life expectancy by year for Black and White #
@@ -284,6 +304,11 @@ fig.tight_layout()
 fig.savefig(os.path.join(figures, 'Life expectancy.pdf'), format='pdf')
 plt.close()
 
+# Save and close the figure
+fig.tight_layout()
+fig.savefig(os.path.join(figures, 'Life expectancy.eps'), format='eps')
+plt.close()
+
 ################################################################################
 #                                                                              #
 # This section of the script plots the incarceration rate for Black and White  #
@@ -323,6 +348,11 @@ ax.spines['top'].set_visible(False)
 # Save and close the figure
 fig.tight_layout()
 fig.savefig(os.path.join(figures, 'Incarceration.pdf'), format='pdf')
+plt.close()
+
+# Save and close the figure
+fig.tight_layout()
+fig.savefig(os.path.join(figures, 'Incarceration.eps'), format='eps')
 plt.close()
 
 ################################################################################
@@ -402,6 +432,11 @@ ax.spines['top'].set_visible(False)
 # Save and close the figure
 fig.tight_layout()
 fig.savefig(os.path.join(figures, 'Welfare by region.pdf'), format='pdf')
+plt.close()
+
+# Save and close the figure
+fig.tight_layout()
+fig.savefig(os.path.join(figures, 'Welfare by region.eps'), format='eps')
 plt.close()
 
 ################################################################################
@@ -527,6 +562,11 @@ fig.tight_layout()
 fig.savefig(os.path.join(figures, 'Welfare, consumption, earnings, and wealth.pdf'), format='pdf')
 plt.close()
 
+# Save and close the figure
+fig.tight_layout()
+fig.savefig(os.path.join(figures, 'Welfare, consumption, earnings, and wealth.eps'), format='eps')
+plt.close()
+
 ################################################################################
 #                                                                              #
 # This section of the script plots the consumption-equivalent welfare          #
@@ -618,6 +658,11 @@ fig.tight_layout()
 fig.savefig(os.path.join(figures, 'Welfare decomposition.pdf'), format='pdf')
 plt.close()
 
+# Save and close the figure
+fig.tight_layout()
+fig.savefig(os.path.join(figures, 'Welfare decomposition.eps'), format='eps')
+plt.close()
+
 ################################################################################
 #                                                                              #
 # This section of the script plots the consumption and earnings of Black and   #
@@ -673,6 +718,11 @@ ax.spines['right'].set_visible(False)
 # Save and close the figure
 fig.tight_layout()
 fig.savefig(os.path.join(figures, 'Consumption and earnings.pdf'), format='pdf')
+plt.close()
+
+# Save and close the figure
+fig.tight_layout()
+fig.savefig(os.path.join(figures, 'Consumption and earnings.eps'), format='eps')
 plt.close()
 
 ################################################################################
@@ -790,6 +840,11 @@ fig.tight_layout()
 fig.savefig(os.path.join(figures, 'Welfare and morbidity sensitivity.pdf'), format='pdf')
 plt.close()
 
+# Save and close the figure
+fig.tight_layout()
+fig.savefig(os.path.join(figures, 'Welfare and morbidity sensitivity.eps'), format='eps')
+plt.close()
+
 ################################################################################
 #                                                                              #
 # This section of the script plots the consumption-equivalent welfare          #
@@ -905,6 +960,11 @@ fig.tight_layout()
 fig.savefig(os.path.join(figures, 'Welfare and morbidity decomposition.pdf'), format='pdf')
 plt.close()
 
+# Save and close the figure
+fig.tight_layout()
+fig.savefig(os.path.join(figures, 'Welfare and morbidity decomposition.eps'), format='eps')
+plt.close()
+
 ################################################################################
 #                                                                              #
 # This section of the script plots the consumption-equivalent welfare          #
@@ -1011,4 +1071,9 @@ ax.spines['top'].set_visible(False)
 # Save and close the figure
 fig.tight_layout()
 fig.savefig(os.path.join(figures, 'Welfare and morbidity.pdf'), format='pdf')
+plt.close()
+
+# Save and close the figure
+fig.tight_layout()
+fig.savefig(os.path.join(figures, 'Welfare and morbidity.eps'), format='eps')
 plt.close()
