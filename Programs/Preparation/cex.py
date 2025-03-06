@@ -3,16 +3,12 @@ import os
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
-import beapy
 from scipy.stats.mstats import winsorize
 import calendar
 
 # Import functions and directories
 from functions import *
 from directories import *
-
-# Start the BEA API
-bea = beapy.BEA(key=bea_api_key)
 
 # Define a list of years
 years = range(1984, 2022 + 1)
@@ -849,10 +845,25 @@ cex = cex.drop([column for column in cex.columns if column.endswith('average') o
 cex = pd.merge(cex_memi, cex, how='inner').drop('family_id', axis=1)
 
 # Calculate total NIPA PCE, nondurable PCE and the poverty threshold in each year, which corresponds to 2000 USD in 2012
-pce = bea.data('nipa', tablename='t20405', frequency='a', year=years).data.DPCERC.values.squeeze() - bea.data('nipa', tablename='t20405', frequency='a', year=years).data.DINSRC.values.squeeze()
-pce_nd = pce - bea.data('nipa', tablename='t20405', frequency='a', year=years).data.DDURRC.values.squeeze()
-population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=years).data.B230RC.values.squeeze()
-deflator = 1e2 / bea.data('nipa', tablename='t10104', frequency='a', year=years).data.DPCERG.values.squeeze()
+bea_20405 = pd.read_csv(os.path.join(bea_r_data, 'table_20405.csv'), skiprows=[0, 1, 2, 4], skipfooter=5, header=0, engine='python').rename(columns={'Unnamed: 1': 'series'}).iloc[:, 1:]
+bea_20405['series'] = bea_20405['series'].str.strip()
+bea_20405 = bea_20405.melt(id_vars='series', var_name='year', value_name='value').dropna()
+bea_20405 = bea_20405[bea_20405['value'] != '---']
+bea_20405['value'] = pd.to_numeric(bea_20405['value'])
+pce = bea_20405.loc[bea_20405['series'] == 'Personal consumption expenditures', 'value'].values - bea_20405.loc[bea_20405['series'] == 'Insurance', 'value'].values
+pce_nd = pce - bea_20405.loc[bea_20405['series'] == 'Durable goods', 'value'].values
+bea_20100 = pd.read_csv(os.path.join(bea_r_data, 'table_20100.csv'), skiprows=[0, 1, 2, 4], header=0).rename(columns={'Unnamed: 1': 'series'}).iloc[:, 1:]
+bea_20100['series'] = bea_20100['series'].str.strip()
+bea_20100 = bea_20100.melt(id_vars='series', var_name='year', value_name='value').dropna()
+bea_20100['year'] = pd.to_numeric(bea_20100['year'])
+population = 1e3 * bea_20100.loc[(bea_20100['series'] == 'Population (midperiod, thousands)6') & bea_20100['year'].isin(years), 'value'].values
+bea_10104 = pd.read_csv(os.path.join(bea_r_data, 'table_10104.csv'), skiprows=[0, 1, 2, 4], header=0).rename(columns={'Unnamed: 1': 'series'}).iloc[:, 1:]
+bea_10104['series'] = bea_10104['series'].str.strip()
+bea_10104 = bea_10104.melt(id_vars='series', var_name='year', value_name='value').dropna()
+bea_10104 = bea_10104[bea_10104['value'] != '---']
+bea_10104['value'] = pd.to_numeric(bea_10104['value'])
+bea_10104['year'] = pd.to_numeric(bea_10104['year'])
+deflator = 1e2 / bea_10104.loc[(bea_10104['series'] == 'Personal consumption expenditures') & bea_10104['year'].isin(years), 'value'].values
 deflator = deflator / deflator[years.index(2012)]
 pce = 1e6 * deflator * pce / population
 pce_nd = 1e6 * deflator * pce_nd / population

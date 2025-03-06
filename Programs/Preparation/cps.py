@@ -3,7 +3,6 @@ import os
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
-import beapy
 import calendar
 import ipumspy
 
@@ -13,9 +12,6 @@ from directories import *
 
 # Start the IPUMS API
 ipums = ipumspy.IpumsApiClient(ipums_api_key)
-
-# Start the BEA API
-bea = beapy.BEA(key=bea_api_key)
 
 # Define CPS variable columns
 variables = [
@@ -184,13 +180,18 @@ cps = pd.read_csv(os.path.join(cps_r_data, file_name), header=0, usecols=variabl
 years = cps.YEAR.unique().tolist()
 
 # Load the NIPA personal earnings and income data from the BEA
-meta = bea.data('nipa', tablename='t20100', frequency='a', year=years).metadata
-earnings_series = list(meta.loc[meta.LineDescription.isin(['Wages and salaries', "Proprietors' earnings with inventory valuation and capital consumption adjustments"]), 'SeriesCode'])
-income_series = meta.loc[meta.LineDescription == 'Equals: Disposable personal income', 'SeriesCode'].values[0]
-earnings = 1e6 * bea.data('nipa', tablename='t20100', frequency='a', year=years).data.loc[:, earnings_series].sum(axis=1).values.squeeze()
-income = 1e6 * bea.data('nipa', tablename='t20100', frequency='a', year=years).data[income_series]
-population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=years).data.B230RC.values.squeeze()
-deflator = 1e2 / bea.data("nipa", tablename="t10104", frequency="a", year=years).data.DPCERG.values.squeeze()
+bea_20100 = pd.read_csv(os.path.join(bea_r_data, 'table_20100.csv'), skiprows=[0, 1, 2, 4], header=0).rename(columns={'Unnamed: 1': 'series'}).iloc[:, 1:]
+bea_20100['series'] = bea_20100['series'].str.strip()
+bea_20100 = bea_20100.melt(id_vars='series', var_name='year', value_name='value').dropna()
+earnings = 1e6 * bea_20100.loc[bea_20100['series'] == 'Wages and salaries', 'value'].values
+income = 1e6 * bea_20100.loc[bea_20100['series'] == 'Equals: Disposable personal income', 'value'].values
+population = 1e3 * bea_20100.loc[bea_20100['series'] == 'Population (midperiod, thousands)6', 'value'].values
+bea_10104 = pd.read_csv(os.path.join(bea_r_data, 'table_10104.csv'), skiprows=[0, 1, 2, 4], header=0).rename(columns={'Unnamed: 1': 'series'}).iloc[:, 1:]
+bea_10104['series'] = bea_10104['series'].str.strip()
+bea_10104 = bea_10104.melt(id_vars='series', var_name='year', value_name='value').dropna()
+bea_10104 = bea_10104[bea_10104['value'] != '---']
+bea_10104['value'] = pd.to_numeric(bea_10104['value'])
+deflator = 1e2 / bea_10104.loc[bea_10104['series'] == 'Personal consumption expenditures', 'value'].values
 deflator = deflator / deflator[years.index(2012)]
 earnings_per_capita = deflator * earnings / population
 income_per_capita = deflator * income / population

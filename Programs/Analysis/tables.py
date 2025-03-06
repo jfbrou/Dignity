@@ -2,7 +2,6 @@
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
-import beapy
 import statsmodels.api as sm
 from sklearn.linear_model import LinearRegression
 import os
@@ -11,8 +10,20 @@ import os
 from functions import *
 from directories import *
 
-# Start the BEA API
-bea = beapy.BEA(key=bea_api_key)
+# Retrieve nominal consumption per capita in 2006
+bea_20405 = pd.read_csv(os.path.join(bea_r_data, 'table_20405.csv'), skiprows=[0, 1, 2, 4], skipfooter=5, header=0, engine='python').rename(columns={'Unnamed: 1': 'series'}).iloc[:, 1:]
+bea_20405['series'] = bea_20405['series'].str.strip()
+bea_20405 = bea_20405.melt(id_vars='series', var_name='year', value_name='value').dropna()
+bea_20405 = bea_20405[bea_20405['value'] != '---']
+bea_20405['value'] = pd.to_numeric(bea_20405['value'])
+bea_20405['year'] = pd.to_numeric(bea_20405['year'])
+c_nominal = bea_20405.loc[(bea_20405['series'] == 'Personal consumption expenditures') & (bea_20405['year'] == 2006), 'value'].values
+bea_20100 = pd.read_csv(os.path.join(bea_r_data, 'table_20100.csv'), skiprows=[0, 1, 2, 4], header=0).rename(columns={'Unnamed: 1': 'series'}).iloc[:, 1:]
+bea_20100['series'] = bea_20100['series'].str.strip()
+bea_20100 = bea_20100.melt(id_vars='series', var_name='year', value_name='value').dropna()
+bea_20100['year'] = pd.to_numeric(bea_20100['year'])
+population = 1e3 * bea_20100.loc[(bea_20100['series'] == 'Population (midperiod, thousands)6') & (bea_20100['year'] == 2006), 'value'].values
+c_nominal = 1e6 * c_nominal / population
 
 ################################################################################
 #                                                                              #
@@ -29,11 +40,6 @@ years = [1984, 2022]
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
 dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
 dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1), :]
-
-# Retrieve nominal consumption per capita in 2006
-c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
-population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC
-c_nominal = 1e6 * c_nominal / population
 
 # Instantiate an empty data frame
 df = expand({'year': years, 'case': ['benchmark', 'beta_and_g', 'age_min_1', 'age_min_5', 'CV', 'EV', 'sqrt', 'high_vsl', 'low_vsl', 'gamma', 'high_frisch', 'low_frisch', 'incarceration', 'unemployment'], 'lambda': [np.nan]})
@@ -561,11 +567,6 @@ table.close()
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
 dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
 dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1), :]
-
-# Retrieve nominal consumption per capita in 2006
-c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
-population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC
-c_nominal = 1e6 * c_nominal / population
 
 # Calculate consumption-equivalent welfare growth
 df = expand({'year': [2022], 'race': [1, 2]})

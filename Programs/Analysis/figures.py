@@ -3,7 +3,6 @@ import os
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
-import beapy
 import matplotlib.pyplot as plt
 from matplotlib import rc
 import seaborn as sns
@@ -11,9 +10,6 @@ import seaborn as sns
 # Import functions and directories
 from functions import *
 from directories import *
-
-# Start the BEA API
-bea = beapy.BEA(key=bea_api_key)
 
 # Set the font for the plots
 rc('font', **{'family':'serif', 'serif':['Palatino']})
@@ -33,6 +29,21 @@ newnewcolors = sns.color_palette('viridis', 5)
 
 # Load the bootstrap data from the CEX and CPS
 dignity_bs = pd.read_csv(os.path.join(f_data, 'dignity_bootstrap.csv'))
+
+# Retrieve nominal consumption per capita in 2006
+bea_20405 = pd.read_csv(os.path.join(bea_r_data, 'table_20405.csv'), skiprows=[0, 1, 2, 4], skipfooter=5, header=0, engine='python').rename(columns={'Unnamed: 1': 'series'}).iloc[:, 1:]
+bea_20405['series'] = bea_20405['series'].str.strip()
+bea_20405 = bea_20405.melt(id_vars='series', var_name='year', value_name='value').dropna()
+bea_20405 = bea_20405[bea_20405['value'] != '---']
+bea_20405['value'] = pd.to_numeric(bea_20405['value'])
+bea_20405['year'] = pd.to_numeric(bea_20405['year'])
+c_nominal = bea_20405.loc[(bea_20405['series'] == 'Personal consumption expenditures') & (bea_20405['year'] == 2006), 'value'].values
+bea_20100 = pd.read_csv(os.path.join(bea_r_data, 'table_20100.csv'), skiprows=[0, 1, 2, 4], header=0).rename(columns={'Unnamed: 1': 'series'}).iloc[:, 1:]
+bea_20100['series'] = bea_20100['series'].str.strip()
+bea_20100 = bea_20100.melt(id_vars='series', var_name='year', value_name='value').dropna()
+bea_20100['year'] = pd.to_numeric(bea_20100['year'])
+population = 1e3 * bea_20100.loc[(bea_20100['series'] == 'Population (midperiod, thousands)6') & (bea_20100['year'] == 2006), 'value'].values
+c_nominal = 1e6 * c_nominal / population
 
 ################################################################################
 #                                                                              #
@@ -370,11 +381,6 @@ dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
 dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
 dignity = dignity.loc[dignity.race != -1, :]
 
-# Retrieve nominal consumption per capita in 2006
-c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
-population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC
-c_nominal = 1e6 * c_nominal / population
-
 # Calculate the consumption-equivalent welfare of Black relative to White Americans
 df = expand({'year': years, 'region': [-1, 1, 2]})
 df.loc[:, 'log_lambda'] = 0
@@ -454,11 +460,6 @@ years = range(1984, 2022 + 1)
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
 dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
 dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1), :]
-
-# Retrieve nominal consumption per capita in 2006
-c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
-population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC
-c_nominal = 1e6 * c_nominal / population
 
 # Compute average consumption by year and race
 cex = pd.read_csv(os.path.join(cex_f_data, 'cex.csv'))
@@ -581,11 +582,6 @@ years = range(1984, 2022 + 1)
 dignity = pd.read_csv(os.path.join(f_data, 'dignity.csv'))
 dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.region == -1) & (dignity.year == 2006), :]
 dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1), :]
-
-# Retrieve nominal consumption per capita in 2006
-c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
-population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC
-c_nominal = 1e6 * c_nominal / population
 
 # Calculate the consumption-equivalent welfare of Black relative to White Americans
 df = pd.DataFrame({
@@ -752,11 +748,6 @@ dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1) & (dignity.y
 dignity_intercept = pd.merge(dignity_intercept, nhis_intercept, how='left')
 dignity = pd.merge(dignity, nhis, how='left')
 
-# Retrieve nominal consumption per capita in 2006
-c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
-population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC
-c_nominal = 1e6 * c_nominal / population
-
 # Calculate the consumption-equivalent welfare of Black relative to White Americans without the morbidity adjustment
 S_i = dignity.loc[dignity.race == 1, 'S'].values
 S_j = dignity.loc[dignity.race == 2, 'S'].values
@@ -876,11 +867,6 @@ dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1) & dignity.ye
 dignity_intercept = pd.merge(dignity_intercept, nhis_intercept, how='left')
 dignity = pd.merge(dignity, nhis, how='left')
 
-# Retrieve nominal consumption per capita in 2006
-c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
-population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC
-c_nominal = 1e6 * c_nominal / population
-
 # Create a data frame
 df = pd.DataFrame({
     'year': years, 
@@ -995,11 +981,6 @@ dignity_intercept = dignity.loc[(dignity.race == -1) & (dignity.region == -1) & 
 dignity = dignity.loc[(dignity.race != -1) & (dignity.region == -1) & dignity.year.isin(years), :]
 dignity_intercept = pd.merge(dignity_intercept, nhis_intercept, how='left')
 dignity = pd.merge(dignity, nhis, how='left')
-
-# Retrieve nominal consumption per capita in 2006
-c_nominal = bea.data('nipa', tablename='t20405', frequency='a', year=2006).data.DPCERC
-population = 1e3 * bea.data('nipa', tablename='t20100', frequency='a', year=2006).data.B230RC
-c_nominal = 1e6 * c_nominal / population
 
 # Create a data frame
 df = pd.DataFrame({

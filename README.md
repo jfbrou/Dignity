@@ -99,28 +99,22 @@ To replicate the CPS extracts:
 
 #### 8. Bureau of Economic Analysis' (BEA) NIPA Tables [10], [11], [12]
 
-- Data from NIPA tables (2.4.5, 2.1, 1.1.4) are sourced via the BEA API.
-- To replicate:
-  1. **Create/Log into a BEA Account**:  
-     Sign up at [BEA](https://apps.bea.gov/API/signup/).
-  2. **Obtain an API Key**:  
-     Get a BEA API key [here](https://apps.bea.gov/API/signup/).
-  3. **Update `.env`**:  
-     Insert your BEA API key at line 2, replacing the value of `bea_api_key`.
+- Data from NIPA tables (2.4.5, 2.1, 1.1.4) are provided in `Data/Raw/BEA`.
+
 
 ### Dataset Summary Table
 
 | Dataset                                           | Source/Provider                | Provided in Package?        | Access Method                   | Format(s) Included      |
 |---------------------------------------------------|--------------------------------|-----------------------------|---------------------------------|-------------------------|
-| Current Population Survey (CPS)                   | U.S. Census Bureau / IPUMS CPS | Not directly (API required) | API via IPUMS                   | N/A (retrieved via API) |
+| Current Population Survey (CPS)                   | U.S. Census Bureau / IPUMS CPS | Yes (in `Data/Raw/CPS`)     | API via IPUMS                   | CSV.gz                  |
 | National Prisoner Statistics (NPS)                | U.S. BJS / ICPSR               | Yes (in `Data/Raw/NPS`)     | Direct download via ICPSR       | TSV                     |
 | Annual Survey of Jails (ASJ)                      | U.S. BJS / ICPSR               | Yes (in `Data/Raw/ASJ`)     | Direct download via ICPSR       | TSV, DTA                |
 | CDC WONDER (Mortality, 1999–2020, 2018–2022)      | CDC / NCHS, WONDER database    | Yes (in `Data/Raw/CDC`)     | Direct download via WONDER      | TXT                     |
 | CDC NCHS Life Tables (1984–2017)                  | CDC / NCHS                     | Yes (in `Data/Raw/CDC`)     | PDF originals, processed CSV    | CSV                     |
 | Consumer Expenditure Survey (CEX)                 | U.S. BLS                       | Yes (in `Data/Raw/CEX`)     | Direct download via BLS         | CSV                     |
 | Population Estimates (1984–1999)                  | U.S. Census Bureau             | Yes (in `Data/Raw/POP`)     | Direct download via U.S. Census | TXT                     |
-| National Health Interview Survey (NHIS)           | CDC NCHS / IPUMS NHIS          | Not directly (API required) | API via IPUMS                   | N/A (retrieved via API) |
-| BEA NIPA Tables (2.4.5, 2.2.4, 2.1)               | U.S. BEA                       | Not directly (API required) | API via BEA                     | N/A (retrieved via API) |
+| National Health Interview Survey (NHIS)           | CDC NCHS / IPUMS NHIS          | Yes (in `Data/Raw/NHIS`)    | API via IPUMS                   | CSV.gz                  |
+| BEA NIPA Tables (2.4.5, 2.2.4, 2.1)               | U.S. BEA                       | Yes (in `Data/Raw/BEA`)     | Direct download via BEA         | CSV                     |
 
 ## Computational Requirements
 
@@ -128,6 +122,15 @@ To replicate the CPS extracts:
 
 - Python 3.10.9
   - The file "`Programs/requirements.txt`" lists all dependencies.
+    - numpy==1.26.4
+    - pandas==1.5.3
+    - scipy==1.14.1
+    - statsmodels==0.14.4
+    - scikit-learn==1.6.0
+    - ipumspy==0.5.1
+    - python-dotenv==1.0.1
+    - matplotlib==3.9.3
+    - seaborn==0.13.2
 
 ### Controlled Randomness
 
@@ -167,6 +170,7 @@ Directory
 │   │   ├── POP
 │   ├── Raw
 │       ├── ASJ
+|       ├── BEA
 │       ├── CDC
 │       ├── CEX
 │       ├── CPS
@@ -224,7 +228,7 @@ Description of programs:
 3. **Configure environment variables:**  
    - Rename the `.env.template` file to `.env`.  
    - Update the following fields in the `.env` file:
-     - `ipums_api_key` and `bea_api_key`: Enter your API keys.  
+     - `ipums_api_key`: Enter your API keys.  
      - `mypath`: Specify the absolute path to your replication directory.  
 
 4. **Install dependencies:**  
@@ -243,21 +247,21 @@ The provided programs reproduce all tables and figures in the paper and online a
 
 | Figure/Table   | Program                        | Line        | Output                                                   |
 |----------------|--------------------------------|-------------|----------------------------------------------------------|
-| Table 1        | `Programs/Analysis/tables.py`  | 650         | `Tables/Welfare growth.tex`                              |
-| Table 2        | `Programs/Analysis/tables.py`  | 550         | `Tables/Robustness.tex`                                  |
-| Figure 1.a     | `Programs/Analysis/figures.py` | 284         | `Figures/Life expectancy.pdf`                            |
-| Figure 1.b     | `Programs/Analysis/figures.py` | 88          | `Figures/Average consumption.pdf`                        |
-| Figure 1.c     | `Programs/Analysis/figures.py` | 140         | `Figures/Standard deviation of consumption.pdf`          |
-| Figure 1.d     | `Programs/Analysis/figures.py` | 192         | `Figures/Average leisure.pdf`                            |
-| Figure 1.e     | `Programs/Analysis/figures.py` | 325         | `Figures/Incarceration.pdf`                              |
-| Figure 1.f     | `Programs/Analysis/figures.py` | 239         | `Figures/Unemployment.pdf`                               |
-| Figure 2       | `Programs/Analysis/figures.py` | 527         | `Figures/Welfare, consumption, earnings, and wealth.pdf` |
-| Figure 3       | `Programs/Analysis/figures.py` | 618         | `Figures/Welfare decomposition.pdf`                      |
-| Figure A1      | `Programs/Analysis/figures.py` | 404         | `Figures/Welfare by region.pdf`                          |
-| Figure A2      | `Programs/Analysis/figures.py` | 790         | `Figures/Welfare and morbidity sensitivity.pdf`          |
-| Figure A3      | `Programs/Analysis/figures.py` | 905         | `Figures/Welfare and morbidity decomposition.pdf`        |
-| Figure A4      | `Programs/Analysis/figures.py` | 1013        | `Figures/Welfare and morbidity.pdf`                      |
-| Figure A5      | `Programs/Analysis/figures.py` | 675         | `Figures/Consumption and earnings.pdf`                   |
+| Table 1        | `Programs/Analysis/tables.py`  | 609         | `Tables/Welfare growth.tex`                              |
+| Table 2        | `Programs/Analysis/tables.py`  | 523         | `Tables/Robustness.tex`                                  |
+| Figure 1.a     | `Programs/Analysis/figures.py` | 315         | `Figures/Life expectancy.pdf`                            |
+| Figure 1.b     | `Programs/Analysis/figures.py` | 99          | `Figures/Average consumption.pdf`                        |
+| Figure 1.c     | `Programs/Analysis/figures.py` | 156         | `Figures/Standard deviation of consumption.pdf`          |
+| Figure 1.d     | `Programs/Analysis/figures.py` | 213         | `Figures/Average leisure.pdf`                            |
+| Figure 1.e     | `Programs/Analysis/figures.py` | 361         | `Figures/Incarceration.pdf`                              |
+| Figure 1.f     | `Programs/Analysis/figures.py` | 265         | `Figures/Unemployment.pdf`                               |
+| Figure 2       | `Programs/Analysis/figures.py` | 563         | `Figures/Welfare, consumption, earnings, and wealth.pdf` |
+| Figure 3       | `Programs/Analysis/figures.py` | 654         | `Figures/Welfare decomposition.pdf`                      |
+| Figure A1      | `Programs/Analysis/figures.py` | 440         | `Figures/Welfare by region.pdf`                          |
+| Figure A2      | `Programs/Analysis/figures.py` | 831         | `Figures/Welfare and morbidity sensitivity.pdf`          |
+| Figure A3      | `Programs/Analysis/figures.py` | 946         | `Figures/Welfare and morbidity decomposition.pdf`        |
+| Figure A4      | `Programs/Analysis/figures.py` | 1054        | `Figures/Welfare and morbidity.pdf`                      |
+| Figure A5      | `Programs/Analysis/figures.py` | 716         | `Figures/Consumption and earnings.pdf`                   |
 
 ## References
 

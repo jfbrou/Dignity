@@ -49,6 +49,9 @@ incarceration_f_data = os.path.join(f_data, "Incarceration")
 nhis_r_data = os.path.join(r_data, "NHIS")
 nhis_f_data = os.path.join(f_data, "NHIS")
 
+# Identify the directory containing the BEA data files
+bea_r_data = os.path.join(r_data, "BEA")
+
 # Identify the directory containing all figures
 figures = os.path.join(path, "Figures")
 
