@@ -612,7 +612,7 @@ lines = [r'\begin{table}[ht]',
          r'\begin{threeparttable}',
          r'\caption{Welfare growth between 1984 and 2022 (\%)}',
          r'\begin{tabular}{lccccccccc}',
-         r'& & & & \multicolumn{6}{c}{\textcolor{ChadBlue}{\it ------ Decomposition ------}} \\',
+         r'& & & & \multicolumn{6}{c}{{\it --------------- Decomposition ---------------}} \\',
          r'& Welfare & Earnings & & $LE$ & $I$ & $c$ & $\sigma\left(c\right)$ & $\ell$ & $\sigma\left(\ell\right)$ \\',
          r'\hline',
          r'Black & ' + '{:.2f}'.format(100 * float(df.loc[df.race == 2, 'log_lambda'])) + ' & ' \
